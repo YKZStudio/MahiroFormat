@@ -216,9 +216,9 @@ test("PDF.js loader lazily caches one promise across concurrent and repeated cal
 test("package pins the expected Electron version and includes the security module", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
 
-  if (packageJson.name === "flyingmouse-format") {
+  if (packageJson.name === "mahiro-format") {
     assert.match(packageJson.devDependencies.electron, /^\^?43\./);
-  } else if (packageJson.name === "flyingmouse-format-win7") {
+  } else if (packageJson.name === "mahiro-format-win7") {
     assert.strictEqual(packageJson.devDependencies.electron, "22.3.27");
   } else {
     assert.fail(`unexpected package name: ${packageJson.name}`);
@@ -233,14 +233,14 @@ test("package bundles the AV3A helper and configures its runtime path", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
   const main = readRoot("electron-main.js");
   const runtimePaths = readRoot("runtime-paths.js");
-  const platformResources = packageJson.name === "flyingmouse-format"
+  const platformResources = packageJson.name === "mahiro-format"
     ? packageJson.build.win.extraResources
     : packageJson.build.extraResources;
   const avs3Resources = platformResources.filter((item) => item.to === "avs3");
   assert.strictEqual(avs3Resources.length, 1);
-  if (packageJson.name === "flyingmouse-format") {
+  if (packageJson.name === "mahiro-format") {
     assert.strictEqual(avs3Resources[0].from, "bin/avs3");
-  } else if (packageJson.name === "flyingmouse-format-win7") {
+  } else if (packageJson.name === "mahiro-format-win7") {
     assert.ok(path.isAbsolute(avs3Resources[0].from));
     assert.strictEqual(path.basename(avs3Resources[0].from), "avs3");
     assert.strictEqual(path.basename(path.dirname(avs3Resources[0].from)), "bin");
@@ -321,7 +321,7 @@ test("packaged Electron exposes CLI mode without creating a window", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
   const main = readRoot("electron-main.js");
   assert.ok(packageJson.build.files.includes("cli.js"));
-  assert.strictEqual(packageJson.bin["flyingmouse-format"], "cli.js");
+  assert.strictEqual(packageJson.bin["mahiro-format"], "cli.js");
   assert.match(main, /process\.argv\.indexOf\("--cli"\)/);
   assert.match(main, /if \(cliMode\)[\s\S]*runCli/);
   assert.match(main, /if \(!cliMode && !mainWindow/);

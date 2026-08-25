@@ -15,7 +15,7 @@
 npm run dist
 ```
 
-输出 `dist/FlyingMouse Format-Setup-<version>-x64.exe`。验收版本、哈希、ASAR 白名单、转换资源、鼠鼠图标、PE 元数据和启动冒烟。
+输出 `dist/Mahiro Format-Setup-<version>-x64.exe`。验收版本、哈希、ASAR 白名单、转换资源、鼠鼠图标、PE 元数据和启动冒烟。
 
 ## Windows 7 SP1 x64 Legacy
 

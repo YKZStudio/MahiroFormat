@@ -17,14 +17,14 @@ const VALUE_OPTIONS = new Map([
   ["--password", "password"]
 ]);
 
-const HELP = `FlyingMouse Format CLI
+const HELP = `Mahiro Format CLI
 
 Usage:
-  flyingmouse-format capabilities [--json]
-  flyingmouse-format targets <file-or-extension> [--json]
-  flyingmouse-format convert <files...> --to <format> [options]
-  flyingmouse-format images-to-pdf <images...> [--output <file>] [--json]
-  flyingmouse-format merge-pdfs <pdfs...> [--output <file>] [--json]
+  mahiro-format capabilities [--json]
+  mahiro-format targets <file-or-extension> [--json]
+  mahiro-format convert <files...> --to <format> [options]
+  mahiro-format images-to-pdf <images...> [--output <file>] [--json]
+  mahiro-format merge-pdfs <pdfs...> [--output <file>] [--json]
 
 Options:
   --output <file>             Single-result output path
@@ -37,8 +37,8 @@ Options:
   -h, --help                  Show this help
 
 Packaged app:
-  macOS: "FlyingMouse Format.app/Contents/MacOS/FlyingMouse Format" --cli ...
-  Windows: "FlyingMouse Format.exe" --cli ...
+  macOS: "Mahiro Format.app/Contents/MacOS/Mahiro Format" --cli ...
+  Windows: "Mahiro Format.exe" --cli ...
 
 License: Non-Commercial — personal use only. Commercial resale or rebranding is prohibited.
 `;

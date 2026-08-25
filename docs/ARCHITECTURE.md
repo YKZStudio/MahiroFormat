@@ -1,4 +1,4 @@
-# FlyingMouse Format 架构说明
+# Mahiro Format 架构说明
 
 ## 运行结构
 
@@ -28,6 +28,9 @@ Electron 保存对话框 → 用户选择的目录
 | `ncm-format.js` | 常规 NCM 解密、元数据和封面处理 |
 | `av3a-format.js` | 从 NCM 中识别并准备 Audio Vivid（AV3A）音频 |
 | `kgg-format.js` | KGG 输入处理 |
+| `mflac-format.js` | QQ 音乐 QMC v1/QMC2 解密与 musicex 密钥交换 |
+| `kwm-format.js` | KWM 文件头密钥解密与旧版循环掩码恢复 |
+| `audio-sniffer.js` | 解密后音频容器魔数统一识别与候选密钥校验 |
 | `settings-store.js` | 在 Electron `userData/settings.json` 保存上次目录 |
 | `public/app.js` | 鼠鼠状态、批量队列、转换和保存交互 |
 | `public/conversion-preferences.js` | 按源扩展名分别记忆目标格式 |
@@ -96,8 +99,8 @@ PDF.js 先读取电子文字及坐标，Poppler 以固定 DPI 渲染页面；无
 - PDF.js 加载器把入口固定在当前应用自己的 `node_modules/pdfjs-dist`，现代版优先 `.mjs`，旧版仅在该入口确实缺失时回退 `.js`，禁止借用父目录依赖。
 - 所有 PDF.js 文本提取调用都设置 `isEvalSupported: false`，用于缓解旧 PDF.js 的动态代码执行风险。
 
-Windows 7 构建是兼容 profile，不改变标准版运行时。PE 元数据由 `pe-metadata.js` / `scripts/inspect-pe.js` 检查；兼容性判断必须读取 `win-unpacked/FlyingMouse Format.exe` 这一内层应用，而不是 OS 字段不同的 NSIS 外壳。
+Windows 7 构建是兼容 profile，不改变标准版运行时。PE 元数据由 `pe-metadata.js` / `scripts/inspect-pe.js` 检查；兼容性判断必须读取 `win-unpacked/Mahiro Format.exe` 这一内层应用，而不是 OS 字段不同的 NSIS 外壳。
 
 ## 产品边界
 
-本仓库是“鼠鼠 UI 的飞鼠格式”。`鼠鼠打印` 是独立项目，不共享发布产物、桌面快捷方式或功能改动。
+本仓库是“鼠鼠 UI 的 Mahiro Format”。`鼠鼠打印` 是独立项目，不共享发布产物、桌面快捷方式或功能改动。

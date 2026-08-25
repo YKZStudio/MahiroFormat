@@ -835,6 +835,20 @@ input:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.compatibility-warning {
+  max-width: 820px;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  color: #6f3d00;
+  background: #fff2cc;
+  border: 1px solid #d39a24;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .drop-folder-line {
   margin-top: 8px;
   display: block;

@@ -50,7 +50,7 @@ function createWindow(url) {
     height: 820,
     minWidth: 900,
     minHeight: 640,
-    title: "FlyingMouse Format",
+    title: "Mahiro Format",
     backgroundColor: "#f6f3ee",
     autoHideMenuBar: true,
     webPreferences: {
@@ -108,7 +108,7 @@ async function boot() {
   const started = await serverRuntime.startServer(0);
   server = started.server;
   serverUrl = started.url;
-  console.log(`FlyingMouse Format started at ${started.url}`);
+  console.log(`Mahiro Format started at ${started.url}`);
   log(`Server started at ${started.url}`);
   createWindow(started.url);
 }
@@ -144,7 +144,7 @@ ipcMain.handle("install-agent-skill", async (event, payload) => {
     defaultId: 0,
     cancelId: 1,
     title: "接入 Agent / Connect to Agent",
-    message: "将安装或更新 FlyingMouse Format skill",
+    message: "将安装或更新 Mahiro Format skill",
     detail: `应用会把轻量 skill 写入以下已存在的目录，并记录当前程序的 CLI 路径：\n\n${targetNames}`,
     noLink: true
   });

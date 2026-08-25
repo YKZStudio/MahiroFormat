@@ -1,4 +1,4 @@
-// image.js — 飞鼠格式图片转换域：图片解码/中转、图片→PDF、图片→视频、OCR 输入预处理。
+// image.js — Mahiro Format 图片转换域：图片解码/中转、图片→PDF、图片→视频、OCR 输入预处理。
 // 第二批抽取自 server.js（零逻辑改动，纯搬移）。
 // 注意：convertImage 的 OCR 分支延迟 require("./ocr")，避免与 ocr.js 顶层循环依赖
 //（ocr.js 需要本模块的 inspectImageMetadata，本模块需要 ocr.js 的 convertImageToOcrText）。

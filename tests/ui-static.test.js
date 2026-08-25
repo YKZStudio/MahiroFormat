@@ -150,12 +150,12 @@ test("renderer shows localized conversion warnings without HTML injection", () =
   assert.doesNotMatch(app, /\.innerHTML\s*=/);
 });
 
-test("renderer labels experimental inputs bilingually", () => {
+test("renderer labels unstable experimental inputs bilingually", () => {
   const app = readPublic("app.js");
   assert.match(app, /experimentalInputs/);
-  assert.match(app, /Experimental\/unverified inputs/);
-  assert.match(app, /实验性\/尚未完整验证的输入/);
-  assert.doesNotMatch(app, /NCM|MFLAC|Audio Vivid/);
+  assert.match(app, /Unstable\/experimental inputs/);
+  assert.match(app, /不稳定\/实验性输入/);
+  assert.match(app, /NCM \/ KGG \/ MFLAC \/ MGG \/ KGMA \/ MMP4 \/ KWM \/ VPR/);
 });
 
 test("renderer surfaces a feedback hint without personal contact details", () => {
@@ -237,15 +237,19 @@ test("blank page insertion is exposed in the image merge queue", () => {
   assert.doesNotMatch(app, /\.innerHTML\s*=/);
 });
 
-test("non-commercial notice is present in UI and styles without author attribution", () => {
+test("Mahiro branding, attribution, unstable warning, and QQ guide are present", () => {
   const html = readPublic("index.html");
   const app = readPublic("app.js");
   const css = readPublic("styles.css");
-  assert.match(html, /class="author-line"/);
-  assert.doesNotMatch(html, /牢蜂|LaoFeng/);
-  assert.match(html, /仅支持普通音乐格式转换，不支持其他音乐平台的加密特殊格式/);
-  assert.match(html, /禁止商业售卖/);
+  assert.match(html, /<title>Mahiro Format<\/title>/);
+  assert.match(html, /原作者：牢蜂（LaoFeng）/);
+  assert.match(html, /YKZStudio/);
+  assert.match(html, /class="compatibility-warning"/);
+  assert.match(html, /NCM \/ KGG \/ MFLAC \/ MGG \/ KGMA \/ MMP4 \/ KWM \/ VPR/);
+  assert.match(html, /id="qqTutorialModal"/);
+  assert.match(app, /MFLAC_EKEY_REQUIRED/);
+  assert.match(app, /function maybeShowQqTutorial/);
   assert.match(css, /\.author-line/);
-  // 渲染器不重新引入 innerHTML
+  assert.match(css, /\.compatibility-warning/);
   assert.doesNotMatch(app, /\.innerHTML\s*=/);
 });

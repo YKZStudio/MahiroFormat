@@ -31,6 +31,14 @@ const {
 } = require("./resource-policy");
 const { buildPdfTableWorkbook, detectTableLinesFromRaw } = require("./pdf-table-runtime");
 const { convertOfdToPdf } = require("./ofd-convert");
+const { convertNcm } = require("./ncm-format");
+const { buildNcmFfmpegOptions } = require("./ncm-metadata");
+const { prepareDecryptedAudio } = require("./av3a-format");
+const { convertKgg } = require("./kgg-format");
+const { convertMflac } = require("./mflac-format");
+const { convertKgma } = require("./kgma-format");
+const { convertKwm } = require("./kwm-format");
+const { convertVpr } = require("./kgm-vpr-format");
 const { OfficeEngineError, probeLibreOffice, runLibreOffice } = require("./office-engine");
 const { inspectXlsxForCsv } = require("./office-quality");
 const logger = require("./logger");
@@ -168,6 +176,7 @@ const {
   pdfTextTargets,
   pdfImageTargets,
   audioInput,
+  unlockAudioInputs,
   videoInput,
   mediaAudioTargets,
   mediaVideoTargets,
@@ -352,7 +361,7 @@ app.get("/api/capabilities", async (_req, res) => {
       spreadsheet: { inputs: [...spreadsheetInput].sort(), targets: spreadsheetTargets, experimentalInputs: experimentalInputsByCategory.spreadsheet },
       presentation: { inputs: [...presentationInput].sort(), targets: presentationTargets, experimentalInputs: experimentalInputsByCategory.presentation },
       pdf: { inputs: [...pdfInput].sort(), targets: [...pdfTextTargets, ...(tools.poppler ? [...pdfImageTargets, "pdf"] : [])] },
-      audio: { inputs: [...audioInput].sort(), targets: mediaAudioTargets, experimentalInputs: experimentalInputsByCategory.audio },
+      audio: { inputs: [...audioInput].filter((ext) => !process.windowsStore || !unlockAudioInputs.has(ext)).sort(), targets: mediaAudioTargets, experimentalInputs: experimentalInputsByCategory.audio },
       video: { inputs: [...videoInput].sort(), targets: mediaTargets },
       any: { inputs: ["*"], targets: ["zip"] }
     },
@@ -601,12 +610,39 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
         await convertWithLibreOffice(file.path, outputPath, originalName, requestedTarget);
       }
     } else if (category === "audio" || category === "video") {
-      const videoCodec = ["h264", "h265", "av1"].includes(String(req.body?.videoCodec || ""))
-        ? String(req.body.videoCodec)
-        : "h264";
-      // 透明背景色：white / black / 十六进制色值（白名单在 alphaCompositeArgs 内校验）。
-      const alphaBackground = String(req.body?.alphaBackground || "").trim() || "white";
-      await convertMedia(file.path, outputPath, requestedTarget, category, { videoCodec, alphaBackground });
+      if (category === "audio" && unlockAudioInputs.has(inputExt)) {
+        if (process.windowsStore) {
+          logger.warn(`Rejected special-audio conversion on Store build: ${originalName}`);
+          await fsp.rm(file.path, { force: true }).catch(() => {});
+          res.status(400).json({ error: "商店版不支持特殊音乐容器转换。", errorCode: "AUDIO_UNLOCK_UNAVAILABLE_ON_STORE" });
+          return;
+        }
+        let decrypted;
+        if (inputExt === "ncm") decrypted = await convertNcm(file.path);
+        else if (inputExt === "kgg") decrypted = await convertKgg(file.path);
+        else if (inputExt === "kgma") decrypted = await convertKgma(file.path);
+        else if (inputExt === "kwm") decrypted = await convertKwm(file.path);
+        else if (inputExt === "vpr") decrypted = await convertVpr(file.path);
+        else decrypted = await convertMflac(file.path, { sourceExt: inputExt });
+        try {
+          const conversionInput = inputExt === "ncm"
+            ? await prepareDecryptedAudio(decrypted)
+            : decrypted.nativePath;
+          const mediaOptions = inputExt === "ncm"
+            ? buildNcmFfmpegOptions(decrypted, requestedTarget)
+            : {};
+          await convertMedia(conversionInput, outputPath, requestedTarget, "audio", mediaOptions);
+        } finally {
+          await fsp.rm(decrypted.tempDir, { recursive: true, force: true }).catch(() => {});
+        }
+      } else {
+        const videoCodec = ["h264", "h265", "av1"].includes(String(req.body?.videoCodec || ""))
+          ? String(req.body.videoCodec)
+          : "h264";
+        // 透明背景色：white / black / 十六进制色值（白名单在 alphaCompositeArgs 内校验）。
+        const alphaBackground = String(req.body?.alphaBackground || "").trim() || "white";
+        await convertMedia(file.path, outputPath, requestedTarget, category, { videoCodec, alphaBackground });
+      }
     } else {
       throw new Error("暂时无法识别这个文件类型。");
     }
@@ -650,6 +686,13 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
   } catch (error) {
     const isClientConversionError = [
       "CSV_PARSE_FAILED",
+      "AV3A_UNSUPPORTED_PLATFORM",
+      "MFLAC_DECRYPT_FAILED",
+      "MFLAC_EKEY_REQUIRED",
+      "MFLAC_EKEY_NETWORK",
+      "VPR_INVALID_FILE",
+      "VPR_MASK_RANGE_EXCEEDED",
+      "VPR_DECRYPT_FAILED",
       "PDF_TABLE_OCR_REQUIRED",
       "PDF_TABLE_OCR_EMPTY",
       "MEDIA_NO_AUDIO_TRACK",
