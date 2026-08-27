@@ -4,22 +4,31 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mahiro Format</title>
-    <link rel="icon" href="/assets/mouse-format/mouse-idle.png">
+    <meta name="theme-color" content="#fff7fb">
+    <link rel="icon" href="/assets/mahiro-format/mahiro-avatar.png">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
+    <div class="mahiro-sky" aria-hidden="true">
+      <span class="mahiro-sky-star star-one">✦</span>
+      <span class="mahiro-sky-star star-two">✧</span>
+      <span class="mahiro-sky-star star-three">✦</span>
+    </div>
     <main class="shell">
       <section class="workspace" data-i18n-aria="workspace.aria" aria-label="文件转换工作台">
         <div class="topbar">
           <div class="brand-lockup">
-            <img class="brand-mouse" src="/assets/mouse-format/mouse-idle.png" alt="" aria-hidden="true">
+            <span class="brand-avatar" aria-hidden="true">
+              <img class="brand-mahiro" src="/assets/mahiro-format/mahiro-avatar.png" alt="">
+              <span class="brand-avatar-sparkle">✦</span>
+            </span>
             <div>
-              <p class="eyebrow">Mahiro Format · File Atelier <span class="app-version" id="appVersion"></span></p>
+              <p class="eyebrow">Mahiro Format · Pastel File Studio <span class="app-version" id="appVersion"></span></p>
               <div class="brand-title-row">
-                <h1 data-i18n="brand.title">Mahiro 和鼠鼠，把每一份文件整理妥当</h1>
+                <h1 data-i18n="brand.title">真寻的格式工房，让每一份文件轻松变身</h1>
                 <p class="feedback-line" data-i18n="feedback.guide">问题反馈：转换遇到问题，请导出诊断报告并查看错误提示，帮助信息详见软件说明。</p>
               </div>
-              <p class="author-line" data-i18n="credits.line">原作者：牢蜂（LaoFeng） · Mahiro Format 升级与维护：YKZStudio · 仅供个人免费使用，禁止商业售卖/转卖/套壳</p>
+              <p class="author-line" data-i18n="credits.line">原作者：牢蜂（LaoFeng） · Mahiro Format 升级与维护：YKZStudio · 非官方绪山真寻同人主题 · 仅供个人免费使用，禁止商业售卖/转卖/套壳</p>
               <p class="compatibility-warning" data-i18n="specialAudio.warning">不稳定功能：NCM / KGG / QQ 音乐 QMC / KGMA / KWM / VPR 的兼容性受客户端版本、密钥和样本影响。请只处理你有权使用的文件，保留源文件并复核结果。</p>
             </div>
           </div>
@@ -49,8 +58,10 @@
             <input id="fileInput" type="file" class="sr-only" multiple>
             <input id="folderInput" type="file" class="sr-only" webkitdirectory>
             <button class="drop-zone" id="dropZone" type="button">
-              <span class="mouse-stage" aria-hidden="true">
-                <img class="mouse-mascot" id="mouseMascot" src="/assets/mouse-format/mouse-upload.png" alt="">
+              <span class="mahiro-stage" aria-hidden="true">
+                <span class="mahiro-orbit orbit-one"></span>
+                <span class="mahiro-orbit orbit-two"></span>
+                <img class="mahiro-mascot" id="mahiroMascot" src="/assets/mahiro-format/mahiro-upload.png" alt="" data-state="upload">
               </span>
               <span class="drop-main" data-i18n="upload.title">把文件放到 Mahiro 的工作台</span>
               <span class="drop-sub" id="dropHint" data-i18n="upload.hint">图片、文档、PDF、WPS、音视频都可以试</span>
@@ -177,12 +188,12 @@
 
     <aside class="sponsor-widget" id="sponsorWidget" data-i18n-aria="sponsor.aria" aria-label="支持 Mahiro Format">
       <button class="sponsor-toggle" id="sponsorToggle" type="button" data-i18n-title="sponsor.aria" title="支持 Mahiro Format" aria-expanded="false">
-        <img class="sponsor-mouse" src="/assets/mouse-format/mouse-idle.png" alt="🐭">
+        <img class="sponsor-mahiro" src="/assets/mahiro-format/mahiro-avatar.png" alt="真寻">
       </button>
       <div class="sponsor-panel" id="sponsorPanel" hidden>
         <button class="sponsor-close" id="sponsorClose" type="button" data-i18n-aria="sponsor.close" aria-label="收起">×</button>
-        <p class="sponsor-title" data-i18n="sponsor.title">给 Mahiro 的鼠鼠添份点心 🐟</p>
-        <p class="sponsor-sub" data-i18n="sponsor.description">Mahiro Format 仅供个人免费使用。如果帮到了你，欢迎给鼠鼠添份小鱼干～纯自愿。</p>
+        <p class="sponsor-title" data-i18n="sponsor.title">请真寻吃份布丁 🍮</p>
+        <p class="sponsor-sub" data-i18n="sponsor.description">Mahiro Format 仅供个人免费使用。如果帮到了你，欢迎请真寻吃份布丁～纯自愿。</p>
         <img class="sponsor-qr" src="/assets/sponsor-qr.jpg" data-i18n-alt="sponsor.qrAlt" alt="微信收款码">
       </div>
     </aside>

@@ -1,6 +1,8 @@
 # Mahiro Format
 
-> A mouse-themed, offline Windows file converter. / 一款鼠鼠主题、可离线使用的 Windows 文件格式转换工具。
+> An unofficial Mahiro Oyama fan-themed, offline desktop file converter. / 一款采用非官方绪山真寻同人主题、可离线使用的桌面文件格式转换工具。
+
+界面角色图为本项目 AI 生成的非官方同人素材，不含动画截图或官方宣传图；角色与作品权利归原作者及相应权利方所有。本项目与原作权利方无官方合作或从属关系。详见 [`public/assets/mahiro-format/ASSET-NOTICE.md`](public/assets/mahiro-format/ASSET-NOTICE.md)。
 
 > 原作者 / Original author：牢蜂（LaoFeng） · Mahiro Format 升级与维护 / upgrade and maintenance：YKZStudio
 
@@ -15,7 +17,7 @@
 
 [上游项目与历史版本 / Upstream project and historical releases](https://github.com/LaoFeng-mouse/flyingmouse-format/releases/latest) · [上游问题记录 / Upstream issues](https://github.com/LaoFeng-mouse/flyingmouse-format/issues)
 
-![Mahiro Format mouse UI](public/assets/screenshots/home.png)
+![Mahiro Format fan-theme UI](public/assets/screenshots/home.png)
 
 ## 中文
 
@@ -89,7 +91,7 @@ npm run dist
 ### Windows 版本选择
 
 - **Windows 10 / 11 x64（推荐）**：使用 `Mahiro Format-Setup-0.6.4-x64.exe`。它使用 Electron 43、Sharp 0.35 和 PDF.js 6 运行时。
-- **Windows 7 SP1 x64（兼容版）**：使用 `Mahiro Format-Setup-0.6.4-win7-x64.exe`。它使用同一源码和鼠鼠 UI，但在独立环境固定 Electron 22.3.27、Sharp 0.32.6 与 PDF.js 2.16.105。
+- **Windows 7 SP1 x64（兼容版）**：使用 `Mahiro Format-Setup-0.6.4-win7-x64.exe`。它使用同一源码和 Mahiro 主题 UI，但在独立环境固定 Electron 22.3.27、Sharp 0.32.6 与 PDF.js 2.16.105。
 
 Windows 7 兼容版是 Legacy 构建，不会降低标准版依赖。其 Electron 22 已停止上游安全维护，并包含无法在 Windows 7 上直接升级的已知依赖风险；PDF.js 动态代码执行已通过 `isEvalSupported: false` 缓解，但仍只建议离线处理可信文件。v0.6.4 通过 Windows、macOS arm64 和 macOS x64 自动化门禁以及真实样本回归；真实 Windows 7 SP1 x64 设备仍待验收。Windows 安装包均未签名，SmartScreen 可能提示。
 
@@ -114,7 +116,7 @@ Win7 staging 使用专用 `win7-package-lock.json` 和 `npm ci` 重建；推荐�
 
 ### Highlights
 
-- Original mouse UI with animated state changes for upload, detection, batch work, OCR, success, and errors.
+- Mahiro Oyama fan-theme UI with animated state changes for upload, detection, batch work, OCR, success, and errors.
 - Fully local conversion with bundled FFmpeg, LibreOffice, Poppler, Tesseract, and an AVS3 decoder.
 - Converts images, text, Word/WPS, Excel/WPS, PPT/WPS, PDF, audio, video, and ZIP files.
 - Unstable/experimental special music-container compatibility: NCM, KGG, QQ Music QMC (TKM/BKC, MFLAC/MGG/MMP4/QMC), KGMA, KWM, and VPR can be converted to ordinary audio formats. Results depend on client versions, keys, login credentials, and real-file coverage.
@@ -168,7 +170,7 @@ Packaged builds accept the same commands after `--cli`: use `Mahiro Format.app/C
 ### Choose a Windows build
 
 - **Windows 10 / 11 x64 (recommended):** use `Mahiro Format-Setup-0.6.4-x64.exe` with Electron 43, Sharp 0.35, and PDF.js 6.
-- **Windows 7 SP1 x64 (compatibility build):** use `Mahiro Format-Setup-0.6.4-win7-x64.exe`, derived from the same source and mouse UI with Electron 22.3.27, Sharp 0.32.6, and PDF.js 2.16.105 pinned in isolation.
+- **Windows 7 SP1 x64 (compatibility build):** use `Mahiro Format-Setup-0.6.4-win7-x64.exe`, derived from the same source and Mahiro fan-theme UI with Electron 22.3.27, Sharp 0.32.6, and PDF.js 2.16.105 pinned in isolation.
 
 The Windows 7 package is a Legacy build and does not downgrade the standard build. Electron 22 no longer receives upstream security maintenance, and other known legacy dependency risks cannot be upgraded without dropping Windows 7. PDF.js dynamic evaluation is disabled as a mitigation, but this build should remain offline and process trusted files only. v0.6.4 passed Windows, native macOS arm64, and native macOS x64 automation gates plus real-sample regressions; acceptance on a physical Windows 7 SP1 x64 system is still pending. Both Windows installers are unsigned and may trigger SmartScreen.
 
@@ -229,6 +231,6 @@ Use `node scripts/build-win7.js --prepare-only` only to inspect staging without 
 
 ## Support / 支持
 
-Mahiro Format is free, offline, and has no ads. If it helped you, you can buy Mouse a dried fish — completely optional. / Mahiro Format 免费、离线、无广告。如果它帮到了你，欢迎请鼠鼠吃根小鱼干，纯自愿。
+Mahiro Format is free, offline, and has no ads. If it helped you, you can treat Mahiro to pudding — completely optional. / Mahiro Format 免费、离线、无广告。如果它帮到了你，欢迎请真寻吃份布丁，纯自愿。
 
 ![WeChat payment QR / 微信收款码](public/assets/sponsor-qr.jpg)
