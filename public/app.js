@@ -84,7 +84,7 @@ const progressLabel = document.querySelector("#progressLabel");
 const progressPercent = document.querySelector("#progressPercent");
 const progressTrack = document.querySelector(".progress-track");
 const progressFill = document.querySelector("#progressFill");
-const mouseMascot = document.querySelector("#mouseMascot");
+const mahiroMascot = document.querySelector("#mahiroMascot");
 const languageSelect = document.querySelector("#languageSelect");
 const diagnosticsButton = document.querySelector("#diagnosticsButton");
 const compressFolderButton = document.querySelector("#compressFolderButton");
@@ -100,7 +100,7 @@ const { LANGUAGE_STORAGE_KEY, createI18n } = window.FlyingMouseI18n;
 
 const messages = {
   "zh-CN": {
-    "workspace.aria": "文件转换工作台", "brand.title": "Mahiro 和鼠鼠，把每一份文件整理妥当",
+    "workspace.aria": "文件转换工作台", "brand.title": "真寻的格式工房，让每一份文件轻松变身",
     "language.label": "语言", "health.checking": "正在检测转换引擎", "health.failed": "检测失败",
     "diagnostics.export": "导出诊断", "diagnostics.saved": "诊断报告已保存到：{path}",
     "diagnostics.canceled": "已取消导出诊断报告。", "diagnostics.failed": "导出诊断失败：{message}",
@@ -137,10 +137,10 @@ const messages = {
     "settings.aria": "转换设置", "progress.label": "转换进度", "status.ready": "选择文件后会显示可用的转换格式。",
     "formats.aria": "支持格式", "formats.title": "当前支持",
     "formats.description": "文档转换会尽量保留排版；PDF 可导出页面图片，图片和扫描版 PDF 可 OCR 转 TXT。特殊音乐容器兼容已恢复，但统一标记为不稳定/实验性。",
-    "credits.line": "原作者：牢蜂（LaoFeng） · Mahiro Format 升级与维护：YKZStudio · 仅供个人免费使用，禁止商业售卖/转卖/套壳",
+    "credits.line": "原作者：牢蜂（LaoFeng） · Mahiro Format 升级与维护：YKZStudio · 非官方绪山真寻同人主题 · 仅供个人免费使用，禁止商业售卖/转卖/套壳",
     "specialAudio.warning": "不稳定功能：NCM / KGG / QQ 音乐 QMC / KGMA / KWM / VPR 的兼容性受客户端版本、密钥和样本影响。请只处理你有权使用的文件，保留源文件并复核结果。",
-    "sponsor.aria": "支持 Mahiro Format", "sponsor.close": "收起", "sponsor.title": "给 Mahiro 的鼠鼠添份点心 🐟",
-    "sponsor.description": "Mahiro Format 仅供个人免费使用。如果帮到了你，欢迎给鼠鼠添份小鱼干～纯自愿。",
+    "sponsor.aria": "支持 Mahiro Format", "sponsor.close": "收起", "sponsor.title": "请真寻吃份布丁 🍮",
+    "sponsor.description": "Mahiro Format 仅供个人免费使用。如果帮到了你，欢迎请真寻吃份布丁～纯自愿。",
     "sponsor.qrAlt": "微信收款码",
     "feedback.label": "问题反馈", "feedback.hint": "如需帮助，请导出诊断报告并查看错误提示。",
     "feedback.guide": "问题反馈：转换遇到问题，请导出诊断报告并查看错误提示，帮助信息详见软件说明。",
@@ -178,7 +178,7 @@ const messages = {
     "tutorial.gotIt": "我知道了"
   },
   "en-US": {
-    "workspace.aria": "File conversion workspace", "brand.title": "Mahiro and Mouse, with every file in its place",
+    "workspace.aria": "File conversion workspace", "brand.title": "Mahiro's format studio, where every file transforms with ease",
     "language.label": "Language", "health.checking": "Checking conversion engines", "health.failed": "Check failed",
     "diagnostics.export": "Export diagnostics", "diagnostics.saved": "Diagnostics saved to: {path}",
     "diagnostics.canceled": "Diagnostics export canceled.", "diagnostics.failed": "Diagnostics export failed: {message}",
@@ -215,10 +215,10 @@ const messages = {
     "settings.aria": "Conversion settings", "progress.label": "Conversion progress", "status.ready": "Available target formats appear after you select files.",
     "formats.aria": "Supported formats", "formats.title": "Supported now",
     "formats.description": "Document conversion preserves layout where possible; PDFs can export page images, and images and scanned PDFs can be OCRed to TXT. Special music-container compatibility is restored but remains unstable and experimental.",
-    "credits.line": "Original author: 牢蜂 (LaoFeng) · Mahiro Format upgrade and maintenance: YKZStudio · Free for personal use only; commercial resale and rebranding are prohibited",
+    "credits.line": "Original author: 牢蜂 (LaoFeng) · Mahiro Format upgrade and maintenance: YKZStudio · Unofficial Mahiro Oyama fan theme · Free for personal use only; commercial resale and rebranding are prohibited",
     "specialAudio.warning": "Unstable feature: NCM / KGG / QQ Music QMC / KGMA / KWM / VPR compatibility depends on client versions, keys, and sample coverage. Process only files you may lawfully use, keep the source, and review the result.",
-    "sponsor.aria": "Support Mahiro Format", "sponsor.close": "Close", "sponsor.title": "A snack for Mahiro's Mouse 🐟",
-    "sponsor.description": "Mahiro Format is free for personal use. If it helped you, you can buy Mouse a snack — completely optional.",
+    "sponsor.aria": "Support Mahiro Format", "sponsor.close": "Close", "sponsor.title": "Treat Mahiro to pudding 🍮",
+    "sponsor.description": "Mahiro Format is free for personal use. If it helped you, you can treat Mahiro to pudding — completely optional.",
     "sponsor.qrAlt": "WeChat payment QR code",
     "feedback.label": "Feedback", "feedback.hint": "For help, export the diagnostics report and check the error details.",
     "feedback.guide": "Feedback: if a conversion fails, export the diagnostics report and check the error details. Help is described in the app documentation.",
@@ -288,16 +288,16 @@ function refreshLanguage() {
   syncPdfExcelHint();
 }
 
-const mouseAssets = {
-  idle: "/assets/mouse-format/mouse-idle.png",
-  upload: "/assets/mouse-format/mouse-upload.png",
-  analyzing: "/assets/mouse-format/mouse-analyzing.png",
-  converting: "/assets/mouse-format/mouse-converting.png",
-  pdfPages: "/assets/mouse-format/mouse-pdf-pages.png",
-  ocr: "/assets/mouse-format/mouse-ocr.png",
-  batch: "/assets/mouse-format/mouse-batch.png",
-  success: "/assets/mouse-format/mouse-success.png",
-  error: "/assets/mouse-format/mouse-error.png"
+const mahiroAssets = {
+  idle: "/assets/mahiro-format/mahiro-idle.png",
+  upload: "/assets/mahiro-format/mahiro-upload.png",
+  analyzing: "/assets/mahiro-format/mahiro-analyzing.png",
+  converting: "/assets/mahiro-format/mahiro-converting.png",
+  pdfPages: "/assets/mahiro-format/mahiro-pdf-pages.png",
+  ocr: "/assets/mahiro-format/mahiro-ocr.png",
+  batch: "/assets/mahiro-format/mahiro-batch.png",
+  success: "/assets/mahiro-format/mahiro-success.png",
+  error: "/assets/mahiro-format/mahiro-error.png"
 };
 
 const labels = {
@@ -363,10 +363,13 @@ function setStatus(message, type = "") {
   statusBox.className = `status-box ${type}`.trim();
 }
 
-function setMouseState(name) {
-  if (!mouseMascot) return;
-  mouseMascot.src = mouseAssets[name] || mouseAssets.idle;
-  mouseMascot.dataset.state = name;
+function setMahiroState(name) {
+  if (!mahiroMascot) return;
+  mahiroMascot.classList.remove("is-changing");
+  mahiroMascot.src = mahiroAssets[name] || mahiroAssets.idle;
+  mahiroMascot.dataset.state = name;
+  void mahiroMascot.offsetWidth;
+  mahiroMascot.classList.add("is-changing");
 }
 
 function setWorkflowStep(step) {
@@ -375,7 +378,7 @@ function setWorkflowStep(step) {
   }
 }
 
-function mouseStateForConversion(targetFormat) {
+function mahiroStateForConversion(targetFormat) {
   if (state.files.length > 1) return "batch";
   if (targetFormat === "txt" && state.fileInfos.some((info) => info.category === "image" || info.category === "pdf")) return "ocr";
   if ((targetFormat === "png" || targetFormat === "jpg") && state.fileInfos.some((info) => info.category === "pdf")) return "pdfPages";
@@ -466,7 +469,7 @@ function clearFile() {
   convertButton.disabled = true;
   resetDownload();
   resetProgress();
-  setMouseState("upload");
+  setMahiroState("upload");
   setStatus(t("status.ready"));
   setWorkflowStep("select");
 }
@@ -738,7 +741,7 @@ async function acceptFiles(fileList) {
     setStatus(i18n.language === "en-US"
       ? "This batch is too large for this computer. Convert the files in smaller batches."
       : "本批文件总大小超出当前电脑可处理范围，请分批转换。", "error");
-    setMouseState("error");
+    setMahiroState("error");
     fileInput.value = "";
     return;
   }
@@ -753,7 +756,7 @@ async function acceptFiles(fileList) {
   state.folderName = folderName && folderName !== firstRel.webkitRelativePath ? folderName : "";
   resetDownload();
   resetProgress();
-  setMouseState(files.length > 1 ? "batch" : "analyzing");
+  setMahiroState(files.length > 1 ? "batch" : "analyzing");
   setWorkflowStep("analyze");
 
   const summary = summarizeFiles(files);
@@ -784,7 +787,7 @@ async function acceptFiles(fileList) {
       syncZipCompressionField();
       syncVideoCodecField();
       syncPdfActionFields();
-      setMouseState("error");
+      setMahiroState("error");
       return;
     }
 
@@ -813,7 +816,7 @@ async function acceptFiles(fileList) {
     syncVideoCodecField();
     syncPdfActionFields();
     syncPdfExcelHint();
-    setMouseState(files.length > 1 ? "batch" : "idle");
+    setMahiroState(files.length > 1 ? "batch" : "idle");
     if (files.length === 1) {
       const info = infos[0];
       setStatus(i18n.language === "en-US"
@@ -828,7 +831,7 @@ async function acceptFiles(fileList) {
   } catch (error) {
     setStatus(i18n.language === "en-US" ? `Detection failed: ${error.message}` : `识别失败：${error.message}`, "error");
     setWorkflowStep("analyze");
-    setMouseState("error");
+    setMahiroState("error");
   }
 }
 
@@ -955,7 +958,7 @@ async function convertMergedImagesToPdf() {
     batchSaveButton.hidden = true;
     setProgress(100, i18n.language === "en-US" ? "Merge complete" : "合并完成", "success");
     setStatus(i18n.language === "en-US" ? `Images merged into ${result.fileName}.` : `图片已合并为：${result.fileName}。`, "success");
-    setMouseState("success");
+    setMahiroState("success");
     setWorkflowStep("save");
   } catch (error) {
     state.batchResults = state.files.map(() => ({
@@ -965,7 +968,7 @@ async function convertMergedImagesToPdf() {
     renderBatchList();
     setProgress(100, i18n.language === "en-US" ? "Merge failed" : "合并失败", "error");
     setStatus(i18n.language === "en-US" ? `PDF merge failed: ${error.message || "Unknown error"}` : `合并 PDF 失败：${error.message || "未知错误"}`, "error");
-    setMouseState("error");
+    setMahiroState("error");
   } finally {
     state.isConverting = false;
     convertButton.disabled = !state.files.length;
@@ -1028,7 +1031,7 @@ async function convertMergedPdfs() {
     batchSaveButton.hidden = true;
     setProgress(100, i18n.language === "en-US" ? "Merge complete" : "合并完成", "success");
     setStatus(i18n.language === "en-US" ? `PDF files merged into ${result.fileName}.` : `PDF 已合并为：${result.fileName}。`, "success");
-    setMouseState("success");
+    setMahiroState("success");
     setWorkflowStep("save");
   } catch (error) {
     state.batchResults = state.files.map(() => ({
@@ -1038,7 +1041,7 @@ async function convertMergedPdfs() {
     renderBatchList();
     setProgress(100, i18n.language === "en-US" ? "Merge failed" : "合并失败", "error");
     setStatus(i18n.language === "en-US" ? `PDF merge failed: ${error.message || "Unknown error"}` : `合并 PDF 失败：${error.message || "未知错误"}`, "error");
-    setMouseState("error");
+    setMahiroState("error");
   } finally {
     state.isConverting = false;
     convertButton.disabled = !state.files.length;
@@ -1056,7 +1059,7 @@ async function convertCurrentFiles() {
   resetDownload();
   state.batchResults = state.files.map(() => ({ status: "pending", detail: "等待转换" }));
   renderBatchList();
-  setMouseState(mouseStateForConversion(targetFormat));
+  setMahiroState(mahiroStateForConversion(targetFormat));
   setProgress(0, i18n.language === "en-US" ? "Preparing conversion" : "准备转换");
   setWorkflowStep("convert");
   setStatus(i18n.language === "en-US"
@@ -1128,7 +1131,7 @@ async function convertCurrentFiles() {
   }
 
   batchSaveButton.hidden = successful.length < 2;
-  setMouseState(failCount ? "error" : "success");
+  setMahiroState(failCount ? "error" : "success");
   if (successful.length) {
     setWorkflowStep("save");
   }
@@ -1300,12 +1303,12 @@ dropZone.addEventListener("click", () => fileInput.click());
 dropZone.addEventListener("dragover", (event) => {
   event.preventDefault();
   dropZone.classList.add("dragging");
-  setMouseState("upload");
+  setMahiroState("upload");
 });
 
 dropZone.addEventListener("dragleave", () => {
   dropZone.classList.remove("dragging");
-  setMouseState(state.files.length > 1 ? "batch" : state.files.length ? "idle" : "upload");
+  setMahiroState(state.files.length > 1 ? "batch" : state.files.length ? "idle" : "upload");
 });
 
 dropZone.addEventListener("drop", async (event) => {
@@ -1549,7 +1552,7 @@ async function initializeApp() {
   await initializeSession();
   await initializeDurableSettings();
   applyStaticTranslations();
-  setMouseState("upload");
+  setMahiroState("upload");
   setWorkflowStep("select");
   await fetchCapabilities();
   initializeVersionLabel();
@@ -1568,7 +1571,7 @@ function initializeVersionLabel() {
 }
 
 initializeApp().catch((error) => {
-  setMouseState("error");
+  setMahiroState("error");
   toolHealth.textContent = t("health.failed");
   setStatus(error.message, "error");
   rendererLog("error", "能力检测失败", error);

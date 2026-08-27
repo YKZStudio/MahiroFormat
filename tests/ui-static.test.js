@@ -16,34 +16,40 @@ test("renderer exposes workflow hooks and drop zone copy", () => {
     assert.match(html, new RegExp(`data-step="${step}"`), `${step} workflow step is missing`);
   }
   assert.match(html, /id="dropZone"/);
-  assert.match(html, /把文件丢给鼠鼠|Drop files here/);
+  assert.match(html, /把文件放到 Mahiro 的工作台|Drop files onto Mahiro's desk/);
   assert.match(html, /id="dropHint"/);
 });
 
-test("renderer restores the original mouse mascot and keeps the sponsor widget", () => {
+test("renderer uses the Mahiro mascot state system and keeps the sponsor widget", () => {
   const html = readPublic("index.html");
   const app = readPublic("app.js");
-  assert.match(html, /mouse-mascot|mouseMascot/);
+  assert.match(html, /mahiro-mascot|mahiroMascot/);
   assert.match(html, /sponsorWidget|sponsorToggle/);
   assert.match(html, /sponsor-qr\.jpg/);
-  assert.match(app, /setMouseState|mouseAssets|mouseMascot/);
+  assert.match(app, /setMahiroState|mahiroAssets|mahiroMascot/);
   assert.match(app, /sponsorToggle/);
+  assert.doesNotMatch(html, /assets\/mouse-format/);
   assert.doesNotMatch(html, /3465177342@qq\.com/);
 });
 
-test("renderer uses the mouse brand and favicon", () => {
+test("renderer uses the Mahiro brand and favicon", () => {
   const html = readPublic("index.html");
-  assert.match(html, /class="brand-mouse"/);
+  assert.match(html, /class="brand-mahiro"/);
   assert.match(html, /rel="icon"/);
-  assert.match(html, /href="\/assets\/mouse-format\/mouse-idle\.png"/);
+  assert.match(html, /href="\/assets\/mahiro-format\/mahiro-avatar\.png"/);
+  assert.match(html, /Pastel File Studio/);
 });
 
-test("original mouse visual theme classes are present", () => {
+test("Mahiro pastel visual theme classes and motion states are present", () => {
   const css = readPublic("styles.css");
-  assert.match(css, /--accent:\s*#e95f6d/);
+  assert.match(css, /--accent:\s*#ff82ad/);
+  assert.match(css, /--sky:\s*#7fb8f5/);
+  assert.match(css, /--mint:\s*#79d9c2/);
   assert.match(css, /\.workflow-steps/);
-  assert.match(css, /\.mouse-stage/);
-  assert.match(css, /\.mouse-mascot/);
+  assert.match(css, /\.mahiro-stage/);
+  assert.match(css, /\.mahiro-mascot/);
+  assert.match(css, /@keyframes mahiro-cheer/);
+  assert.match(css, /@keyframes mahiro-oops/);
   assert.match(css, /\.sponsor-widget/);
   assert.match(css, /border-radius:\s*var\(--radius\)/);
 });
