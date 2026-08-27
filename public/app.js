@@ -9,6 +9,7 @@ const state = {
   previewResult: null,
   previewOpener: null,
   folderName: "",
+  sessionToken: "",
   settings: { schemaVersion: 2, targetBySource: {} }
 };
 
@@ -99,7 +100,7 @@ const { LANGUAGE_STORAGE_KEY, createI18n } = window.FlyingMouseI18n;
 
 const messages = {
   "zh-CN": {
-    "workspace.aria": "文件转换工作台", "brand.title": "鼠鼠帮你把文件转成需要的格式",
+    "workspace.aria": "文件转换工作台", "brand.title": "Mahiro 和鼠鼠，把每一份文件整理妥当",
     "language.label": "语言", "health.checking": "正在检测转换引擎", "health.failed": "检测失败",
     "diagnostics.export": "导出诊断", "diagnostics.saved": "诊断报告已保存到：{path}",
     "diagnostics.canceled": "已取消导出诊断报告。", "diagnostics.failed": "导出诊断失败：{message}",
@@ -112,7 +113,7 @@ const messages = {
     "preview.tooLarge": "文本文件超过 2 MB，为避免界面卡顿，请保存后查看。", "preview.failed": "预览失败：{message}",
     "workflow.aria": "转换流程", "workflow.select": "选择文件", "workflow.analyze": "识别格式",
     "workflow.convert": "开始转换", "workflow.save": "保存结果", "upload.aria": "上传文件",
-    "upload.title": "把文件丢给鼠鼠", "upload.hint": "图片、文档、PDF、WPS、音视频都可以试", "upload.chooseFolder": "选择文件夹转 PDF",
+    "upload.title": "把文件放到 Mahiro 的工作台", "upload.hint": "图片、文档、PDF、WPS、音视频都可以试", "upload.chooseFolder": "选择文件夹转 PDF",
     "upload.limited": "PDF 表格可以转 Excel；Office/WPS 需要内置 LibreOffice",
     "action.clear": "清空", "action.convert": "开始转换", "action.download": "下载转换后的文件",
     "action.save": "保存", "action.saveAll": "保存全部", "action.compressFolder": "压缩文件夹",
@@ -121,7 +122,7 @@ const messages = {
     "target.label": "目标格式",
     "target.placeholder": "先选择文件", "target.analyzing": "正在识别", "target.none": "无共同目标格式",
     "pdfExcel.hint": "适合电子版规则表格；扫描件、复杂表头和合并单元格可能不完整。",
-    "formats.experimental": "不稳定/实验性输入：{formats}",
+    "formats.experimental": "不稳定/实验性输入（{count} 种）",
     "zip.label": "ZIP 压缩级别（0=不压缩，9=最大）", "zip.0": "0 不压缩（最快）",
     "zip.1": "1 最快", "zip.6": "6 标准（默认）", "zip.9": "9 最大压缩（最慢）",
     "videoCodec.label": "视频编码", "videoCodec.h264": "H.264（兼容性最好，默认）",
@@ -138,8 +139,8 @@ const messages = {
     "formats.description": "文档转换会尽量保留排版；PDF 可导出页面图片，图片和扫描版 PDF 可 OCR 转 TXT。特殊音乐容器兼容已恢复，但统一标记为不稳定/实验性。",
     "credits.line": "原作者：牢蜂（LaoFeng） · Mahiro Format 升级与维护：YKZStudio · 仅供个人免费使用，禁止商业售卖/转卖/套壳",
     "specialAudio.warning": "不稳定功能：NCM / KGG / QQ 音乐 QMC / KGMA / KWM / VPR 的兼容性受客户端版本、密钥和样本影响。请只处理你有权使用的文件，保留源文件并复核结果。",
-    "sponsor.aria": "支持鼠鼠", "sponsor.close": "收起", "sponsor.title": "请鼠鼠吃小鱼干 🐟",
-    "sponsor.description": "Mahiro Format 仅供个人免费使用。如果帮到了你，欢迎请鼠鼠吃根小鱼干～纯自愿。",
+    "sponsor.aria": "支持 Mahiro Format", "sponsor.close": "收起", "sponsor.title": "给 Mahiro 的鼠鼠添份点心 🐟",
+    "sponsor.description": "Mahiro Format 仅供个人免费使用。如果帮到了你，欢迎给鼠鼠添份小鱼干～纯自愿。",
     "sponsor.qrAlt": "微信收款码",
     "feedback.label": "问题反馈", "feedback.hint": "如需帮助，请导出诊断报告并查看错误提示。",
     "feedback.guide": "问题反馈：转换遇到问题，请导出诊断报告并查看错误提示，帮助信息详见软件说明。",
@@ -177,7 +178,7 @@ const messages = {
     "tutorial.gotIt": "我知道了"
   },
   "en-US": {
-    "workspace.aria": "File conversion workspace", "brand.title": "Let Mouse convert files into the format you need",
+    "workspace.aria": "File conversion workspace", "brand.title": "Mahiro and Mouse, with every file in its place",
     "language.label": "Language", "health.checking": "Checking conversion engines", "health.failed": "Check failed",
     "diagnostics.export": "Export diagnostics", "diagnostics.saved": "Diagnostics saved to: {path}",
     "diagnostics.canceled": "Diagnostics export canceled.", "diagnostics.failed": "Diagnostics export failed: {message}",
@@ -190,7 +191,7 @@ const messages = {
     "preview.tooLarge": "This text file is larger than 2 MB. Save it to view without slowing the app.", "preview.failed": "Preview failed: {message}",
     "workflow.aria": "Conversion workflow", "workflow.select": "Select files", "workflow.analyze": "Detect format",
     "workflow.convert": "Convert", "workflow.save": "Save results", "upload.aria": "Upload files",
-    "upload.title": "Drop files to Mouse", "upload.hint": "Try images, documents, PDF, WPS, audio, or video", "upload.chooseFolder": "Choose folder → PDF",
+    "upload.title": "Drop files onto Mahiro's desk", "upload.hint": "Try images, documents, PDF, WPS, audio, or video", "upload.chooseFolder": "Choose folder → PDF",
     "upload.limited": "PDF tables can be converted to Excel; Office/WPS needs bundled LibreOffice",
     "action.clear": "Clear", "action.convert": "Convert", "action.download": "Download converted file",
     "action.save": "Save", "action.saveAll": "Save all", "action.compressFolder": "Compress folder",
@@ -199,7 +200,7 @@ const messages = {
     "target.label": "Target format",
     "target.placeholder": "Select files first", "target.analyzing": "Detecting", "target.none": "No common target format",
     "pdfExcel.hint": "Best for digital PDFs with regular tables. Scans, complex headers, and merged cells may be incomplete.",
-    "formats.experimental": "Unstable/experimental inputs: {formats}",
+    "formats.experimental": "Unstable/experimental inputs ({count})",
     "zip.label": "ZIP compression level (0=none, 9=maximum)", "zip.0": "0 None (fastest)",
     "zip.1": "1 Fastest", "zip.6": "6 Standard (default)", "zip.9": "9 Maximum (slowest)",
     "videoCodec.label": "Video codec", "videoCodec.h264": "H.264 (best compatibility, default)",
@@ -216,7 +217,7 @@ const messages = {
     "formats.description": "Document conversion preserves layout where possible; PDFs can export page images, and images and scanned PDFs can be OCRed to TXT. Special music-container compatibility is restored but remains unstable and experimental.",
     "credits.line": "Original author: 牢蜂 (LaoFeng) · Mahiro Format upgrade and maintenance: YKZStudio · Free for personal use only; commercial resale and rebranding are prohibited",
     "specialAudio.warning": "Unstable feature: NCM / KGG / QQ Music QMC / KGMA / KWM / VPR compatibility depends on client versions, keys, and sample coverage. Process only files you may lawfully use, keep the source, and review the result.",
-    "sponsor.aria": "Support Mouse", "sponsor.close": "Close", "sponsor.title": "Buy Mouse a dried fish 🐟",
+    "sponsor.aria": "Support Mahiro Format", "sponsor.close": "Close", "sponsor.title": "A snack for Mahiro's Mouse 🐟",
     "sponsor.description": "Mahiro Format is free for personal use. If it helped you, you can buy Mouse a snack — completely optional.",
     "sponsor.qrAlt": "WeChat payment QR code",
     "feedback.label": "Feedback", "feedback.hint": "For help, export the diagnostics report and check the error details.",
@@ -470,6 +471,23 @@ function clearFile() {
   setWorkflowStep("select");
 }
 
+async function initializeSession() {
+  const response = await fetch("/api/session", { cache: "no-store" });
+  if (!response.ok) throw new Error(i18n.language === "en-US" ? "Unable to establish a local session." : "无法建立本地安全会话。");
+  const payload = await response.json();
+  if (!/^[a-f0-9]{64}$/.test(String(payload?.token || ""))) {
+    throw new Error(i18n.language === "en-US" ? "The local session token is invalid." : "本地安全会话令牌无效。");
+  }
+  state.sessionToken = payload.token;
+}
+
+function apiFetch(url, options = {}) {
+  if (!state.sessionToken) throw new Error(i18n.language === "en-US" ? "The local session is unavailable." : "本地安全会话不可用。");
+  const headers = new Headers(options.headers || {});
+  headers.set("X-Mahiro-Session-Token", state.sessionToken);
+  return fetch(url, { ...options, headers });
+}
+
 async function fetchCapabilities() {
   const response = await fetch("/api/capabilities");
   if (!response.ok) throw new Error(i18n.language === "en-US" ? "Unable to read conversion capabilities." : "无法读取转换能力。");
@@ -513,9 +531,16 @@ function renderFormatTable() {
       createTextElement("p", "", `${i18n.language === "en-US" ? "Output" : "输出"}${pairSeparator}${group.targets.join(", ")}`)
     );
     if (Array.isArray(group.experimentalInputs) && group.experimentalInputs.length) {
-      article.append(createTextElement("p", "format-note", t("formats.experimental", {
-        formats: group.experimentalInputs.join(", ")
-      })));
+      const details = document.createElement("details");
+      details.className = "format-experimental";
+      const summary = createTextElement("summary", "", t("formats.experimental", {
+        count: group.experimentalInputs.length
+      }));
+      details.append(
+        summary,
+        createTextElement("p", "format-note", group.experimentalInputs.join(", "))
+      );
+      article.append(details);
     }
     return article;
   });
@@ -528,7 +553,7 @@ async function loadTargets(file) {
     return { extension: "", category: "image", targets: ["pdf"], experimental: false };
   }
   const extension = extensionOf(file.name);
-  const response = await fetch("/api/targets", {
+  const response = await apiFetch("/api/targets", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ extension })
@@ -857,7 +882,7 @@ async function convertOneFile(file, targetFormat) {
     if (pdfGroupSize?.value) form.append("groupSize", pdfGroupSize.value);
   }
 
-  const response = await fetch("/api/convert", {
+  const response = await apiFetch("/api/convert", {
     method: "POST",
     body: form
   });
@@ -895,7 +920,7 @@ async function convertImagesToPdf(files) {
   // blanks=0,3 表示：在上传文件流的第 0 个（最前）和第 3 个文件之后插入空白页
   if (blankAfter.length) form.append("blanks", blankAfter.join(","));
 
-  const response = await fetch("/api/convert-images-to-pdf", {
+  const response = await apiFetch("/api/convert-images-to-pdf", {
     method: "POST",
     body: form
   });
@@ -968,7 +993,7 @@ async function convertPdfsToMerged(files) {
     form.append("files", file);
   }
 
-  const response = await fetch("/api/merge-pdfs", {
+  const response = await apiFetch("/api/merge-pdfs", {
     method: "POST",
     body: form
   });
@@ -1125,7 +1150,8 @@ async function saveResult(result) {
     const saved = await window.flyingMouseFormat.saveConvertedFile({
       downloadUrl: result.downloadUrl,
       fileName: result.fileName,
-      assets: Array.isArray(result.assets) ? result.assets : undefined
+      assets: Array.isArray(result.assets) ? result.assets : undefined,
+      assetDirectoryName: result.assetDirectoryName
     });
     if (saved?.canceled) {
       setStatus(i18n.language === "en-US" ? `Converted: ${result.fileName}. Not saved yet.` : `转换完成：${result.fileName}。尚未保存。`, "success");
@@ -1520,6 +1546,7 @@ async function initializeDurableSettings() {
 }
 
 async function initializeApp() {
+  await initializeSession();
   await initializeDurableSettings();
   applyStaticTranslations();
   setMouseState("upload");

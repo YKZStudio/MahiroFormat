@@ -1,10 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Mahiro Format mouse icon</title>
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff9a5a"/>
-      <stop offset="1" stop-color="#ff7a45"/>
+    <linearGradient id="paper" x1="8" y1="5" x2="57" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDE6EF"/>
+      <stop offset="0.52" stop-color="#EEE7FF"/>
+      <stop offset="1" stop-color="#E4EFFF"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="url(#g)"/>
-  <path d="M36 12 L18 36 h11 l-3 16 20-26 H34 l2-14z" fill="#ffffff"/>
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#paper)" stroke="#5A5069" stroke-width="2"/>
+  <circle cx="21" cy="23" r="8" fill="#ED8CAC" stroke="#5A5069" stroke-width="2.5"/>
+  <circle cx="43" cy="23" r="8" fill="#ED8CAC" stroke="#5A5069" stroke-width="2.5"/>
+  <path d="M16 30C16 20 23 14 32 14s16 6 16 16v8c0 9-7 15-16 15s-16-6-16-15v-8Z" fill="#FFFAFD" stroke="#5A5069" stroke-width="2.5"/>
+  <circle cx="26" cy="32" r="2" fill="#30283E"/>
+  <circle cx="38" cy="32" r="2" fill="#30283E"/>
+  <path d="M29 38c2 2 4 2 6 0" fill="none" stroke="#C75F86" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M22 45c4-5 8-5 10 0 2-5 6-5 10 0-4 4-7 5-10 2-3 3-6 2-10-2Z" fill="#ED8CAC" stroke="#5A5069" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="32" cy="45" r="2.5" fill="#FFF0C7" stroke="#5A5069" stroke-width="1.5"/>
 </svg>

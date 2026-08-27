@@ -134,10 +134,10 @@ test("video targets expose a transparent background color selector", () => {
 
 
 
-test("renderer no longer enforces a batch size limit and localizes resource errors", () => {
+test("renderer enforces the server-provided batch budget and localizes resource errors", () => {
   const app = readPublic("app.js");
-  assert.match(app, /maxBatchBytes/);
-  assert.match(app, /maxBatchBytes \|\| Number\.MAX_SAFE_INTEGER/);
+  assert.match(app, /maxBatchBytes = state\.capabilities\?\.limits\?\.maxBatchBytes/);
+  assert.match(app, /totalBytes > maxBatchBytes/);
   assert.match(app, /result\?\.messages\?\.enUS/);
   assert.match(app, /result\?\.messages\?\.zhCN/);
 });
@@ -155,7 +155,7 @@ test("renderer labels unstable experimental inputs bilingually", () => {
   assert.match(app, /experimentalInputs/);
   assert.match(app, /Unstable\/experimental inputs/);
   assert.match(app, /不稳定\/实验性输入/);
-  assert.match(app, /NCM \/ KGG \/ MFLAC \/ MGG \/ KGMA \/ MMP4 \/ KWM \/ VPR/);
+  assert.match(app, /NCM \/ KGG \/ QQ 音乐 QMC \/ KGMA \/ KWM \/ VPR/);
 });
 
 test("renderer surfaces a feedback hint without personal contact details", () => {
@@ -245,7 +245,7 @@ test("Mahiro branding, attribution, unstable warning, and QQ guide are present",
   assert.match(html, /原作者：牢蜂（LaoFeng）/);
   assert.match(html, /YKZStudio/);
   assert.match(html, /class="compatibility-warning"/);
-  assert.match(html, /NCM \/ KGG \/ MFLAC \/ MGG \/ KGMA \/ MMP4 \/ KWM \/ VPR/);
+  assert.match(html, /NCM \/ KGG \/ QQ 音乐 QMC \/ KGMA \/ KWM \/ VPR/);
   assert.match(html, /id="qqTutorialModal"/);
   assert.match(app, /MFLAC_EKEY_REQUIRED/);
   assert.match(app, /function maybeShowQqTutorial/);

@@ -157,7 +157,7 @@ async function writeRequestChunk(request, chunk) {
   await new Promise((resolve) => request.once("drain", resolve));
 }
 
-async function postMultipart(url, fields, files, fieldName) {
+async function postMultipart(url, fields, files, fieldName, sessionToken) {
   const boundary = `----flyingmouse-${randomUUID()}`;
   const parts = [];
   for (const [name, value] of Object.entries(fields)) {
@@ -187,7 +187,8 @@ async function postMultipart(url, fields, files, fieldName) {
       method: "POST",
       headers: {
         "Content-Type": `multipart/form-data; boundary=${boundary}`,
-        "Content-Length": contentLength
+        "Content-Length": contentLength,
+        "X-Mahiro-Session-Token": sessionToken
       }
     }, (response) => {
       const chunks = [];
@@ -271,7 +272,10 @@ async function executeCli(parsed, runtime) {
       if (parsed.files.length !== 1) throw new Error("targets requires one file name or extension.");
       return await requestJson(`${baseUrl}/api/targets`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: {
+          "Content-Type": "application/json",
+          "X-Mahiro-Session-Token": started.sessionToken
+        }
       }, JSON.stringify({ extension: extensionFromInput(parsed.files[0]) }));
     }
     if (!parsed.files.length) throw new Error(`${parsed.command} requires at least one input file.`);
@@ -287,12 +291,12 @@ async function executeCli(parsed, runtime) {
           videoCodec: parsed.options.videoCodec,
           pdfAction: parsed.options.pdfAction,
           password: parsed.options.password
-        }, [file], "file"));
+        }, [file], "file", started.sessionToken));
       }
     } else if (parsed.command === "images-to-pdf") {
-      results = [await postMultipart(`${baseUrl}/api/convert-images-to-pdf`, {}, parsed.files, "files")];
+      results = [await postMultipart(`${baseUrl}/api/convert-images-to-pdf`, {}, parsed.files, "files", started.sessionToken)];
     } else if (parsed.command === "merge-pdfs") {
-      results = [await postMultipart(`${baseUrl}/api/merge-pdfs`, {}, parsed.files, "files")];
+      results = [await postMultipart(`${baseUrl}/api/merge-pdfs`, {}, parsed.files, "files", started.sessionToken)];
     } else {
       throw new Error(`Unknown command: ${parsed.command}`);
     }

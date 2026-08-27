@@ -139,7 +139,7 @@ Win7 staging 使用专用 `win7-package-lock.json` 和 `npm ci` 重建；推荐�
 - ICO icons convert to PNG/JPG and more; PNG/JPG can also produce multi-size ICO icons (experimental).
 - TGA images convert to PNG/JPG/WebP and more (built-in ffmpeg decoding, experimental).
 - Camera RAW files (CR2/CR3/NEF/ARW/DNG, etc.) convert to JPG/PNG/WebP/TIFF and more (built-in dcraw decoding, Windows build, experimental).
-- Resource safeguards: 50 MP / 16384 px per image, 100 MP image-to-PDF decode budget, 2 GB batches, 500 PDF pages, and 100 OCR pages.
+- Resource safeguards: 50 MP / 16,384 px per image, a 100 MP image-to-PDF decode budget, and 2 GB batches. PDF and OCR page counts are not capped, so very long documents may take longer.
 
 > **Unstable-feature and compliance notice:** NCM / KGG / QQ Music QMC / KGMA / KWM / VPR support is experimental. Keep the source and review every result. Process only files you lawfully obtained and may use. Audio copyrights remain with their respective creators and labels; this tool is not affiliated with any music platform. Personal use only; commercial resale and rebranding are prohibited. See [special music format compatibility](docs/特殊音乐格式兼容说明.md).
 

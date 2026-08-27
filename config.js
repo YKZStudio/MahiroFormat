@@ -10,7 +10,7 @@ const DEFAULT_PORT = Number(process.env.PORT || 5177);
 const RUNTIME_DIR = process.env.FLYINGMOUSE_RUNTIME_DIR || path.join(os.tmpdir(), "flyingmouse-format-runtime");
 const UPLOAD_DIR = path.join(RUNTIME_DIR, "uploads");
 const OUTPUT_DIR = path.join(RUNTIME_DIR, "converted");
-const MAX_UPLOAD_BYTES = Number.MAX_SAFE_INTEGER;
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;
 
 function bundledFfmpegPath() {
   const resourcesPath = process.resourcesPath || "";

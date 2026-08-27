@@ -39,13 +39,14 @@ Electron 保存对话框 → 用户选择的目录
 ## 本地接口
 
 - `GET /api/capabilities`：返回当前可用引擎能力和 `limits` 资源策略。
+- `GET /api/session`：向同源鼠鼠 UI 返回本次启动的一次性会话令牌，响应禁止缓存。
 - `POST /api/targets`：根据文件列表计算可选目标格式。
 - `POST /api/convert`：转换单个文件。
 - `POST /api/convert-images-to-pdf`：将多张图片合并为 PDF。
 - `POST /api/merge-pdfs`：合并多个 PDF。
 - `GET /downloads/:id`：读取本次会话生成的临时结果。
 
-所有改变状态的接口都校验本地页面来源；服务只绑定回环地址和随机端口。
+所有 POST 接口同时校验本次启动生成的 256 位会话令牌；浏览器请求还必须匹配本次随机端口的精确 `127.0.0.1` origin。会话令牌只通过同源 `/api/session` 返回，CLI 从其私有服务实例直接取得。
 
 ## 状态记忆
 

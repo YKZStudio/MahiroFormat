@@ -73,6 +73,7 @@ test("Win7 profile includes every current runtime module and absolute binary res
     "server.js",
     "logger.js",
     "settings-store.js",
+    "markdown-assets.js",
     "office-engine.js",
     "config.js",
     "utils.js",

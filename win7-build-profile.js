@@ -31,6 +31,7 @@ const REQUIRED_RUNTIME_FILES = [
   "ci-engines-v1.json",
   "logger.js",
   "settings-store.js",
+  "markdown-assets.js",
   "ncm-format.js",
   "ncm-metadata.js",
   "av3a-format.js",

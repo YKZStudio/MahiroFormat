@@ -269,12 +269,15 @@ test("save dialogs restore and update the last successful directory", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
   const main = readRoot("electron-main.js");
   assert.ok(packageJson.build.files.includes("settings-store.js"));
+  assert.ok(packageJson.build.files.includes("markdown-assets.js"));
   assert.match(main, /readLastSaveDirectory/);
   assert.match(main, /writeLastSaveDirectory/);
   assert.match(main, /path\.join\(lastSaveDirectory, fileName\)/);
   assert.match(main, /defaultPath: lastSaveDirectory/);
   assert.match(main, /writeLastSaveDirectory\(settingsPath, path\.dirname\(result\.filePath\)\)/);
   assert.match(main, /writeLastSaveDirectory\(settingsPath, directory\)/);
+  assert.match(main, /rewriteMarkdownAssetReferences\(markdown, source, targetAssetDirectoryName\)/);
+  assert.match(main, /downloadAssetsToMdSidecar\(assets, result\.filePath, assetDirectoryName\)/);
 });
 
 test("trusted IPC owns durable renderer settings", () => {

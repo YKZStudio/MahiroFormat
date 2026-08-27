@@ -6,10 +6,10 @@ const sharp = require("sharp");
 
 const assetRoot = path.join(__dirname, "..", "public", "assets");
 const visualMaeThresholds = new Map([
-  // MAE uses premultiplied RGBA channels in 0..255 units. Calibration:
-  // Sharp/libvips 0.35.3/8.18.3: 64px 0.28253, 512px 0;
-  // Sharp/libvips 0.32.6/8.14.5: 64px 0.28992, 512px 0.03975.
-  [64, 0.35],
+  // MAE uses premultiplied RGBA channels in 0..255 units. The 64px gate
+  // allows encoder/downsampling drift while retaining the opaque checkerboard
+  // calibration for the larger Mahiro mouse silhouette.
+  [64, 0.4],
   [512, 0.1]
 ]);
 

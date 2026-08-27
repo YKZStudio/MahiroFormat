@@ -1,4 +1,4 @@
-const { randomUUID } = require("crypto");
+const { randomBytes, randomUUID, timingSafeEqual } = require("crypto");
 const fs = require("fs");
 const fsp = require("fs/promises");
 const os = require("os");
@@ -188,6 +188,8 @@ const {
 } = require("./config");
 
 const app = express();
+let trustedServerOrigin = "";
+let sessionToken = "";
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self'",
@@ -209,18 +211,20 @@ const upload = multer({
   limits: { fileSize: MAX_UPLOAD_BYTES }
 });
 
-async function cleanupOldFiles() {
-  const cutoff = Date.now() - 1000 * 60 * 60;
+async function cleanupOldFiles(options = {}) {
+  const now = Number.isFinite(options.now) ? options.now : Date.now();
+  const cutoff = now - 1000 * 60 * 60;
+  const directories = Array.isArray(options.directories) ? options.directories : [UPLOAD_DIR, OUTPUT_DIR];
   for (const [id, item] of downloads.entries()) {
     if (item.createdAt < cutoff) downloads.delete(id);
   }
-  for (const dir of [UPLOAD_DIR, OUTPUT_DIR]) {
+  for (const dir of directories) {
     const files = await fsp.readdir(dir).catch(() => []);
     await Promise.all(files.map(async (file) => {
       const filePath = path.join(dir, file);
       const stat = await fsp.stat(filePath).catch(() => null);
       if (stat && stat.mtimeMs < cutoff) {
-        await fsp.rm(filePath, { force: true }).catch(() => {});
+        await fsp.rm(filePath, { recursive: stat.isDirectory(), force: true }).catch(() => {});
       }
     }));
   }
@@ -299,26 +303,35 @@ async function getToolDiagnostics() {
   };
 }
 
-function isLocalWebOrigin(value) {
-  if (!value) return false;
+function exactServerOrigin(value) {
+  if (!value || !trustedServerOrigin) return false;
   try {
-    const url = new URL(value);
-    return url.protocol === "http:"
-      && (url.hostname === "127.0.0.1" || url.hostname === "localhost" || url.hostname === "[::1]" || url.hostname === "::1");
+    const parsed = new URL(value);
+    return parsed.origin === trustedServerOrigin
+      && !parsed.username
+      && !parsed.password;
   } catch {
     return false;
   }
 }
 
+function hasValidSessionToken(req) {
+  const supplied = String(req.headers["x-mahiro-session-token"] || "");
+  if (!supplied || !sessionToken) return false;
+  const actual = Buffer.from(supplied);
+  const expected = Buffer.from(sessionToken);
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
 function assertLocalWebRequest(req, res, next) {
-  const origin = req.headers.origin;
-  const referer = req.headers.referer;
-  if (origin && !isLocalWebOrigin(origin)) {
-    res.status(403).json({ error: "拒绝跨站请求。" });
+  if (!hasValidSessionToken(req)) {
+    res.status(403).json({ error: "请求缺少有效的本地会话令牌。", errorCode: "INVALID_SESSION_TOKEN" });
     return;
   }
-  if (referer && !isLocalWebOrigin(referer)) {
-    res.status(403).json({ error: "拒绝跨站请求。" });
+  const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  if ((origin && !exactServerOrigin(origin)) || (referer && !exactServerOrigin(referer))) {
+    res.status(403).json({ error: "拒绝非本次应用页面的请求。", errorCode: "UNTRUSTED_REQUEST_ORIGIN" });
     return;
   }
   next();
@@ -330,6 +343,11 @@ app.use((_req, res, next) => {
 });
 app.use(express.static(path.join(ROOT, "public")));
 app.use(express.json());
+app.get("/api/session", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.json({ token: sessionToken });
+});
 
 function resourceErrorPayload(error) {
   return {
@@ -374,7 +392,7 @@ app.get("/api/capabilities", async (_req, res) => {
   });
 });
 
-app.post("/api/targets", async (req, res) => {
+app.post("/api/targets", assertLocalWebRequest, async (req, res) => {
   const tools = await getTools();
   const ext = normalizeExt(String(req.body?.extension || "").toLowerCase());
   res.json({ extension: ext, category: categoryForExt(ext), targets: targetsForExt(ext, tools), experimental: experimentalInputSet.has(ext) });
@@ -656,7 +674,10 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
       mdAssetsDir = await findMarkdownAssetsDir(outputPath, downloadName);
     }
     const registered = registerDownload(outputPath, downloadName, mimeType, { assetsDir: mdAssetsDir });
-    if (mdAssetsDir) registered.assets = await listDownloadAssets(mdAssetsDir, registered.downloadUrl);
+    if (mdAssetsDir) {
+      registered.assets = await listDownloadAssets(mdAssetsDir, registered.downloadUrl);
+      registered.assetDirectoryName = path.basename(mdAssetsDir);
+    }
     const previewSize = (await fsp.stat(outputPath)).size;
     const payload = {
       ok: true,
@@ -803,6 +824,8 @@ let cleanupTimer = null;
 
 function startServer(port = DEFAULT_PORT) {
   ensureDirs();
+  sessionToken = randomBytes(32).toString("hex");
+  trustedServerOrigin = "";
   logger.info(`Server starting (runtime dir: ${RUNTIME_DIR}, engines: ffmpeg=${FFMPEG_PATH}, libreoffice=${LIBREOFFICE_PATH}, poppler=${PDFTOPPM_PATH}, tessdata=${TESSDATA_PATH})`);
   if (!cleanupTimer) {
     cleanupTimer = setInterval(cleanupOldFiles, 1000 * 60 * 20);
@@ -813,11 +836,13 @@ function startServer(port = DEFAULT_PORT) {
     const server = app.listen(port, "127.0.0.1", () => {
       const address = server.address();
       const actualPort = typeof address === "object" && address ? address.port : port;
-      logger.info(`Server listening on http://127.0.0.1:${actualPort}`);
+      trustedServerOrigin = `http://127.0.0.1:${actualPort}`;
+      logger.info(`Server listening on ${trustedServerOrigin}`);
       resolve({
         server,
         port: actualPort,
-        url: `http://127.0.0.1:${actualPort}`
+        url: trustedServerOrigin,
+        sessionToken
       });
     });
     server.on("error", (error) => {
@@ -836,4 +861,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, startServer, createPdfjsLoader, getToolDiagnostics, isMissingPdfjsEntry, loadPdfjsModule, platformCapabilities, assertPdfTableOcrQuality };
+module.exports = { app, startServer, cleanupOldFiles, createPdfjsLoader, getToolDiagnostics, isMissingPdfjsEntry, loadPdfjsModule, platformCapabilities, assertPdfTableOcrQuality };
