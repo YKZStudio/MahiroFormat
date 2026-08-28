@@ -89,6 +89,7 @@ const languageSelect = document.querySelector("#languageSelect");
 const diagnosticsButton = document.querySelector("#diagnosticsButton");
 const compressFolderButton = document.querySelector("#compressFolderButton");
 const agentInstallButton = document.querySelector("#agentInstallButton");
+const workspace = document.querySelector(".workspace");
 const workflowSteps = [...document.querySelectorAll("[data-step]")];
 const {
   STORAGE_KEY: LEGACY_TARGET_STORAGE_KEY,
@@ -141,7 +142,9 @@ const messages = {
     "specialAudio.warning": "不稳定功能：NCM / KGG / QQ 音乐 QMC / KGMA / KWM / VPR 的兼容性受客户端版本、密钥和样本影响。请只处理你有权使用的文件，保留源文件并复核结果。",
     "sponsor.aria": "支持 Mahiro Format", "sponsor.close": "收起", "sponsor.title": "请真寻吃份布丁 🍮",
     "sponsor.description": "Mahiro Format 仅供个人免费使用。如果帮到了你，欢迎请真寻吃份布丁～纯自愿。",
-    "sponsor.qrAlt": "微信收款码",
+    "sponsor.wechatPayee": "微信支付 · 原作者：牢蜂（LaoFeng）",
+    "sponsor.cryptoPayee": "YKZStudio · 加密货币",
+    "sponsor.qrAlt": "牢蜂（LaoFeng）的微信收款码",
     "feedback.label": "问题反馈", "feedback.hint": "如需帮助，请导出诊断报告并查看错误提示。",
     "feedback.guide": "问题反馈：转换遇到问题，请导出诊断报告并查看错误提示，帮助信息详见软件说明。",
     "tutorial.qq.title": "QQ 音乐登录凭据教程",
@@ -219,7 +222,9 @@ const messages = {
     "specialAudio.warning": "Unstable feature: NCM / KGG / QQ Music QMC / KGMA / KWM / VPR compatibility depends on client versions, keys, and sample coverage. Process only files you may lawfully use, keep the source, and review the result.",
     "sponsor.aria": "Support Mahiro Format", "sponsor.close": "Close", "sponsor.title": "Treat Mahiro to pudding 🍮",
     "sponsor.description": "Mahiro Format is free for personal use. If it helped you, you can treat Mahiro to pudding — completely optional.",
-    "sponsor.qrAlt": "WeChat payment QR code",
+    "sponsor.wechatPayee": "WeChat Pay · Original author: 牢蜂 (LaoFeng)",
+    "sponsor.cryptoPayee": "YKZStudio · Crypto",
+    "sponsor.qrAlt": "WeChat payment QR code for 牢蜂 (LaoFeng)",
     "feedback.label": "Feedback", "feedback.hint": "For help, export the diagnostics report and check the error details.",
     "feedback.guide": "Feedback: if a conversion fails, export the diagnostics report and check the error details. Help is described in the app documentation.",
     "tutorial.qq.title": "QQ Music Login Credential Guide",
@@ -282,7 +287,10 @@ function refreshLanguage() {
   applyStaticTranslations();
   renderHealth();
   if (state.capabilities) renderFormatTable();
-  if (!state.files.length) setStatus(t("status.ready"));
+  if (!state.files.length) {
+    setSelectPlaceholder(targetSelect, "", t("target.placeholder"));
+    setStatus(t("status.ready"));
+  }
   resetProgress();
   renderBatchList();
   syncPdfExcelHint();
@@ -373,8 +381,15 @@ function setMahiroState(name) {
 }
 
 function setWorkflowStep(step) {
+  if (workspace) workspace.dataset.workflow = step;
   for (const item of workflowSteps) {
-    item.classList.toggle("active", item.dataset.step === step);
+    const isActive = item.dataset.step === step;
+    item.classList.toggle("active", isActive);
+    if (isActive) {
+      item.setAttribute("aria-current", "step");
+    } else {
+      item.removeAttribute("aria-current");
+    }
   }
 }
 
@@ -464,6 +479,10 @@ function clearFile() {
   batchList.hidden = true;
   batchList.replaceChildren();
   setSelectPlaceholder(targetSelect, "", t("target.placeholder"));
+  syncZipCompressionField();
+  syncVideoCodecField();
+  syncAlphaBackgroundField();
+  syncPdfActionFields();
   syncPdfExcelHint();
   targetSelect.disabled = true;
   convertButton.disabled = true;

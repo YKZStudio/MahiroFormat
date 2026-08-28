@@ -26,6 +26,10 @@ test("renderer uses the Mahiro mascot state system and keeps the sponsor widget"
   assert.match(html, /mahiro-mascot|mahiroMascot/);
   assert.match(html, /sponsorWidget|sponsorToggle/);
   assert.match(html, /sponsor-qr\.jpg/);
+  assert.match(html, /原作者：牢蜂（LaoFeng）/);
+  assert.match(html, /YKZStudio · 加密货币/);
+  assert.match(html, /TNsEbkyyy9XWpsTT64Zvn7bkN2wkbeWPwM/);
+  assert.match(html, /TV7w7oi18KiSVz9qoXsvQur2FKNnu3Ry5h/);
   assert.match(app, /setMahiroState|mahiroAssets|mahiroMascot/);
   assert.match(app, /sponsorToggle/);
   assert.doesNotMatch(html, /assets\/mouse-format/);

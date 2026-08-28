@@ -23,7 +23,7 @@
 
 ### 主要功能
 
-- 鼠鼠原版界面：鼠鼠会跟随上传、识别、批量、OCR、转换成功或失败切换状态。
+- Mahiro 液态玻璃同人主题界面：真寻会跟随上传、识别、批量、OCR、转换成功或失败切换状态；桌面、平板与窄窗口布局会自适应重排。
 - 本地离线转换：内置 FFmpeg、LibreOffice、Poppler、Tesseract 和 AVS3 解码器。
 - 支持图片、文本、Word/WPS、Excel/WPS、PPT/WPS、PDF、音频、视频和 ZIP。
 - 特殊音乐容器兼容（不稳定/实验性）：NCM、KGG、QQ 音乐 QMC（TKM/BKC、MFLAC/MGG/MMP4/QMC）、KGMA、KWM、VPR 可转换为普通音频格式；兼容性受客户端版本、密钥、登录凭据和真实样本覆盖影响。
@@ -116,7 +116,7 @@ Win7 staging 使用专用 `win7-package-lock.json` 和 `npm ci` 重建；推荐�
 
 ### Highlights
 
-- Mahiro Oyama fan-theme UI with animated state changes for upload, detection, batch work, OCR, success, and errors.
+- Mahiro Oyama liquid-glass fan-theme UI with animated states for upload, detection, batch work, OCR, success, and errors, plus responsive desktop, tablet, and narrow-window layouts.
 - Fully local conversion with bundled FFmpeg, LibreOffice, Poppler, Tesseract, and an AVS3 decoder.
 - Converts images, text, Word/WPS, Excel/WPS, PPT/WPS, PDF, audio, video, and ZIP files.
 - Unstable/experimental special music-container compatibility: NCM, KGG, QQ Music QMC (TKM/BKC, MFLAC/MGG/MMP4/QMC), KGMA, KWM, and VPR can be converted to ordinary audio formats. Results depend on client versions, keys, login credentials, and real-file coverage.
