@@ -76,7 +76,7 @@ jobs:
         run: npm test
 
       - name: Production dependency audit
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --audit-level=high --package-lock-only
 
   macos-test:
     name: macOS ${{ matrix.arch }} engine and code gates
@@ -135,4 +135,4 @@ jobs:
           "$FLYINGMOUSE_LIBREOFFICE_PATH" -env:UserInstallation="file://$RUNNER_TEMP/flyingmouse-office-profile" --headless --version
 
       - name: Production dependency audit
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --audit-level=high --package-lock-only
