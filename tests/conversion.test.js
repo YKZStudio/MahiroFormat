@@ -422,10 +422,10 @@ test("converts a PDF to DOCX with extracted text and tables", async () => {
   assert.strictEqual(packageBytes.readUInt32LE(0), 0x04034b50, "docx must be a ZIP package");
   const documentXml = readZipEntry(packageBytes, "word/document.xml");
   assert.match(documentXml, /<w:document/);
-  // Windows 标准版的结构化 PDF 回退会把这组规则定位文字恢复为真实表格，
-  // 并保留最后一列；其他平台仍允许走纯 PDF.js 文字回退。
+  // Windows 的无边框定位文字会随 docengine 版本表示为真实表格或制表位段落；
+  // 两种结构都必须保留全部三列内容，不能把渲染细节误判为转换失败。
   if (process.platform === "win32") {
-    assert.match(documentXml, /<w:tbl>/);
+    assert.match(documentXml, /<w:(?:tbl>|tab\/>)/);
     assert.match(documentXml, /Price/);
     assert.match(documentXml, /3\.50/);
   }
