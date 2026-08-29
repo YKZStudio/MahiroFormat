@@ -16,6 +16,7 @@
     "mahiro-format": "cli.js"
   },
   "scripts": {
+    "docs:check": "node scripts/check-docs.js",
     "pretest": "node --test tests/pdf-structure-engine.test.js tests/pdf-office-docx.test.js tests/pdf-office-xlsx.test.js tests/pdf-structure-score.test.js",
     "pretest:ci": "node --test tests/pdf-structure-engine.test.js tests/pdf-office-docx.test.js tests/pdf-office-xlsx.test.js tests/pdf-structure-score.test.js",
     "start": "node server.js",
