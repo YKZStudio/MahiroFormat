@@ -105,15 +105,18 @@ npm audit --omit=dev --prefix output\win7-stage
 - Win7 构建只允许使用 Node.js 18–22（推荐 22 LTS）和专用 `win7-package-lock.json` 经 `npm ci` 重建 `output/win7-stage/`；子进程必须绑定当前 Node，源码复制须兼容 Unicode 路径。产物写入精确的 `dist/Mahiro Format-Setup-<version>-win7-x64.exe`；脚本必须锁定 staging manifest/lockfile，校验本地 builder 与 `extraResources` 各自在允许根目录内的 canonical containment 并拒绝 reparse point；测试可以清理 staging，不得覆盖标准安装包或移动既有版本标签。
 - Windows 7 发布证据必须同时记录：主线测试、staging 测试、内层 EXE PE 5.2、当前系统冒烟、旧依赖审计及“真实 Win7 设备待验收”。
 - Win7 staging 测试只运行能在 staging 内自洽执行的 90 项；根专属真实引擎/打包管线测试由主线执行，不得把根测试文件复制进 staging 后制造假失败。
-- GitHub remote：`https://github.com/LaoFeng-mouse/flyingmouse-format.git`。
+- 当前 GitHub remote：`https://github.com/YKZStudio/MahiroFormat.git`。原始上游与历史发行仓库：`https://github.com/LaoFeng-mouse/flyingmouse-format.git`；引用时必须明确区分。
 
 ## Documentation map
 
-- `README.md`：面向用户的中英文介绍、下载与格式范围。
-- `docs/ARCHITECTURE.md`：运行架构、状态和数据边界。
-- `docs/RELEASE.md`：本机测试、打包、桌面同步与 GitHub 发布清单。
-- `docs/HANDOFF.md`：当前可交接状态和剩余风险。
-- `docs/privacy-policy.html`：面向用户和 Microsoft Store 的隐私政策。
+- `README.md` / `README_zh_CN.md`：面向用户的英文/简体中文介绍、安装与格式范围。
+- `docs/README.md` / `docs/README_zh_CN.md`：当前文档、历史发行记录与工程归档索引。
+- `docs/ARCHITECTURE.md` / `docs/ARCHITECTURE_zh_CN.md`：运行架构、状态和数据边界。
+- `docs/RELEASE.md` / `docs/RELEASE_zh_CN.md`：本机测试、打包与 GitHub 发布流程。
+- `docs/HANDOFF.md` / `docs/HANDOFF_zh_CN.md`：当前可交接状态和剩余风险。
+- `docs/privacy-policy.html` / `docs/privacy-policy-zh-CN.html`：面向用户和 Microsoft Store 的隐私政策。
+- 无语言后缀的公共文档默认英文；简体中文 Markdown 使用 `_zh_CN.md`，HTML 使用 `-zh-CN.html`，成对文档开头必须保留语言切换链接。
+- `docs/release-notes-*`、`docs/releases/`、商店版本校验记录和 `docs/superpowers/` 属于历史证据，不得改写为当前状态；需要纠错时增加明确勘误。
 - `docs/微软商店上架清单.md`、`docs/上架材料包.md`：商店渠道资料；外部审核状态必须写绝对日期并注明是否已现场复核。
 
 ## 著作权与许可（2026-08-14 起强制执行）

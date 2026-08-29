@@ -1,56 +1,55 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mahiro Format 隐私政策</title>
+  <title>Mahiro Format Privacy Policy</title>
   <style>
-    body { font-family: "Microsoft YaHei", Arial, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; line-height: 1.8; color: #333; }
-    h1 { font-size: 24px; border-bottom: 2px solid #e95f6d; padding-bottom: 12px; }
-    h2 { font-size: 18px; margin-top: 28px; color: #c9495a; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; line-height: 1.7; color: #333; }
+    h1 { font-size: 26px; border-bottom: 2px solid #e95f6d; padding-bottom: 12px; }
+    h2 { font-size: 19px; margin-top: 30px; color: #c9495a; }
     p, li { font-size: 15px; }
-    .muted { color: #888; font-size: 13px; }
+    .muted { color: #666; font-size: 13px; }
+    .languages { text-align: center; margin-bottom: 28px; }
+    a { color: #b33e50; }
+    code { overflow-wrap: anywhere; }
   </style>
 </head>
 <body>
-  <h1>Mahiro Format 隐私政策</h1>
-  <p class="muted">更新日期：2026-08-08</p>
+  <nav class="languages" aria-label="Language">
+    <a href="privacy-policy.html" lang="en">English</a> |
+    <a href="privacy-policy-zh-CN.html" lang="zh-CN">简体中文</a>
+  </nav>
 
-  <p>Mahiro Format 是一款本地运行的 Windows 文件格式转换工具。我们重视你的隐私，本政策说明本应用如何处理你的数据。</p>
-  <p class="muted">原作者：牢蜂（LaoFeng） · Mahiro Format 升级与维护：YKZStudio</p>
+  <h1>Mahiro Format Privacy Policy</h1>
+  <p class="muted">Last updated: August 29, 2026</p>
+  <p>Mahiro Format is a desktop file converter maintained by YKZStudio and originally created by LaoFeng. This policy explains how the application handles data.</p>
 
-  <h2>1. 数据收集</h2>
-  <p>本应用没有账号系统，也不会把文件内容、设置或日志上传给开发者或云端转换服务。格式转换可在本机离线完成。</p>
+  <h2>1. No developer account or telemetry</h2>
+  <p>The application has no Mahiro Format account system, advertising SDK, analytics service, or developer-operated cloud conversion service. It does not automatically send files, settings, or logs to the developers.</p>
 
-  <h2>2. 本地文件处理</h2>
+  <h2>2. Local file processing</h2>
   <ul>
-    <li>你选择的待转换文件仅在本机内存和临时目录中处理，用于完成格式转换。</li>
-    <li>转换完成后，源文件不会被修改；上传和转换临时文件会在本机运行目录中定期清理。</li>
-    <li>转换结果由你自己选择保存位置，本应用不会在其他位置保存副本。</li>
+    <li>Selected files are processed in local memory and application-controlled temporary directories.</li>
+    <li>Source files are not modified. You choose where completed results are saved.</li>
+    <li>Temporary uploads and results are removed by the local cleanup process. Abrupt termination may leave temporary data until the next cleanup or manual removal.</li>
   </ul>
 
-  <h2>3. 第三方组件</h2>
-  <p>应用内置以下开源组件用于格式转换，它们均在本机运行，不涉及数据传输：</p>
-  <ul>
-    <li>FFmpeg（音视频转码）</li>
-    <li>LibreOffice（Office/WPS 文档转换）</li>
-    <li>Poppler（PDF 页面渲染）</li>
-    <li>Tesseract（OCR 文字识别）</li>
-    <li>PyMuPDF（PDF 文字与版式提取，随 docengine 文档引擎内置）——遵循 GNU Affero General Public License v3.0（AGPL-3.0），源码：https://github.com/pymupdf/PyMuPDF；按 AGPL 要求提供源码获取途径：https://github.com/LaoFeng-mouse/flyingmouse-format/issues</li>
-  </ul>
+  <h2>3. Optional network-dependent compatibility</h2>
+  <p>Most conversions work offline. Some experimental QQ Music <code>musicex</code> variants may require a valid QQ Music web credential to request a conversion key from QQ Music. When that feature is used, the song identifier and credential are sent to QQ Music's service; the audio file is not uploaded to Mahiro Format or its developers. This optional path is hidden and rejected in Microsoft Store builds.</p>
 
-  <h2>4. 日志</h2>
-  <p>应用会在本地保存界面语言、各源格式的默认目标格式、最近保存目录和调试日志。日志可能包含启动状态、转换引擎路径、文件名及错误信息，但不包含文件正文；这些数据不会自动上传。</p>
+  <h2>4. Local settings and logs</h2>
+  <p>The application stores the interface language, preferred target for each source extension, last successful save directory, and a local debug log. Logs may contain filenames, engine paths, status messages, and errors, but are not intended to contain file contents or credentials. These records are not uploaded automatically.</p>
 
-  <h2>5. 联系我们</h2>
-  <p>如对本隐私政策有任何疑问，可通过以下方式联系我们：</p>
-  <ul>
-    <li>GitHub：https://github.com/LaoFeng-mouse/flyingmouse-format</li>
-  </ul>
+  <h2>5. Third-party components</h2>
+  <p>Conversion components run locally, including FFmpeg, LibreOffice, Poppler, Tesseract, Sharp, qpdf, and document-processing engines. Each component is governed by its own license. The bundled document engine includes PyMuPDF under AGPL-3.0; source is available from the <a href="https://github.com/pymupdf/PyMuPDF">PyMuPDF repository</a>.</p>
 
-  <h2>6. 政策更新</h2>
-  <p>本政策可能随应用功能更新而调整，更新后会在本页面发布。</p>
+  <h2>6. User control</h2>
+  <p>You can remove saved preferences and logs by deleting Mahiro Format's application-data directory. Uninstalling the application may not automatically remove user data or files that you deliberately saved elsewhere.</p>
 
-  <p class="muted">© 2026 LaoFeng. All rights reserved.</p>
+  <h2>7. Contact and updates</h2>
+  <p>For questions, open an issue in the <a href="https://github.com/YKZStudio/MahiroFormat/issues">current GitHub repository</a>. Policy changes will be published on this page with a new update date.</p>
+
+  <p class="muted">Original author: LaoFeng (牢蜂) · Mahiro Format upgrade and maintenance: YKZStudio</p>
 </body>
 </html>
