@@ -20,7 +20,7 @@ jobs:
       - name: Cache fixed conversion engines
         uses: actions/cache@v4
         with:
-          path: output/ci-engines-v1.tar.zst
+          path: output/ci-engines-v1-win32-*.tar.zst
           key: ci-engines-v1-${{ hashFiles('ci-engines-v1.json') }}
 
       - name: Install dependencies
@@ -76,7 +76,7 @@ jobs:
         run: npm test
 
       - name: Production dependency audit
-        run: npm audit --omit=dev
+        run: npm audit --omit=dev --audit-level=high
 
   macos-test:
     name: macOS ${{ matrix.arch }} engine and code gates
@@ -112,10 +112,12 @@ jobs:
           set -euo pipefail
           brew install zstd
           key="darwin-${{ matrix.arch }}"
+          repository="$(node -p "require('./ci-engines-v1.json').repository")"
+          release_tag="$(node -p "require('./ci-engines-v1.json').releaseTag")"
           asset="$(node -p "require('./ci-engines-v1.json').assets['$key'].assetName")"
           root="$PWD/bin/engines/$key"
           mkdir -p output "$root"
-          gh release download ci-engines-v1 --repo "${{ github.repository }}" --pattern "$asset" --dir output
+          gh release download "$release_tag" --repo "$repository" --pattern "$asset" --dir output
           zstd -dc "output/$asset" | tar -xf - -C "$root"
           node scripts/validate-ci-engines.js --platform darwin --arch "${{ matrix.arch }}" --root "$root" --bundle "output/$asset"
           file "$root/runtime/bin/ffmpeg" "$root/runtime/bin/pdftoppm" "$root/libreoffice/LibreOffice.app/Contents/MacOS/soffice"
@@ -133,4 +135,4 @@ jobs:
           "$FLYINGMOUSE_LIBREOFFICE_PATH" -env:UserInstallation="file://$RUNNER_TEMP/flyingmouse-office-profile" --headless --version
 
       - name: Production dependency audit
-        run: npm audit --omit=dev
+        run: npm audit --omit=dev --audit-level=high
