@@ -15,6 +15,7 @@
 | 架构与安全边界 | [Architecture](ARCHITECTURE.md) | [架构说明](ARCHITECTURE_zh_CN.md) |
 | 发布流程 | [Release guide](RELEASE.md) | [发布指南](RELEASE_zh_CN.md) |
 | 运维交接 | [Project handoff](HANDOFF.md) | [项目交接](HANDOFF_zh_CN.md) |
+| 性能审阅与验证 | [Performance](PERFORMANCE.md) | [性能审阅](PERFORMANCE_zh_CN.md) |
 | 隐私政策 | [Privacy policy](privacy-policy.html) | [隐私政策](privacy-policy-zh-CN.html) |
 
 仓库根目录的 [AGENTS.md](../AGENTS.md) 包含面向自动化维护者的强制约束。[LICENSE](../LICENSE) 是具有约束力的中英双语许可证，特意保留在同一文件中，不做拆分。

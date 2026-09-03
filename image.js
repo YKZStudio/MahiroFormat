@@ -8,6 +8,8 @@ const fsp = require("fs/promises");
 const os = require("os");
 const path = require("path");
 const zlib = require("zlib");
+const { promisify } = require("util");
+const { randomUUID } = require("crypto");
 const sharp = require("sharp");
 const { FFMPEG_PATH, DCRAW_PATH, rawInput } = require("./config");
 const RAW_EXTENSIONS = rawInput;
@@ -21,6 +23,7 @@ const {
 const { isBmpFileSync, decodeBmpToRaw } = require("./bmp-input");
 const { isIcoFileSync, extractBestFrame, encodeIco } = require("./ico-format");
 const { convertRasterImage, WARNING_MESSAGES } = require("./image-conversion");
+const deflate = promisify(zlib.deflate);
 
 // ICO 输出：把输入图缩放到多尺寸（16/24/32/48/64/128/256）生成 PNG 帧，组装成 ICO 容器。
 // ICO 是静态格式；动图只取第一帧并附动画压平警告（与其它静态图片目标一致）。
@@ -258,11 +261,11 @@ async function readImageForPdf(inputPath) {
   // sharp 的预编译构建不支持 BMP 输入：批量/ZIP 图片合并 PDF 时直接解码 BMP。
   // 先读文件头判断，避免把非 BMP 大图整读进内存。
   if (isBmpFileSync(inputPath)) {
-    const rawBmp = decodeBmpToRaw(fs.readFileSync(inputPath));
+    const rawBmp = decodeBmpToRaw(await fsp.readFile(inputPath));
     return {
       width: rawBmp.width,
       height: rawBmp.height,
-      data: zlib.deflateSync(rawBmp.data)
+      data: await deflate(rawBmp.data)
     };
   }
 
@@ -316,7 +319,7 @@ async function readPngAsPdfImage(inputPath) {
   return {
     width: info.width,
     height: info.height,
-    data: zlib.deflateSync(rgb)
+    data: await deflate(rgb)
   };
 }
 
@@ -335,60 +338,74 @@ async function convertImagesToPdf(imageFiles, outputPath) {
   }
   assertImagePdfBudget(metadataList);
 
-  const images = [];
-  for (const file of imageFiles) {
-    if (file?.blank) {
-      // 空白页：A4 竖版比例（595×842pt），纯白 RGB 图像，deflate 压缩
-      const blankWidth = 595;
-      const blankHeight = 842;
-      const rgb = Buffer.alloc(blankWidth * blankHeight * 3, 0xff);
-      images.push({
-        width: blankWidth,
-        height: blankHeight,
-        data: zlib.deflateSync(rgb)
-      });
-      continue;
+  // Stream to a sibling file: decoding/writing failures must not replace an existing output.
+  const temporaryPath = path.join(path.dirname(outputPath), `.mahiro-pdf.tmp-${randomUUID()}`);
+  const handle = await fsp.open(temporaryPath, "wx");
+  try {
+    try {
+      // FileHandle.writeFile consumes the async iterable with backpressure (Node 18+).
+      await handle.writeFile(imagePdfChunks(imageFiles));
+    } finally {
+      await handle.close();
     }
-    images.push(await readImageForPdf(file.inputPath));
+    await fsp.rename(temporaryPath, outputPath);
+  } catch (error) {
+    await fsp.rm(temporaryPath, { force: true }).catch(() => {});
+    throw error;
   }
+}
 
-  const objects = [];
-  const pageRefs = [];
-  const addObject = (number, content) => {
-    objects.push({ number, content: Buffer.isBuffer(content) ? content : pdfAscii(content) });
+async function* imagePdfChunks(imageFiles) {
+  let byteLength = 0;
+  const offsets = [0];
+  const chunk = (content) => {
+    const data = Buffer.isBuffer(content) ? content : pdfAscii(content);
+    byteLength += data.length;
+    return data;
   };
+  const object = (number, content) => {
+    offsets[number] = byteLength;
+    return chunk(content);
+  };
+  const pageRefs = imageFiles.map((_file, index) => `${3 + index * 3} 0 R`);
+  yield chunk("%PDF-1.4\n");
+  yield object(1, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+  yield object(2, `2 0 obj
+<< /Type /Pages /Kids [${pageRefs.join(" ")}] /Count ${pageRefs.length} >>
+endobj
+`);
 
-  addObject(1, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
-
-  for (let index = 0; index < images.length; index += 1) {
-    const image = images[index];
+  let blankImage;
+  for (let index = 0; index < imageFiles.length; index += 1) {
+    const file = imageFiles[index];
+    if (file?.blank && !blankImage) {
+      // Reuse the same white A4 image for blank pages in this conversion only.
+      blankImage = { width: 595, height: 842, data: await deflate(Buffer.alloc(595 * 842 * 3, 0xff)) };
+    }
+    const image = file?.blank ? blankImage : await readImageForPdf(file.inputPath);
     const pageNumber = 3 + index * 3;
     const imageNumber = pageNumber + 1;
     const contentNumber = pageNumber + 2;
     const pageWidth = Math.max(1, image.width);
     const pageHeight = Math.max(1, image.height);
-    pageRefs.push(`${pageNumber} 0 R`);
-
-    addObject(pageNumber, `${pageNumber} 0 obj
+    yield object(pageNumber, `${pageNumber} 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pdfNumber(pageWidth)} ${pdfNumber(pageHeight)}] /Resources << /XObject << /Im${index + 1} ${imageNumber} 0 R >> >> /Contents ${contentNumber} 0 R >>
 endobj
 `);
 
-    addObject(imageNumber, Buffer.concat([
-      pdfAscii(`${imageNumber} 0 obj
+    yield object(imageNumber, `${imageNumber} 0 obj
 << /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${image.data.length} >>
 stream
-`),
-      image.data,
-      pdfAscii("\nendstream\nendobj\n")
-    ]));
+`);
+    yield chunk(image.data);
+    yield chunk("\nendstream\nendobj\n");
 
     const content = `q
 ${pdfNumber(pageWidth)} 0 0 ${pdfNumber(pageHeight)} 0 0 cm
 /Im${index + 1} Do
 Q
 `;
-    addObject(contentNumber, `${contentNumber} 0 obj
+    yield object(contentNumber, `${contentNumber} 0 obj
 << /Length ${Buffer.byteLength(content, "latin1")} >>
 stream
 ${content}endstream
@@ -396,26 +413,14 @@ endobj
 `);
   }
 
-  addObject(2, `2 0 obj
-<< /Type /Pages /Kids [${pageRefs.join(" ")}] /Count ${pageRefs.length} >>
-endobj
-`);
-
-  objects.sort((a, b) => a.number - b.number);
-  const chunks = [pdfAscii("%PDF-1.4\n")];
-  const offsets = [0];
-  for (const object of objects) {
-    offsets[object.number] = Buffer.concat(chunks).length;
-    chunks.push(object.content);
-  }
-
-  const body = Buffer.concat(chunks);
-  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (let number = 1; number <= objects.length; number += 1) {
+  const xrefOffset = byteLength;
+  const objectCount = 2 + imageFiles.length * 3;
+  let xref = `xref\n0 ${objectCount + 1}\n0000000000 65535 f \n`;
+  for (let number = 1; number <= objectCount; number += 1) {
     xref += `${String(offsets[number]).padStart(10, "0")} 00000 n \n`;
   }
-  const trailer = `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${body.length}\n%%EOF\n`;
-  await fsp.writeFile(outputPath, Buffer.concat([body, pdfAscii(xref + trailer)]));
+  const trailer = `trailer\n<< /Size ${objectCount + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  yield chunk(xref + trailer);
 }
 
 module.exports = {

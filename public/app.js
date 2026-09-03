@@ -93,6 +93,7 @@ const workspace = document.querySelector(".workspace");
 const workflowSteps = [...document.querySelectorAll("[data-step]")];
 const {
   STORAGE_KEY: LEGACY_TARGET_STORAGE_KEY,
+  normalizeExtension,
   readPreferences,
   rememberTarget,
   preferredTarget
@@ -585,6 +586,18 @@ async function loadTargets(file) {
   return response.json();
 }
 
+function loadTargetsForFiles(files) {
+  // The endpoint depends only on extension; share requests within this selection.
+  // Do not retain failures or stale capabilities across later selections.
+  const requests = new Map();
+  return Promise.all(files.map((file) => {
+    if (file?.isBlankPage) return loadTargets(file);
+    const extension = normalizeExtension(extensionOf(file.name));
+    if (!requests.has(extension)) requests.set(extension, loadTargets(file));
+    return requests.get(extension);
+  }));
+}
+
 function commonTargetsFrom(infos) {
   if (!infos.length) return [];
   const [first, ...rest] = infos;
@@ -619,65 +632,67 @@ function renderBatchList() {
   }
 
   batchList.hidden = false;
-  const entries = state.files.map((file, index) => {
-    const result = state.batchResults[index] || { status: "pending", detail: "等待转换" };
-    const article = document.createElement("article");
-    article.className = `batch-item ${result.status}`;
+  const reorder = canReorderImages();
+  batchList.replaceChildren(...state.files.map((file, index) => createBatchItem(file, index, reorder)));
+}
 
-    const main = document.createElement("div");
-    main.className = "batch-main";
-    main.append(
-      createTextElement("p", "batch-name", file.isBlankPage ? (i18n.language === "en-US" ? "Blank page" : "空白页") : file.name),
-      createTextElement("p", "batch-detail", result.detail || batchStatusLabel(result.status))
-    );
+function createBatchItem(file, index, reorder) {
+  const result = state.batchResults[index] || { status: "pending", detail: "等待转换" };
+  const article = document.createElement("article");
+  article.className = `batch-item ${result.status}`;
 
-    const actions = document.createElement("div");
-    actions.className = "batch-actions";
-    if (canReorderImages()) {
-      const upButton = createTextElement("button", "mini-button", i18n.language === "en-US" ? "↑" : "↑");
-      upButton.type = "button";
-      upButton.dataset.move = String(index);
-      upButton.dataset.direction = "up";
-      upButton.disabled = index === 0;
-      upButton.title = i18n.language === "en-US" ? "Move up (earlier in PDF)" : "上移（在 PDF 中更靠前）";
-      const downButton = createTextElement("button", "mini-button", "↓");
-      downButton.type = "button";
-      downButton.dataset.move = String(index);
-      downButton.dataset.direction = "down";
-      downButton.disabled = index === state.files.length - 1;
-      downButton.title = i18n.language === "en-US" ? "Move down (later in PDF)" : "下移（在 PDF 中更靠后）";
-      actions.append(upButton, downButton);
-      // 插入空白页：在该条目后面插入一页纯白 A4 页（图片合并 PDF 专用）
-      const blankButton = createTextElement("button", "mini-button", i18n.language === "en-US" ? "□+" : "□+");
-      blankButton.type = "button";
-      blankButton.dataset.insertBlank = String(index);
-      blankButton.title = i18n.language === "en-US" ? "Insert blank page after this item" : "在此项后插入空白页";
-      actions.append(blankButton);
-      // 空白页条目支持删除
-      if (file.isBlankPage) {
-        const removeBlank = createTextElement("button", "mini-button", "✕");
-        removeBlank.type = "button";
-        removeBlank.dataset.removeBlank = String(index);
-        removeBlank.title = i18n.language === "en-US" ? "Remove blank page" : "删除空白页";
-        actions.append(removeBlank);
-      }
+  const main = document.createElement("div");
+  main.className = "batch-main";
+  main.append(
+    createTextElement("p", "batch-name", file.isBlankPage ? (i18n.language === "en-US" ? "Blank page" : "空白页") : file.name),
+    createTextElement("p", "batch-detail", result.detail || batchStatusLabel(result.status))
+  );
+
+  const actions = document.createElement("div");
+  actions.className = "batch-actions";
+  if (reorder) {
+    const upButton = createTextElement("button", "mini-button", "↑");
+    upButton.type = "button";
+    upButton.dataset.move = String(index);
+    upButton.dataset.direction = "up";
+    upButton.disabled = index === 0;
+    upButton.title = i18n.language === "en-US" ? "Move up (earlier in PDF)" : "上移（在 PDF 中更靠前）";
+    const downButton = createTextElement("button", "mini-button", "↓");
+    downButton.type = "button";
+    downButton.dataset.move = String(index);
+    downButton.dataset.direction = "down";
+    downButton.disabled = index === state.files.length - 1;
+    downButton.title = i18n.language === "en-US" ? "Move down (later in PDF)" : "下移（在 PDF 中更靠后）";
+    actions.append(upButton, downButton);
+    // 插入空白页：在该条目后面插入一页纯白 A4 页（图片合并 PDF 专用）
+    const blankButton = createTextElement("button", "mini-button", "□+");
+    blankButton.type = "button";
+    blankButton.dataset.insertBlank = String(index);
+    blankButton.title = i18n.language === "en-US" ? "Insert blank page after this item" : "在此项后插入空白页";
+    actions.append(blankButton);
+    // 空白页条目支持删除
+    if (file.isBlankPage) {
+      const removeBlank = createTextElement("button", "mini-button", "✕");
+      removeBlank.type = "button";
+      removeBlank.dataset.removeBlank = String(index);
+      removeBlank.title = i18n.language === "en-US" ? "Remove blank page" : "删除空白页";
+      actions.append(removeBlank);
     }
-    actions.append(createTextElement("span", "batch-status", batchStatusLabel(result.status)));
-    if (result.status === "success" && result.result) {
-      const resultPreviewButton = createTextElement("button", "mini-button", t("preview.open"));
-      resultPreviewButton.type = "button";
-      resultPreviewButton.dataset.previewIndex = String(index);
-      actions.append(resultPreviewButton);
-      const saveButton = createTextElement("button", "mini-button", t("action.save"));
-      saveButton.type = "button";
-      saveButton.dataset.saveIndex = String(index);
-      actions.append(saveButton);
-    }
+  }
+  actions.append(createTextElement("span", "batch-status", batchStatusLabel(result.status)));
+  if (result.status === "success" && result.result) {
+    const resultPreviewButton = createTextElement("button", "mini-button", t("preview.open"));
+    resultPreviewButton.type = "button";
+    resultPreviewButton.dataset.previewIndex = String(index);
+    actions.append(resultPreviewButton);
+    const saveButton = createTextElement("button", "mini-button", t("action.save"));
+    saveButton.type = "button";
+    saveButton.dataset.saveIndex = String(index);
+    actions.append(saveButton);
+  }
 
-    article.append(main, actions);
-    return article;
-  });
-  batchList.replaceChildren(...entries);
+  article.append(main, actions);
+  return article;
 }
 
 // 多张图片合并 PDF 时允许调整顺序（PDF 页序 = 队列顺序）
@@ -707,7 +722,13 @@ function setBatchResult(index, patch) {
     ...(state.batchResults[index] || { status: "pending", detail: "等待转换" }),
     ...patch
   };
-  renderBatchList();
+  // During conversion the queue order and reorder controls are fixed.
+  // Updating one result must not rebuild every other row (and steal button focus).
+  if (state.isConverting && state.files[index] && batchList.children.length === state.files.length) {
+    batchList.children[index].replaceWith(createBatchItem(state.files[index], index, false));
+  } else {
+    renderBatchList();
+  }
 }
 
 function syncZipCompressionField() {
@@ -767,13 +788,13 @@ async function acceptFiles(fileList) {
 
   state.files = files;
   state.fileInfos = [];
-  state.batchResults = files.map(() => ({ status: "pending", detail: "等待转换" }));
   // 文件夹名：来自 <input webkitdirectory> 或拖入文件夹时 File.webkitRelativePath
   // 的第一个路径段（如 "相册2026/001.jpg" -> "相册2026"），用于图片合并 PDF 命名。
   const firstRel = files.find((file) => file.webkitRelativePath);
   const folderName = firstRel ? firstRel.webkitRelativePath.split("/")[0] : "";
   state.folderName = folderName && folderName !== firstRel.webkitRelativePath ? folderName : "";
   resetDownload();
+  state.batchResults = files.map(() => ({ status: "pending", detail: "等待转换" }));
   resetProgress();
   setMahiroState(files.length > 1 ? "batch" : "analyzing");
   setWorkflowStep("analyze");
@@ -792,7 +813,8 @@ async function acceptFiles(fileList) {
     : (files.length === 1 ? "正在分析文件类型和可用转换格式..." : `正在分析 ${files.length} 个文件的共同转换格式...`));
 
   try {
-    const infos = await Promise.all(files.map(loadTargets));
+    const infos = await loadTargetsForFiles(files);
+    if (state.files !== files) return;
     state.fileInfos = infos;
     const targets = commonTargetsFrom(infos);
     targetSelect.replaceChildren();
@@ -835,6 +857,7 @@ async function acceptFiles(fileList) {
     syncVideoCodecField();
     syncPdfActionFields();
     syncPdfExcelHint();
+    renderBatchList();
     setMahiroState(files.length > 1 ? "batch" : "idle");
     if (files.length === 1) {
       const info = infos[0];
@@ -848,6 +871,7 @@ async function acceptFiles(fileList) {
     }
     setWorkflowStep("convert");
   } catch (error) {
+    if (state.files !== files) return;
     setStatus(i18n.language === "en-US" ? `Detection failed: ${error.message}` : `识别失败：${error.message}`, "error");
     setWorkflowStep("analyze");
     setMahiroState("error");
@@ -955,9 +979,8 @@ async function convertImagesToPdf(files) {
 }
 
 async function convertMergedImagesToPdf() {
-  state.files.forEach((_file, index) => {
-    setBatchResult(index, { status: "converting", detail: "正在合并到 PDF" });
-  });
+  state.batchResults = state.files.map(() => ({ status: "converting", detail: "正在合并到 PDF" }));
+  renderBatchList();
   setProgress(35, "正在合并图片");
 
   try {
@@ -1028,9 +1051,8 @@ async function convertPdfsToMerged(files) {
 }
 
 async function convertMergedPdfs() {
-  state.files.forEach((_file, index) => {
-    setBatchResult(index, { status: "converting", detail: "正在合并到 PDF" });
-  });
+  state.batchResults = state.files.map(() => ({ status: "converting", detail: "正在合并到 PDF" }));
+  renderBatchList();
   setProgress(35, "正在合并 PDF");
 
   try {
