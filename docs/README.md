@@ -15,6 +15,7 @@ This index separates current documentation from historical evidence. Unless a do
 | Architecture and security boundaries | [Architecture](ARCHITECTURE.md) | [架构说明](ARCHITECTURE_zh_CN.md) |
 | Release procedure | [Release guide](RELEASE.md) | [发布指南](RELEASE_zh_CN.md) |
 | Operational handoff | [Project handoff](HANDOFF.md) | [项目交接](HANDOFF_zh_CN.md) |
+| Performance review and checks | [Performance](PERFORMANCE.md) | [性能审阅](PERFORMANCE_zh_CN.md) |
 | Privacy policy | [Privacy policy](privacy-policy.html) | [隐私政策](privacy-policy-zh-CN.html) |
 
 The repository-level [AGENTS.md](../AGENTS.md) contains maintainer constraints for automated contributors. [LICENSE](../LICENSE) is bilingual and legally controlling; it is intentionally not split.

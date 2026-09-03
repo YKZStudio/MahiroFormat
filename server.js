@@ -1,35 +1,14 @@
-const { randomBytes, randomUUID, timingSafeEqual } = require("crypto");
-const fs = require("fs");
+const { randomBytes, timingSafeEqual } = require("crypto");
 const fsp = require("fs/promises");
-const os = require("os");
 const path = require("path");
-const zlib = require("zlib");
-const { fileURLToPath, pathToFileURL } = require("url");
 const express = require("express");
 const mime = require("mime-types");
 const multer = require("multer");
-const sanitize = require("sanitize-filename");
 const sharp = require("sharp");
-const ExcelJS = require("exceljs");
-const yazl = require("yazl");
-const yauzl = require("yauzl");
-const { PDFDocument } = require("pdf-lib");
 
-const { createTurndownService, htmlToMarkdown, markdownToHtml, csvToJsonObjects, jsonToCsv, csvToMarkdown, csvToHtmlTable } = require("./text-conversion");
-const { convertRasterImage } = require("./image-conversion");
-const { isBmpFileSync, decodeBmpToRaw } = require("./bmp-input");
-const { xmlToJson } = require("./xml-json");
+const { csvToHtmlTable } = require("./text-conversion");
 const { convertEbook, convertTextToEpub } = require("./ebook");
-const yaml = require("js-yaml");
-const {
-  LIMITS,
-  ResourceLimitError,
-  assertImageMetadata,
-  assertImagePdfBudget,
-  assertBatchBytes,
-  assertPdfPages
-} = require("./resource-policy");
-const { buildPdfTableWorkbook, detectTableLinesFromRaw } = require("./pdf-table-runtime");
+const { LIMITS, ResourceLimitError, assertBatchBytes } = require("./resource-policy");
 const { convertOfdToPdf } = require("./ofd-convert");
 const { convertNcm } = require("./ncm-format");
 const { buildNcmFfmpegOptions } = require("./ncm-metadata");
@@ -39,7 +18,7 @@ const { convertMflac } = require("./mflac-format");
 const { convertKgma } = require("./kgma-format");
 const { convertKwm } = require("./kwm-format");
 const { convertVpr } = require("./kgm-vpr-format");
-const { OfficeEngineError, probeLibreOffice, runLibreOffice } = require("./office-engine");
+const { OfficeEngineError, probeLibreOffice } = require("./office-engine");
 const { inspectXlsxForCsv } = require("./office-quality");
 const logger = require("./logger");
 
@@ -49,10 +28,8 @@ if (process.env.FLYINGMOUSE_LOG_FILE) {
   logger.setLogFile(process.env.FLYINGMOUSE_LOG_FILE);
 }
 
-const config = require("./config");
 const {
   ensureDirs,
-  run,
   commandExists,
   extFromName,
   decodeUploadFileName,
@@ -65,87 +42,23 @@ const {
   outputExtFor,
   outputNameFor,
   outputPathFor,
-  registerDownload,
-  escapeHtml
+  registerDownload
 } = require("./utils");
-const { convertMedia, probeAudioTrack } = require("./media");
-const { zipFile, zipFiles, openZipEntries, readZipEntryToFile, listZipEntries } = require("./zip-util");
+const { convertMedia } = require("./media");
+const { zipFile } = require("./zip-util");
 const {
-  convertPdfDecrypt,
   assertPdfTableOcrQuality,
   convertPdf,
-  splitPdfToZip,
   mergePdfFiles,
-  renderPdfPages,
-  convertPdfPagesToImagesZip,
-  convertScannedPdfToOcrText,
-  convertScannedPdfToOcrDocx,
-  convertScannedPdfToOcrHtml,
-  ocrScannedPdfPages,
   convertPresentationToImages,
   convertPresentationToHtml,
   convertZipImagesToPdf
 } = require("./pdf");
-const {
-  htmlToText,
-  escapeXml,
-  mdInlineRuns,
-  docxRunXml,
-  docxParagraphXml,
-  splitHtmlIntoLines,
-  convertTextToDocx,
-  parseJsonText,
-  convertText,
-  convertCsvToXlsx,
-  convertCsvToPdf,
-  parseCsvRecords,
-  readTabularText
-} = require("./text-docx");
-const {
-  libreOfficeFilterFor,
-  findConvertedFile,
-  convertWithLibreOffice,
-  convertDocumentToMarkdown,
-  convertDocumentToText
-} = require("./office-convert");
-const {
-  convertImage,
-  prepareImageInput,
-  isHeicFileSync,
-  inspectImageMetadata,
-  convertImageToVideo,
-  pdfAscii,
-  pdfNumber,
-  readImageForPdf,
-  readPngAsPdfImage,
-  convertImagesToPdf
-} = require("./image");
-const {
-  ocrAvailable,
-  createOcrWorker,
-  recognizeImageTextWithWorker,
-  convertImageToOcrText
-} = require("./ocr");
-const {
-  normalizePdfjsEntry,
-  isMissingPdfjsEntry,
-  resolvePdfjsEntrySpecifiers,
-  loadPdfjsModule,
-  createPdfjsLoader,
-  loadPdfjs
-} = require("./pdfjs");
-const {
-  groupPdfItemsIntoRows,
-  extractPdfRowsByPage,
-  sheetName,
-  applyColumnWidths,
-  renderPdfTablePage,
-  preparePdfTableOcrImage,
-  recognizePdfTablePage,
-  extractComplexPdfTableModel,
-  addPdfTableNotes,
-  writePdfTableWorkbook
-} = require("./pdf-table");
+const { convertText, convertCsvToXlsx, convertCsvToPdf, readTabularText } = require("./text-docx");
+const { convertWithLibreOffice, convertDocumentToMarkdown, convertDocumentToText } = require("./office-convert");
+const { convertImage, convertImagesToPdf } = require("./image");
+const { ocrAvailable } = require("./ocr");
+const { isMissingPdfjsEntry, loadPdfjsModule, createPdfjsLoader } = require("./pdfjs");
 const {
   ROOT,
   DEFAULT_PORT,
@@ -163,7 +76,6 @@ const {
   imageFormatTargets,
   imageVideoTargets,
   imageOcrTargets,
-  imageTargets,
   textInput,
   textTargets,
   documentInput,
@@ -179,7 +91,6 @@ const {
   unlockAudioInputs,
   videoInput,
   mediaAudioTargets,
-  mediaVideoTargets,
   mediaTargets,
   experimentalInputsByCategory,
   experimentalInputSet,
@@ -203,8 +114,6 @@ const CONTENT_SECURITY_POLICY = [
   "frame-ancestors 'none'",
   "form-action 'self'"
 ].join("; ");
-
-let cachedTesseract = null;
 
 const upload = multer({
   dest: UPLOAD_DIR,
@@ -261,34 +170,49 @@ async function listDownloadAssets(assetsDir, downloadUrl) {
   return assets;
 }
 
-let cachedTools = null;
+let toolsPromise = null;
 let cachedToolDetails = {};
 
-async function getTools() {
-  if (!cachedTools) {
-    let officeProbe = null;
-    try {
-      officeProbe = await probeLibreOffice(LIBREOFFICE_PATH, { runtimeDir: RUNTIME_DIR });
-      cachedToolDetails.libreoffice = officeProbe;
-    } catch (error) {
-      cachedToolDetails.libreoffice = {
-        enabled: false,
-        errorCode: error.code || "OFFICE_ENGINE_START_FAILED",
-        messages: error.messages
-      };
-      logger.warn("LibreOffice capability probe failed", error);
-    }
-    cachedTools = {
-      ffmpeg: await commandExists(FFMPEG_PATH),
-      libreoffice: Boolean(officeProbe?.enabled),
-      poppler: await commandExists(PDFTOPPM_PATH, ["-v"]),
-      ocr: ocrAvailable(),
-      pdf: true,
-      sharp: true,
-      zip: true
+async function probeOfficeCapabilities() {
+  try {
+    return await probeLibreOffice(LIBREOFFICE_PATH, { runtimeDir: RUNTIME_DIR });
+  } catch (error) {
+    logger.warn("LibreOffice capability probe failed", error);
+    return {
+      enabled: false,
+      errorCode: error.code || "OFFICE_ENGINE_START_FAILED",
+      messages: error.messages
     };
   }
-  return cachedTools;
+}
+
+async function detectTools() {
+  const [officeProbe, ffmpeg, poppler] = await Promise.all([
+    probeOfficeCapabilities(),
+    commandExists(FFMPEG_PATH),
+    commandExists(PDFTOPPM_PATH, ["-v"])
+  ]);
+  cachedToolDetails = { libreoffice: officeProbe };
+  return {
+    ffmpeg,
+    libreoffice: Boolean(officeProbe?.enabled),
+    poppler,
+    ocr: ocrAvailable(),
+    pdf: true,
+    sharp: true,
+    zip: true
+  };
+}
+
+function getTools() {
+  // Cache the in-flight probe too: simultaneous API requests share one engine startup.
+  if (!toolsPromise) {
+    toolsPromise = detectTools().catch((error) => {
+      toolsPromise = null;
+      throw error;
+    });
+  }
+  return toolsPromise;
 }
 
 async function getToolDiagnostics() {
