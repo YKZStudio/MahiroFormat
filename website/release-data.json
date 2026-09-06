@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-09-06",
+  "release": {
+    "tag_name": "v0.6.5",
+    "html_url": "https://github.com/YKZStudio/MahiroFormat/releases/tag/v0.6.5",
+    "draft": false,
+    "prerelease": false,
+    "published_at": "2026-09-06T02:49:57Z",
+    "assets": [
+      {
+        "name": "Mahiro-Format-Setup-0.6.5-x64.exe",
+        "size": 1713960229,
+        "state": "uploaded",
+        "browser_download_url": "https://github.com/YKZStudio/MahiroFormat/releases/download/v0.6.5/Mahiro-Format-Setup-0.6.5-x64.exe",
+        "digest": "sha256:d18509f8bf733e28c7677d4afc5de3c6866a6841825543897419d923f16fe78b"
+      },
+      {
+        "name": "Mahiro.Format-Setup-0.6.5-mac-arm64.dmg",
+        "size": 688488581,
+        "state": "uploaded",
+        "browser_download_url": "https://github.com/YKZStudio/MahiroFormat/releases/download/v0.6.5/Mahiro.Format-Setup-0.6.5-mac-arm64.dmg",
+        "digest": "sha256:b627e462d8276e27243146b2e26fd59631874db015b39a6be1dee6244006f86d"
+      },
+      {
+        "name": "Mahiro.Format-Setup-0.6.5-mac-x64.dmg",
+        "size": 723718638,
+        "state": "uploaded",
+        "browser_download_url": "https://github.com/YKZStudio/MahiroFormat/releases/download/v0.6.5/Mahiro.Format-Setup-0.6.5-mac-x64.dmg",
+        "digest": "sha256:0aa166e615c8149482cbf6c983bc5da37add77d0366eb1de7fc76f089f8a2984"
+      },
+      {
+        "name": "Mahiro.Format-Setup-0.6.5-win7-x64.exe",
+        "size": 553341264,
+        "state": "uploaded",
+        "browser_download_url": "https://github.com/YKZStudio/MahiroFormat/releases/download/v0.6.5/Mahiro.Format-Setup-0.6.5-win7-x64.exe",
+        "digest": "sha256:55a00e4c90ebf22ed3dc72eb08ea2dd70bdb1fd8f1f9d0acb04f3394e079c4dc"
+      }
+    ]
+  }
+}

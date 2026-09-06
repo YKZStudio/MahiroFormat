@@ -1,0 +1,53 @@
+name: Sync published release metadata
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/sync-release-metadata.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reconcile published filenames and bilingual notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p output/release-metadata
+          node <<'JS'
+          const fs = require('node:fs');
+          const { execFileSync } = require('node:child_process');
+          const version = require('./package.json').version;
+          if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Invalid version');
+          const tag = `v${version}`;
+          const repo = process.env.GITHUB_REPOSITORY;
+          const release = JSON.parse(execFileSync('gh', ['api', `repos/${repo}/releases/tags/${tag}`], { encoding: 'utf8' }));
+          if (release.draft || release.prerelease || release.tag_name !== tag) throw new Error('Expected published stable release');
+          const assets = release.assets.filter(a => a.name !== 'SHA256SUMS.txt');
+          if (!assets.length) throw new Error('Missing release assets');
+          const lines = assets.map(a => {
+            if (a.state !== 'uploaded' || !/^sha256:[a-f0-9]{64}$/.test(a.digest) || /[\r\n]/.test(a.name)) throw new Error('Unverified asset');
+            return `${a.digest.slice(7)}  ${a.name}`;
+          });
+          fs.writeFileSync('output/release-metadata/SHA256SUMS.txt', lines.join('\n') + '\n');
+          const suffix = version.replaceAll('.', '');
+          const base = `https://github.com/${repo}/blob/${tag}/docs/`;
+          const files = [`release-notes-${suffix}_zh_CN.md`, `release-notes-${suffix}.md`];
+          const notes = files.map(name => fs.readFileSync(`docs/${name}`, 'utf8').replace(/\]\((release-notes-[^)]+\.md)\)/g, `](${base}$1)`)).join('\n\n---\n\n');
+          fs.writeFileSync('output/release-metadata/notes.md', notes);
+          fs.appendFileSync(process.env.GITHUB_ENV, `RELEASE_TAG=${tag}\n`);
+          JS
+          RELEASE_TAG="v$(node -p 'require("./package.json").version')"
+          gh release upload "$RELEASE_TAG" output/release-metadata/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --notes-file output/release-metadata/notes.md

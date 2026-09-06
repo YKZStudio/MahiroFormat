@@ -2,6 +2,8 @@
 
 当前发行版本：**0.6.5**。
 
+项目网站源码：[website/](website/)。提供系统选择、GitHub 发行版、最新构建与 GhProxy 加速下载入口。
+
 <p align="center">
   <a href="README.md">English</a> |
   <a href="README_zh_CN.md">简体中文</a>

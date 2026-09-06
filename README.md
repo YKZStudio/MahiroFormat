@@ -2,6 +2,8 @@
 
 Current release version: **0.6.5**.
 
+Website source: [website/](website/). A static Chinese landing page with platform selection, GitHub releases, latest builds and GhProxy download links.
+
 <p align="center">
   <a href="README.md">English</a> |
   <a href="README_zh_CN.md">简体中文</a>
