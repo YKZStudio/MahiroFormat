@@ -1,6 +1,6 @@
 {
   "name": "mahiro-format",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "private": true,
   "author": "LaoFeng",
   "contributors": [
@@ -66,8 +66,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "LaoFeng-mouse",
-        "repo": "flyingmouse-format"
+        "owner": "YKZStudio",
+        "repo": "MahiroFormat"
       }
     ],
     "directories": {

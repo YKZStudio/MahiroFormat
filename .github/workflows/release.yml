@@ -6,16 +6,38 @@ on:
       release_tag:
         description: "Release/tag name (e.g. v0.6.1) — used when dispatching manually"
         required: false
-        default: "v0.6.1"
+        default: ""
   push:
+    branches: [main]
+    paths: [".github/release-request.json"]
     tags:
       - "v*"
 
 permissions:
   contents: read
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  release-metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.metadata.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate release version and source
+        id: metadata
+        env:
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+        run: node scripts/release-metadata.js
+
   validate-and-build:
+    needs: release-metadata
     runs-on: windows-latest
     timeout-minutes: 180
     steps:
@@ -81,7 +103,14 @@ jobs:
         run: npm test
 
       - name: Production dependency audit
-        run: npm audit --omit=dev --audit-level=high --package-lock-only
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if npm audit --omit=dev --audit-level=high --package-lock-only; then exit 0; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            echo "Audit did not pass; retrying in 15 seconds ($attempt/3)."
+            sleep 15
+          done
 
       - name: Build Windows 10 and 11 installer
         run: npm run dist
@@ -110,6 +139,7 @@ jobs:
           if-no-files-found: error
 
   validate-and-build-macos:
+    needs: release-metadata
     name: macOS ${{ matrix.arch }} validated DMG
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
@@ -166,7 +196,14 @@ jobs:
           "$FLYINGMOUSE_LIBREOFFICE_PATH" -env:UserInstallation="file://$RUNNER_TEMP/flyingmouse-office-profile" --headless --version
 
       - name: Production dependency audit
-        run: npm audit --omit=dev --audit-level=high --package-lock-only
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if npm audit --omit=dev --audit-level=high --package-lock-only; then exit 0; fi
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            echo "Audit did not pass; retrying in 15 seconds ($attempt/3)."
+            sleep 15
+          done
 
       - name: Build unsigned macOS DMG
         run: npm run dist:mac:${{ matrix.arch }}
@@ -219,7 +256,7 @@ jobs:
 
   publish:
     name: Publish GitHub Release
-    needs: [validate-and-build, validate-and-build-macos]
+    needs: [release-metadata, validate-and-build, validate-and-build-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -236,9 +273,14 @@ jobs:
       - name: Create release and upload assets
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.release-metadata.outputs.tag }}
         run: |
           set -euo pipefail
-          TAG="${{ inputs.release_tag || github.ref_name }}"
+          TAG="$RELEASE_TAG"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            git fetch origin "refs/tags/$TAG:refs/tags/$TAG"
+            test "$(git rev-list -n 1 "$TAG")" = "$GITHUB_SHA" || { echo "Release tag points to another commit; refusing to move it."; exit 1; }
+          fi
           # 标准版 x64 exe/blockmap 重命名为连字符，匹配 latest.yml 的 url
           # （空格会被 GitHub 显示成点，electron-updater 按 url 下载会 404）
           cd release-assets
@@ -260,13 +302,14 @@ jobs:
           VER="${TAG#v}"
           VER="${VER//./}"
           NOTES="docs/release-notes-${VER}.md"
-          [ -f "$NOTES" ] || NOTES="docs/RELEASE.md"
+          test -f "$NOTES" || { echo "Version-specific release notes missing"; exit 1; }
+          (cd release-assets && sha256sum * > SHA256SUMS.txt)
           # release 已存在（如手动预上传资产）时跳过 create，仅补传/覆盖资产
           if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             echo "release $TAG already exists; uploading assets only"
           else
             gh release create "$TAG" --repo "${{ github.repository }}" \
-              --title "Mahiro Format $TAG" \
+              --target "$GITHUB_SHA" --title "Mahiro Format $TAG" \
               --notes-file "$NOTES" --draft
           fi
           gh release upload "$TAG" release-assets/* --repo "${{ github.repository }}" --clobber

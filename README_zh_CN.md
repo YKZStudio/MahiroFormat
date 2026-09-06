@@ -1,5 +1,7 @@
 # Mahiro Format
 
+当前发行版本：**0.6.5**。
+
 <p align="center">
   <a href="README.md">English</a> |
   <a href="README_zh_CN.md">简体中文</a>
