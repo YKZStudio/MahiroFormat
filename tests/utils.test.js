@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
-const { decodeUploadFileName, safeBaseName, extFromName } = require("../utils");
+const { decodeUploadFileName, safeBaseName, extFromName } = require("../src/utils");
 
 test("decodeUploadFileName 还原 UTF-8 mojibake（浏览器 FormData 场景）", () => {
   // 「测试音频」UTF-8 字节被 latin1 解码后的样子

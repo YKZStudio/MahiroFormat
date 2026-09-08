@@ -4,25 +4,25 @@
 
 Mahiro Format 是基于原项目升级的 Windows Electron 离线文件转换器。主产品使用非官方绪山真寻同人主题；它与“鼠鼠打印”是两个独立项目，禁止跨项目修改或混合发布物。原版鼠鼠素材仅由 Git 历史保留，不再随当前源码或安装包分发，也不再作为产品主题或打包图标。
 
-当前主线：Electron 43、Windows 10/11 x64、Mahiro 同人主题 UI、中英文切换、批量转换、按源格式记忆目标格式、保存目录记忆、NCM/KGG/MFLAC/MGG/KGMA/MMP4/KWM/VPR 实验性兼容、PDF→Word 版式还原（docengine）、PDF→Excel 表格提取（camelot）、视频编码选择（H.264/H.265/AV1）、OFD→PDF（ofd-convert.js，@miconvert/ofd-to-pdf，仅支持转 PDF 不走 LibreOffice）。Windows 7 SP1 x64 只通过独立 staging 派生 Electron 22.3.27 兼容包，禁止降低根 manifest 的主线依赖。
+当前主线：Electron 43、Windows 10/11 x64、Mahiro 同人主题 UI、中英文切换、批量转换、按源格式记忆目标格式、保存目录记忆、NCM/KGG/MFLAC/MGG/KGMA/MMP4/KWM/VPR 实验性兼容、PDF→Word 版式还原（docengine）、PDF→Excel 表格提取（camelot）、视频编码选择（H.264/H.265/AV1）、OFD→PDF（src/ofd-convert.js，@miconvert/ofd-to-pdf，仅支持转 PDF 不走 LibreOffice）。Windows 7 SP1 x64 只通过独立 staging 派生 Electron 22.3.27 兼容包，禁止降低根 manifest 的主线依赖。
 
 ## Source map
 
-- `server.js`：Express 本地转换服务、能力检测、目标格式判断、上传与下载路由。
-- `electron-main.js`：启动本地服务、创建窗口、设置打包引擎路径、保存 IPC。
-- `electron-security.js`：导航、外链、下载和 IPC 的同源信任策略。
-- `preload.js`：向渲染器暴露最小 IPC 接口。
+- `src/server.js`：Express 本地转换服务、能力检测、目标格式判断、上传与下载路由。
+- `src/electron-main.js`：启动本地服务、创建窗口、设置打包引擎路径、保存 IPC。
+- `src/electron-security.js`：导航、外链、下载和 IPC 的同源信任策略。
+- `src/preload.js`：向渲染器暴露最小 IPC 接口。
 - `public/index.html`、`public/styles.css`、`public/app.js`：Mahiro 主题 UI、批量队列、进度、状态与保存交互。
 - `public/i18n.js`：`zh-CN` / `en-US` 语言状态与持久化。
 - `public/conversion-preferences.js`：按规范化源扩展名记忆目标格式。
-- `settings-store.js`：在 Electron `userData/settings.json` 中原子保存最近目录。
-- `resource-policy.js`：统一图片、批量、PDF 与 OCR 资源上限和稳定错误码。
-- `text-conversion.js`：统一 ATX/Fenced Turndown 与严格 CSV 解析。
-- `pdf-table-extractor.js` / `pdf-table-runtime.js`：复杂 PDF 表格几何识别、OCR 回退与工作簿模型。
-- `ofd-convert.js`：OFD（国标 GB/T 33190）→ PDF，`@miconvert/ofd-to-pdf` 纯 JS 链路，仅支持转 PDF 不走 LibreOffice。
-- `logger.js`：主进程、服务端和渲染器共用的分级日志。
-- `win7-build-profile.js` / `scripts/build-win7.js`：派生并构建隔离的 Windows 7 manifest；根依赖不得被改写。
-- `pe-metadata.js` / `scripts/inspect-pe.js`：读取 PE32/PE32+ 的目标 OS 版本，发布时检查解包应用 EXE。
+- `src/settings-store.js`：在 Electron `userData/settings.json` 中原子保存最近目录。
+- `src/resource-policy.js`：统一图片、批量、PDF 与 OCR 资源上限和稳定错误码。
+- `src/text-conversion.js`：统一 ATX/Fenced Turndown 与严格 CSV 解析。
+- `src/pdf-table-extractor.js` / `src/pdf-table-runtime.js`：复杂 PDF 表格几何识别、OCR 回退与工作簿模型。
+- `src/ofd-convert.js`：OFD（国标 GB/T 33190）→ PDF，`@miconvert/ofd-to-pdf` 纯 JS 链路，仅支持转 PDF 不走 LibreOffice。
+- `src/logger.js`：主进程、服务端和渲染器共用的分级日志。
+- `scripts/lib/win7-build-profile.js` / `scripts/build-win7.js`：派生并构建隔离的 Windows 7 manifest；根依赖不得被改写。
+- `scripts/lib/pe-metadata.js` / `scripts/inspect-pe.js`：读取 PE32/PE32+ 的目标 OS 版本，发布时检查解包应用 EXE。
 - `build/icon.png`：NSIS、EXE、任务栏和快捷方式的 512×512 Mahiro 图标；必须由 `public/assets/mahiro-format/mahiro-avatar.png` 生成。
 - `bin/`：本地转换引擎。除 `bin/avs3/` 外被 Git 忽略，换机时必须单独准备。
 
@@ -71,7 +71,7 @@ Electron 启动时设置：
 
 开发或测试还可覆盖 `FLYINGMOUSE_PDFTOPPM_PATH`、`FLYINGMOUSE_TESSDATA_PATH` 和 `PORT`。
 
-桌面日志位于 `%APPDATA%\Mahiro Format\debug.log`。独立运行 `node server.js` 时默认写 `%TEMP%\flyingmouse-format-debug.log`（为兼容旧诊断路径保留内部文件名）。
+桌面日志位于 `%APPDATA%\Mahiro Format\debug.log`。独立运行 `node src/server.js` 时默认写 `%TEMP%\flyingmouse-format-debug.log`（为兼容旧诊断路径保留内部文件名）。
 
 ## Commands
 
@@ -94,7 +94,7 @@ npm audit --omit=dev --prefix output\win7-stage
 
 ## Packaging and release
 
-- `build.files` 是显式白名单；新增被服务端引用的根目录 JS 模块时必须同步加入。
+- `build.files` 是显式白名单；新增被服务端引用的 `src/` JS 模块时必须同步加入。
 - `extraResources` 必须包含 FFmpeg、AVS3、LibreOffice、Poppler、tessdata、Tesseract core 和 docengine（PDF→Word/Excel 文档引擎，Windows 标准版专用；win7 版与 macOS 排除，回退纯 JS）。
 - 保持 `signExecutable: false`，不要使用 `signAndEditExecutable: false`，后者会跳过图标嵌入。
 - `npm run dist` 当前生成 NSIS 安装包和 `dist/win-unpacked`；不要假设 APPX 已同步生成。

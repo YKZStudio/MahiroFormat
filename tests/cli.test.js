@@ -8,7 +8,7 @@ const {
   parseCliArgs,
   resolveOutputDestinations,
   sanitizeJsonError
-} = require("../cli");
+} = require("../src/cli");
 
 test("CLI parses conversion, merge, JSON, and engine options", () => {
   const parsed = parseCliArgs([
@@ -50,7 +50,7 @@ test("CLI JSON errors never include the PDF password", () => {
 });
 
 test("CLI keeps stdout as one parseable JSON value when engine probes warn", () => {
-  const result = spawnSync(process.execPath, [path.join(__dirname, "..", "cli.js"), "targets", "README.md", "--json"], {
+  const result = spawnSync(process.execPath, [path.join(__dirname, "..", "src/cli.js"), "targets", "README.md", "--json"], {
     cwd: path.join(__dirname, ".."),
     encoding: "utf8"
   });

@@ -4,7 +4,7 @@ const { spawnSync } = require("node:child_process");
 const { createHash, randomBytes } = require("node:crypto");
 const { isDeepStrictEqual } = require("node:util");
 
-const { createWin7BuildProfile } = require("../win7-build-profile");
+const { createWin7BuildProfile } = require("./lib/win7-build-profile");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const STAGE_BASENAME = "win7-stage";

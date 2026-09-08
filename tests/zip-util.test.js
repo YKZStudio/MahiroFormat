@@ -4,7 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const { collectDirectoryFiles, zipDirectory, listZipEntries } = require("../zip-util");
+const { collectDirectoryFiles, zipDirectory, listZipEntries } = require("../src/zip-util");
 
 async function buildFixtureTree(root) {
   await fsp.mkdir(path.join(root, "sub", "nested"), { recursive: true });

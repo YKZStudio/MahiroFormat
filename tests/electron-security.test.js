@@ -4,7 +4,7 @@ const {
   isTrustedRendererUrl,
   resolveTrustedDownloadUrl,
   isAllowedExternalUrl
-} = require("../electron-security");
+} = require("../src/electron-security");
 
 const serverUrl = "http://127.0.0.1:5177";
 

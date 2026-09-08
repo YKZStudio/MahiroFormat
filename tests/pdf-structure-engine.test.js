@@ -11,14 +11,14 @@ const {
   DEFAULT_TIMEOUT_MS,
   createStructuredPdfBoundary,
   withStructuredPdf
-} = require("../pdf-structure-engine");
+} = require("../src/pdf-structure-engine");
 const realExecFile = promisify(execFileCallback);
 
 test("registers the runner test and development engine/model candidates", () => {
   const packageJson = require("../package.json");
   assert.match(`${packageJson.scripts.pretest || ""} ${packageJson.scripts.test}`, /tests\/pdf-structure-engine\.test\.js/);
   assert.match(`${packageJson.scripts["pretest:ci"] || ""} ${packageJson.scripts["test:ci"]}`, /tests\/pdf-structure-engine\.test\.js/);
-  const configSource = require("node:fs").readFileSync(path.join(__dirname, "..", "config.js"), "utf8");
+  const configSource = require("node:fs").readFileSync(path.join(__dirname, "..", "src/config.js"), "utf8");
   assert.match(configSource, /bin["'],\s*["']docstructure["'],\s*["']docstructure-engine\.exe/);
   assert.match(configSource, /bin["'],\s*["']docstructure["'],\s*["']models/);
 });

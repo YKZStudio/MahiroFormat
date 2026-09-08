@@ -5,10 +5,10 @@ const os = require("os");
 const path = require("path");
 const { test } = require("node:test");
 
-const { convertPdf, convertStructuredPdf } = require("../pdf");
-const { validateStructureManifest } = require("../pdf-structure-contract");
-const { validatePdfOfficeDocx } = require("../pdf-office-docx");
-const { validatePdfOfficeXlsx } = require("../pdf-office-xlsx");
+const { convertPdf, convertStructuredPdf } = require("../src/pdf");
+const { validateStructureManifest } = require("../src/pdf-structure-contract");
+const { validatePdfOfficeDocx } = require("../src/pdf-office-docx");
+const { validatePdfOfficeXlsx } = require("../src/pdf-office-xlsx");
 const { createScannedTablePdf } = require("./helpers/scanned-pdf-fixture");
 
 test("creates deterministic scanned PDF fixtures", async (t) => {

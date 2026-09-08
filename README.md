@@ -111,12 +111,12 @@ npm run dist:win7
 ## Command-line interface
 
 ```powershell
-node cli.js capabilities --json
-node cli.js targets example.pdf --json
-node cli.js convert input.docx --to pdf --output output.pdf --json
-node cli.js convert a.png b.png --to webp --output-dir converted --json
-node cli.js images-to-pdf 1.jpg 2.jpg --output album.pdf --json
-node cli.js merge-pdfs a.pdf b.pdf --output merged.pdf --json
+node src/cli.js capabilities --json
+node src/cli.js targets example.pdf --json
+node src/cli.js convert input.docx --to pdf --output output.pdf --json
+node src/cli.js convert a.png b.png --to webp --output-dir converted --json
+node src/cli.js images-to-pdf 1.jpg 2.jpg --output album.pdf --json
+node src/cli.js merge-pdfs a.pdf b.pdf --output merged.pdf --json
 ```
 
 Packaged applications accept the same commands after `--cli`:
@@ -140,6 +140,22 @@ Read the [privacy policy](docs/privacy-policy.html) and [architecture documentat
 
 The [documentation index](docs/README.md) separates current references, release procedures, user guides, historical release notes, and archived design records.
 
+### Project layout
+
+| Path | Contents |
+|---|---|
+| `src/` | Electron main process and preload, local server, CLI, and conversion modules |
+| `public/` | Desktop interface, translations, and artwork |
+| `scripts/` | Build, release, validation, and maintenance commands; shared helpers in `scripts/lib/` |
+| `tests/` | Automated tests, fixtures, and test helpers |
+| `build/` | Installer icons and packaging assets |
+| `bin/` / `tools/` | Local conversion engines / engine source and build tools |
+| `docs/` | User and developer documentation, plus historical records |
+| `agent-skill/` | Bundled Agent integration |
+| `website/` | Project website |
+
+The root retains package manifests, lockfiles, engine manifests, and repository documentation. Source commands now use `node src/cli.js` and `node src/server.js`; `npm start` and `npm run desktop` remain available.
+
 ## License
 
 Mahiro Format uses a [non-commercial license](LICENSE). Personal, non-commercial use and redistribution are allowed when the license and attribution are retained. Commercial sale, resale, paid-service use, rebranding, reskinning, and repackaging as another product are prohibited.
@@ -153,4 +169,21 @@ Bundled third-party components keep their own licenses. The bundled document eng
 - [Current repository](https://github.com/YKZStudio/MahiroFormat)
 - [Original repository and historical issues](https://github.com/LaoFeng-mouse/flyingmouse-format)
 
-Mahiro Format is free, offline, and ad-free. Optional support information is shown in the Chinese README.
+## Optional support
+
+Mahiro Format is free, offline, and ad-free. If it helps you, you can treat Mahiro to a pudding. Support is entirely voluntary.
+
+### YKZStudio — upgrade and maintenance
+
+These are the same cryptocurrency donation addresses shown in the main interface's support panel:
+
+| Method | Address |
+|---|---|
+| TRON | `TNsEbkyyy9XWpsTT64Zvn7bkN2wkbeWPwM` |
+| GasFree | `TV7w7oi18KiSVz9qoXsvQur2FKNnu3Ry5h` |
+
+### LaoFeng (牢蜂) — original author
+
+WeChat Pay:
+
+<img src="public/assets/sponsor-qr.jpg" alt="LaoFeng's WeChat Pay donation QR code" width="240">

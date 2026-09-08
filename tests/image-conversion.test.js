@@ -5,7 +5,7 @@ const path = require("node:path");
 const { test } = require("node:test");
 const sharp = require("sharp");
 
-const { convertRasterImage } = require("../image-conversion");
+const { convertRasterImage } = require("../src/image-conversion");
 
 async function removeScratch(scratch) {
   sharp.cache(false);

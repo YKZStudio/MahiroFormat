@@ -5,7 +5,7 @@
 //   1. FLYINGMOUSE_LOG_FILE env var (explicit override, used by tests)
 //   2. Electron userData dir (desktop mode; the Electron main process calls
 //      setLogFile early so server.js and the renderer share the same file)
-//   3. Temp dir fallback (plain `node server.js` / tests without Electron)
+//   3. Temp dir fallback (plain `node src/server.js` / tests without Electron)
 //
 // Logging must never break the app: every write is wrapped so an unwritable
 // path or a full disk only drops log lines, never the conversion.
@@ -103,7 +103,7 @@ function write(level, message, error) {
     const line = `[${new Date().toISOString()}] [${level}] ${message}${formatError(error)}\n`;
     fs.appendFileSync(filePath, line, "utf8");
     trimIfOversized(filePath);
-    // Also mirror to stdout so `node server.js` sessions stay observable.
+    // Also mirror to stdout so `node src/server.js` sessions stay observable.
     if (LEVELS[level] >= LEVELS.WARN) {
       const stream = process.env.FLYINGMOUSE_LOG_STDERR === "1" ? process.stderr : process.stdout;
       stream.write(`[${level}] ${message}${formatError(error)}\n`);

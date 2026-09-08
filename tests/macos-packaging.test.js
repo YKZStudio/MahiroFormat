@@ -11,7 +11,7 @@ const root = path.join(__dirname, "..");
 test("electron-builder declares exact unsigned macOS 11 DMGs without Windows resources", () => {
   const packageJson = require("../package.json");
   const build = packageJson.build;
-  assert.ok(build.files.includes("runtime-paths.js"));
+  assert.ok(build.files.includes("src/runtime-paths.js"));
   assert.equal(build.extraResources, undefined);
   assert.equal(build.mac.artifactName, "${productName}-Setup-${version}-mac-${arch}.${ext}");
   assert.equal(build.mac.minimumSystemVersion, "11.0.0");
@@ -164,8 +164,8 @@ test("macOS engine preparation uses native arm64 and Intel runners and validates
 
 test("Thai OCR data stays packaged but the runtime loads only eng+chi_sim", () => {
   const packageJson = require("../package.json");
-  const server = fs.readFileSync(path.join(root, "server.js"), "utf8");
-  const ocr = fs.readFileSync(path.join(root, "ocr.js"), "utf8");
+  const server = fs.readFileSync(path.join(root, "src/server.js"), "utf8");
+  const ocr = fs.readFileSync(path.join(root, "src/ocr.js"), "utf8");
   assert.equal(packageJson.dependencies["@tesseract.js-data/tha"], "1.0.0");
   assert.match(JSON.stringify(packageJson.build.win.extraResources), /tha\.traineddata\.gz/);
   assert.match(ocr, /createWorker\("eng\+chi_sim",/);

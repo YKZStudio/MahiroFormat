@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
-const { detectTablesOnPage, buildWorkbookModel } = require("../pdf-table-extractor");
+const { detectTablesOnPage, buildWorkbookModel } = require("../src/pdf-table-extractor");
 
 function word(text, x, y, confidence = 1, width = 40, height = 14) {
   return { text, x, y, width, height, confidence };

@@ -8,7 +8,7 @@ const {
   inspectXlsxForCsv,
   validatePresentationHtml,
   visibleBodyText
-} = require("../office-quality");
+} = require("../src/office-quality");
 
 test("presentation HTML accepts visible slide text inside a non-empty body", () => {
   const result = validatePresentationHtml(`<!doctype html><html><head><title>Deck</title></head>
@@ -84,7 +84,7 @@ test("XLSX to CSV falls back to the first sheet and emits no loss warning for a 
 });
 
 test("server wires Office quality results into the existing warning and bilingual error contracts", () => {
-  const source = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  const source = fs.readFileSync(path.join(__dirname, "..", "src/server.js"), "utf8");
   assert.match(source, /require\(["']\.\/office-quality["']\)/);
   assert.match(source, /inspectXlsxForCsv\(file\.path\)/);
   assert.match(source, /conversionResult\s*=\s*await inspectXlsxForCsv/);
@@ -117,8 +117,8 @@ test("XLSX to CSV degrades gracefully when exceljs cannot parse the workbook str
 });
 
 test("Win7 staging copies the Office quality runtime module", () => {
-  const source = fs.readFileSync(path.join(__dirname, "..", "win7-build-profile.js"), "utf8");
-  assert.match(source, /["']office-quality\.js["']/);
+  const source = fs.readFileSync(path.join(__dirname, "..", "scripts/lib/win7-build-profile.js"), "utf8");
+  assert.match(source, /["']src\/office-quality\.js["']/);
 });
 
 test("numeric HTML entities outside the Unicode range never crash text extraction", () => {

@@ -8,7 +8,7 @@ const {
   csvToMarkdown,
   jsonToCsv,
   markdownToHtml
-} = require("../text-conversion");
+} = require("../src/text-conversion");
 
 test("Markdown converts semantic inline and block structures to HTML", () => {
   const html = markdownToHtml(`# Heading

@@ -12,7 +12,7 @@ const {
   VPR_HEADER,
   VPR_MASK_DIFF,
   MASK_V2_PREDEF
-} = require("../kgm-vpr-format");
+} = require("../src/kgm-vpr-format");
 
 function encryptVprAudio(plain, key, maskV2) {
   const encrypted = Buffer.alloc(plain.length);

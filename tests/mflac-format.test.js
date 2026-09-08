@@ -13,8 +13,8 @@ const {
   musicexFallbackFilenames,
   loadQqMusicCredentials,
   tryDecryptCandidates
-} = require("../mflac-format");
-const { QMC2MAP, QMC2RC4, createQMC2 } = require("../kgg-format");
+} = require("../src/mflac-format");
+const { QMC2MAP, QMC2RC4, createQMC2 } = require("../src/kgg-format");
 
 // 隔离真实桌面凭据：默认 cookie 路径指向不存在的文件，确保测试不读真实凭据、不发起网络请求。
 const { before, after } = require("node:test");
@@ -210,12 +210,12 @@ test("convertMflac decrypts an EncV2 mgg built from the fixture key (OggS output
 });
 
 test("config exposes legacy and QMC2 inputs and server preserves the upload extension", () => {
-  const { audioInput, unlockAudioInputs } = require("../config");
+  const { audioInput, unlockAudioInputs } = require("../src/config");
   for (const extension of ["tkm", "bkcm4a", "mflac", "mgg", "mmp4", "qmcflac", "qmc8"]) {
     assert.equal(audioInput.has(extension), true, `${extension} should be accepted as audio`);
     assert.equal(unlockAudioInputs.has(extension), true, `${extension} should use the unlock route`);
   }
-  const serverSource = require("node:fs").readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  const serverSource = require("node:fs").readFileSync(path.join(__dirname, "..", "src/server.js"), "utf8");
   assert.ok(
     serverSource.includes("convertMflac(file.path, { sourceExt: inputExt })"),
     "multer 临时文件无扩展名，server.js 必须显式传递原始扩展名"
@@ -223,7 +223,7 @@ test("config exposes legacy and QMC2 inputs and server preserves the upload exte
 });
 
 test("shared sniffer recognizes QMC v1 and MMP4 output containers", () => {
-  const { detectAudioFormat } = require("../audio-sniffer");
+  const { detectAudioFormat } = require("../src/audio-sniffer");
   const m4a = Buffer.alloc(16);
   m4a.writeUInt32BE(16, 0);
   m4a.write("ftyp", 4, "latin1");
@@ -243,7 +243,7 @@ test("musicexFallbackFilenames 按音质从高到低生成降档候选", () => {
 
 test("static: musicex 原档无权限时自动降档下载（F0M/O4M/M500）", () => {
   const fs = require("node:fs");
-  const mflacSource = fs.readFileSync(path.join(__dirname, "..", "mflac-format.js"), "utf8");
+  const mflacSource = fs.readFileSync(path.join(__dirname, "..", "src/mflac-format.js"), "utf8");
   assert.ok(mflacSource.includes("collectMusicexCandidates"), "应存在 musicex 候选收集函数");
   assert.ok(mflacSource.includes("tryDecryptCandidates"), "应存在逐候选解密函数");
   assert.ok(mflacSource.includes("downloadMusicexFile"), "应存在 CDN 下载函数");

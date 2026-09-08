@@ -94,9 +94,9 @@ jobs:
 
       - name: Syntax checks
         run: |
-          node --check server.js
-          node --check pdf-table-extractor.js
-          node --check pdf-table-runtime.js
+          node --check src/server.js
+          node --check src/pdf-table-extractor.js
+          node --check src/pdf-table-runtime.js
           node --check public/app.js
 
       - name: Full real conversion suite

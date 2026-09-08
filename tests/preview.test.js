@@ -2,14 +2,14 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
-const { registerDownload } = require("../utils");
-const { downloads } = require("../config");
+const { registerDownload } = require("../src/utils");
+const { downloads } = require("../src/config");
 
 const root = path.join(__dirname, "..");
 
 test("conversion results expose a registered inline preview without leaking paths", () => {
-  const server = fs.readFileSync(path.join(root, "server.js"), "utf8");
-  const utils = fs.readFileSync(path.join(root, "utils.js"), "utf8");
+  const server = fs.readFileSync(path.join(root, "src/server.js"), "utf8");
+  const utils = fs.readFileSync(path.join(root, "src/utils.js"), "utf8");
   assert.match(server, /app\.get\("\/previews\/:id"/);
   assert.match(server, /Content-Disposition",\s*`inline/);
   assert.match(server, /X-Content-Type-Options",\s*"nosniff"/);

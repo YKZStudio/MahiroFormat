@@ -8,9 +8,9 @@ const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const { categoryForExt, targetsForExt } = require("../utils");
-const { rawInput, DCRAW_PATH } = require("../config");
-const { prepareImageInput } = require("../image");
+const { categoryForExt, targetsForExt } = require("../src/utils");
+const { rawInput, DCRAW_PATH } = require("../src/config");
+const { prepareImageInput } = require("../src/image");
 
 const RAW_EXTS = ["cr2", "cr3", "crw", "nef", "arw", "dng", "raf", "rw2", "orf", "pef", "srw", "3fr", "erf", "fff", "iiq", "kdc", "mef", "mrw", "x3f"];
 
@@ -41,20 +41,20 @@ test("targetsForExt 对 RAW 输入暴露图片类目标（与普通图片一致�
 });
 
 test("静态：image.js dcraw 调用用 sRGB（-o 1）并输出 TIFF（-T）", () => {
-  const source = require("fs").readFileSync(path.join(__dirname, "..", "image.js"), "utf8");
+  const source = require("fs").readFileSync(path.join(__dirname, "..", "src/image.js"), "utf8");
   assert.ok(source.includes('["-T", "-o", "1"'), "dcraw 参数应为 -T -o 1（TIFF + sRGB）");
   assert.ok(!source.includes('"-o", "6"'), "不得再使用 ACES 线性（-o 6）导致偏色");
   assert.ok(source.includes("RAW 解码引擎（dcraw）不可用"), "缺少 dcraw 时应报明确错误");
 });
 
 test("静态：config.js rawInput 与实验性标注存在", () => {
-  const source = require("fs").readFileSync(path.join(__dirname, "..", "config.js"), "utf8");
+  const source = require("fs").readFileSync(path.join(__dirname, "..", "src/config.js"), "utf8");
   assert.ok(source.includes("rawInput"), "config 应导出 rawInput");
   assert.ok(source.includes('raw: [...rawInput]'), "RAW 应标记为实验性输入");
 });
 
 test("静态：server.js capability 按 DCRAW_PATH 暴露 RAW 输入", () => {
-  const source = require("fs").readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  const source = require("fs").readFileSync(path.join(__dirname, "..", "src/server.js"), "utf8");
   assert.ok(source.includes("DCRAW_PATH ? rawInput"), "capability 应在有 dcraw 时暴露 raw 输入");
 });
 

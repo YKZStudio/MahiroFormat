@@ -9,7 +9,7 @@ const yazl = require("yazl");
 const {
   findCrcBrokenZipEntries,
   repairZipCrcIfNeeded
-} = require("../office-convert");
+} = require("../src/office-convert");
 
 function buildDocx(parts) {
   return new Promise((resolve, reject) => {
@@ -87,7 +87,7 @@ test("repairZipCrcIfNeeded rewrites a zip with zero-CRC entries", async (t) => {
   assert.equal(stillBroken.length, 0, "修复后不应再有 CRC=0 的 entry");
 
   // 修复后的 docx 仍应能被正常解析出 document.xml
-  const { readDocxEntryString } = require("../office-convert");
+  const { readDocxEntryString } = require("../src/office-convert");
   const xml = await readDocxEntryString(repaired, "word/document.xml");
   assert.ok(xml && xml.includes("飞鼠"));
 });

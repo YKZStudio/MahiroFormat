@@ -9,7 +9,7 @@ const {
   assertImagePdfBudget,
   assertBatchBytes,
   assertPdfPages
-} = require("../resource-policy");
+} = require("../src/resource-policy");
 
 test("resource limits match the fixed desktop safety budget", () => {
   assert.equal(LIMITS.maxImagePixels, 50_000_000);

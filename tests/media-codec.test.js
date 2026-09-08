@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
-const { videoEncoderArgs, alphaCompositeArgs } = require("../media");
+const { videoEncoderArgs, alphaCompositeArgs } = require("../src/media");
 
 test("videoEncoderArgs 默认与 h264 → libx264 crf23", () => {
   const expected = ["-codec:v", "libx264", "-preset", "medium", "-crf", "23"];

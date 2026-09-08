@@ -6,8 +6,8 @@ const path = require("node:path");
 const fsp = require("node:fs/promises");
 const yazl = require("yazl");
 
-const { DOCENGINE_PATH } = require("../config");
-const { convertPdfToDocx, validateNativePdfDocx } = require("../pdf");
+const { DOCENGINE_PATH } = require("../src/config");
+const { convertPdfToDocx, validateNativePdfDocx } = require("../src/pdf");
 
 const fixture = path.join(__dirname, "fixtures", "sample-pdf2docx.pdf");
 const fixtureExists = fs.existsSync(fixture);
@@ -28,7 +28,7 @@ test("PDF→docx 优先走 pdf2docx 引擎做版式还原（fixture + 引擎保�
 });
 
 test("pdf.js 的 PDF→docx 在引擎缺失/失败时回退到文字提取", () => {
-  const source = fs.readFileSync(path.join(__dirname, "..", "pdf.js"), "utf8");
+  const source = fs.readFileSync(path.join(__dirname, "..", "src/pdf.js"), "utf8");
   assert.match(source, /DOCENGINE_PATH/, "应接入 pdf2docx 引擎路径");
   assert.match(source, /extractPdfRowsByPage/, "应保留 PDF.js 文字提取回退");
   assert.match(source, /catch\s*\(error\)/, "引擎转换失败应回退");

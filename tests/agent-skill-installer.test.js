@@ -6,7 +6,7 @@ const { test } = require("node:test");
 const {
   discoverSkillRoots,
   installAgentSkill
-} = require("../agent-skill-installer");
+} = require("../src/agent-skill-installer");
 
 test("discovers only existing Agent skill roots on macOS and Windows", async () => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), "flyingmouse-roots-"));

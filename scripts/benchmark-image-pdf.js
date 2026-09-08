@@ -16,12 +16,20 @@ const sharp = require("sharp");
 const root = path.resolve(__dirname, "..");
 
 async function worker([revision, inputPath, outputPath, pageCount]) {
-  const filename = path.join(root, "image.js");
-  const source = revision === "working-tree" ? fs.readFileSync(filename, "utf8")
-    : execFileSync("git", ["show", `${revision}:image.js`], { cwd: root, encoding: "utf8" });
+  const filename = path.join(root, "src", "image.js");
+  let source;
+  if (revision === "working-tree") {
+    source = fs.readFileSync(filename, "utf8");
+  } else {
+    // Baselines may precede the source-directory migration.
+    const entries = execFileSync("git", ["ls-tree", "--name-only", revision, "src/image.js"],
+      { cwd: root, encoding: "utf8" }).trim();
+    const sourcePath = entries ? "src/image.js" : "image.js";
+    source = execFileSync("git", ["show", `${revision}:${sourcePath}`], { cwd: root, encoding: "utf8" });
+  }
   const loaded = { exports: {} };
   vm.compileFunction(source, ["require", "module", "exports", "__filename", "__dirname"], { filename })(
-    createRequire(filename), loaded, loaded.exports, filename, root);
+    createRequire(filename), loaded, loaded.exports, filename, path.dirname(filename));
   sharp.cache(false);
   let concatBytes = 0;
   const originalConcat = Buffer.concat;

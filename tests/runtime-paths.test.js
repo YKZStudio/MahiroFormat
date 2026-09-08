@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const { test } = require("node:test");
 
-const { resolveRuntimePaths } = require("../runtime-paths");
+const { resolveRuntimePaths } = require("../src/runtime-paths");
 
 test("Windows runtime paths preserve the packaged x64 engine layout", () => {
   const resourcesPath = "C:\\Program Files\\Mahiro Format\\resources";

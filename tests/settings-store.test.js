@@ -10,7 +10,7 @@ const {
   readSettings,
   updateSettings,
   writeLastSaveDirectory
-} = require("../settings-store");
+} = require("../src/settings-store");
 
 test("falls back when settings are missing, damaged, or point to a non-directory", async (t) => {
   const scratch = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-settings-test-"));

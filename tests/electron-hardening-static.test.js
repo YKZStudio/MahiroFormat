@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { test } = require("node:test");
 const { pathToFileURL } = require("url");
-const { createPdfjsLoader, loadPdfjsModule } = require("../server");
+const { createPdfjsLoader, loadPdfjsModule } = require("../src/server");
 
 const MODERN_PDFJS = "pdfjs-dist/legacy/build/pdf.mjs";
 const LEGACY_PDFJS = "pdfjs-dist/legacy/build/pdf.js";
@@ -21,7 +21,7 @@ function readRoot(fileName) {
 }
 
 test("main process enforces Electron trust boundaries", () => {
-  const source = readRoot("electron-main.js");
+  const source = readRoot("src/electron-main.js");
   assert.match(source, /sandbox:\s*true/);
   assert.match(source, /will-navigate/);
   assert.match(source, /isTrustedRendererUrl/);
@@ -32,7 +32,7 @@ test("main process enforces Electron trust boundaries", () => {
 });
 
 test("every IPC handler checks the renderer trust boundary", () => {
-  const source = readRoot("electron-main.js");
+  const source = readRoot("src/electron-main.js");
   const handlers = [...source.matchAll(/ipcMain\.handle\("([^"]+)"/g)].map((match) => match[1]);
   assert.ok(handlers.length >= 8, `expected at least 8 IPC handlers, got ${handlers.length}`);
   for (const name of handlers) {
@@ -48,7 +48,7 @@ test("every IPC handler checks the renderer trust boundary", () => {
 });
 
 test("local service sends a restrictive content security policy", () => {
-  const source = readRoot("server.js");
+  const source = readRoot("src/server.js");
   assert.match(source, /Content-Security-Policy/);
   assert.match(source, /default-src 'self'/);
   assert.match(source, /object-src 'none'/);
@@ -56,7 +56,7 @@ test("local service sends a restrictive content security policy", () => {
 });
 
 test("PDF.js loader supports modern and Win7 legacy layouts", () => {
-  const source = readRoot("pdfjs.js");
+  const source = readRoot("src/pdfjs.js");
   assert.match(source, /pdfjs-dist\/package\.json/);
   assert.match(source, /"pdf\.mjs"/);
   assert.match(source, /"pdf\.js"/);
@@ -65,7 +65,7 @@ test("PDF.js loader supports modern and Win7 legacy layouts", () => {
 });
 
 test("PDF extraction disables PDF.js eval support", () => {
-  const source = readRoot("pdf-table.js");
+  const source = readRoot("src/pdf-table.js");
   const functionStart = source.indexOf("async function extractPdfRowsByPage");
   const functionEnd = source.indexOf("\nasync function ", functionStart + 1);
   const extractSource = source.slice(functionStart, functionEnd);
@@ -99,7 +99,7 @@ test("PDF.js loader falls back to the legacy layout only when the modern entry i
   const modernUrl = pathToFileURL(modernEntry).href;
   const legacyUrl = pathToFileURL(legacyEntry).href;
   const missing = Object.assign(
-    new Error(`Cannot find module '${modernEntry}' imported from ${path.join(appRoot, "server.js")}`),
+    new Error(`Cannot find module '${modernEntry}' imported from ${path.join(appRoot, "src/server.js")}`),
     { code: "ERR_MODULE_NOT_FOUND", url: modernUrl }
   );
   const imports = [];
@@ -224,15 +224,15 @@ test("package pins the expected Electron version and includes the security modul
     assert.fail(`unexpected package name: ${packageJson.name}`);
   }
 
-  assert.ok(packageJson.build.files.includes("electron-security.js"));
+  assert.ok(packageJson.build.files.includes("src/electron-security.js"));
   assert.strictEqual(packageJson.build.win.signExecutable, false);
   assert.strictEqual(packageJson.build.win.signtoolOptions?.certificateSha1, undefined);
 });
 
 test("package bundles the AV3A helper and configures its runtime path", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
-  const main = readRoot("electron-main.js");
-  const runtimePaths = readRoot("runtime-paths.js");
+  const main = readRoot("src/electron-main.js");
+  const runtimePaths = readRoot("src/runtime-paths.js");
   const platformResources = packageJson.name === "mahiro-format"
     ? packageJson.build.win.extraResources
     : packageJson.build.extraResources;
@@ -260,16 +260,16 @@ test("structured PDF engine is standard Windows-only and never claimed by Win7 o
   ]);
   assert.strictEqual(packageJson.build.mac.extraResources.some((item) => item.to === "docstructure"), false);
 
-  const { createWin7Package } = require("../win7-build-profile");
+  const { createWin7Package } = require("../scripts/lib/win7-build-profile");
   const profile = createWin7Package(packageJson, path.resolve(__dirname, ".."));
   assert.strictEqual(profile.build.extraResources.some((item) => item.to === "docstructure"), false);
 });
 
 test("save dialogs restore and update the last successful directory", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
-  const main = readRoot("electron-main.js");
-  assert.ok(packageJson.build.files.includes("settings-store.js"));
-  assert.ok(packageJson.build.files.includes("markdown-assets.js"));
+  const main = readRoot("src/electron-main.js");
+  assert.ok(packageJson.build.files.includes("src/settings-store.js"));
+  assert.ok(packageJson.build.files.includes("src/markdown-assets.js"));
   assert.match(main, /readLastSaveDirectory/);
   assert.match(main, /writeLastSaveDirectory/);
   assert.match(main, /path\.join\(lastSaveDirectory, fileName\)/);
@@ -281,8 +281,8 @@ test("save dialogs restore and update the last successful directory", () => {
 });
 
 test("trusted IPC owns durable renderer settings", () => {
-  const main = readRoot("electron-main.js");
-  const preload = readRoot("preload.js");
+  const main = readRoot("src/electron-main.js");
+  const preload = readRoot("src/preload.js");
   for (const channel of ["get-settings", "update-settings", "migrate-legacy-settings"]) {
     assert.match(main, new RegExp(`ipcMain\\.handle\\(\\"${channel}\\"`));
   }
@@ -294,9 +294,9 @@ test("trusted IPC owns durable renderer settings", () => {
 
 test("trusted IPC exports a sanitized diagnostics report to the remembered directory", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
-  const main = readRoot("electron-main.js");
-  const preload = readRoot("preload.js");
-  assert.ok(packageJson.build.files.includes("diagnostics.js"));
+  const main = readRoot("src/electron-main.js");
+  const preload = readRoot("src/preload.js");
+  assert.ok(packageJson.build.files.includes("src/diagnostics.js"));
   assert.match(main, /ipcMain\.handle\("export-diagnostics"/);
   assert.match(main, /buildDiagnosticsReport/);
   assert.match(main, /readLastSaveDirectory/);
@@ -308,9 +308,9 @@ test("trusted IPC exports a sanitized diagnostics report to the remembered direc
 
 test("trusted IPC discovers and installs the bundled Agent skill", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
-  const main = readRoot("electron-main.js");
-  const preload = readRoot("preload.js");
-  assert.ok(packageJson.build.files.includes("agent-skill-installer.js"));
+  const main = readRoot("src/electron-main.js");
+  const preload = readRoot("src/preload.js");
+  assert.ok(packageJson.build.files.includes("src/agent-skill-installer.js"));
   assert.ok(packageJson.build.files.includes("agent-skill/**/*"));
   assert.match(main, /ipcMain\.handle\("inspect-agent-skill-targets"/);
   assert.match(main, /ipcMain\.handle\("install-agent-skill"/);
@@ -322,27 +322,26 @@ test("trusted IPC discovers and installs the bundled Agent skill", () => {
 
 test("packaged Electron exposes CLI mode without creating a window", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
-  const main = readRoot("electron-main.js");
-  assert.ok(packageJson.build.files.includes("cli.js"));
-  assert.strictEqual(packageJson.bin["mahiro-format"], "cli.js");
+  const main = readRoot("src/electron-main.js");
+  assert.ok(packageJson.build.files.includes("src/cli.js"));
+  assert.strictEqual(packageJson.bin["mahiro-format"], "src/cli.js");
   assert.match(main, /process\.argv\.indexOf\("--cli"\)/);
   assert.match(main, /if \(cliMode\)[\s\S]*runCli/);
   assert.match(main, /if \(!cliMode && !mainWindow/);
 });
 
 test("runtime diagnostics read Sharp's supported runtime version API", () => {
-  const server = readRoot("server.js");
+  const server = readRoot("src/server.js");
   assert.doesNotMatch(server, /require\(["']sharp\/package\.json["']\)/);
   assert.match(server, /sharp\.versions\.sharp/);
 });
 
 test("LibreOffice conversions without an output file surface the stable OFFICE_CONVERSION_FAILED code", () => {
-  const server = readRoot("office-convert.js");
+  const server = readRoot("src/office-convert.js");
   const branch = /if \(!convertedPath\) \{\s*\n\s*throw new OfficeEngineError\(\s*"OFFICE_CONVERSION_FAILED"/.exec(server);
   assert.ok(branch, "findConvertedFile empty branch must throw the stable code");
   assert.doesNotMatch(server, /throw new Error\(\s*"文档转换失败，可能是不支持这个源格式或文件已损坏。"/);
 });
-
 
 
 

@@ -9,7 +9,7 @@ const yazl = require("yazl");
 const {
   readDocxEntryString,
   docxNeedsPdfRepair
-} = require("../office-convert");
+} = require("../src/office-convert");
 
 function buildDocx(parts) {
   return new Promise((resolve, reject) => {

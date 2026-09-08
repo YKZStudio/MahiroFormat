@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const path = require('node:path');
-const { inspectPeFile } = require('../pe-metadata');
+const { inspectPeFile } = require('./lib/pe-metadata');
 
 const USAGE = 'Usage: node scripts/inspect-pe.js <path-to-exe>';
 
