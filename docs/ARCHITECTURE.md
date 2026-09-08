@@ -14,7 +14,7 @@ Electron main process
 ├─ exposes narrow save/settings IPC through preload
 └─ resolves packaged or development conversion engines
         ↓
-Mahiro UI (public/) → local API (server.js) → converters/engines → temporary output
+Mahiro UI (public/) → local API (src/server.js) → converters/engines → temporary output
         ↓
 Electron save dialog → user-selected destination
 ```
@@ -23,18 +23,18 @@ Electron save dialog → user-selected destination
 
 | Module | Responsibility |
 |---|---|
-| `electron-main.js` | Electron lifecycle, local service, runtime paths, trusted IPC, and saving |
-| `electron-security.js` | Navigation, external-link, download, and IPC-origin policy |
-| `preload.js` | Minimal renderer bridge |
-| `server.js` | Uploads, detection, target calculation, conversion dispatch, and downloads |
-| `config.js` / `utils.js` | Format registry, engine discovery, categories, and target calculation |
-| `resource-policy.js` | Shared image, PDF, OCR, and batch resource budgets |
-| `text-conversion.js` | Markdown/HTML conversion and strict CSV parsing |
-| `pdf.js` | PDF routing, DOCX conversion, split, encryption, and decryption |
-| `pdf-table-*.js` | Digital/OCR table extraction and workbook modeling |
-| `pdf-structure-*.js` | Scanned-document classification, manifest validation, scoring, and engine boundary |
-| `office-engine.js` | Isolated LibreOffice profiles, probes, execution, and stable errors |
-| `settings-store.js` | Atomic versioned settings in Electron `userData/settings.json` |
+| `src/electron-main.js` | Electron lifecycle, local service, runtime paths, trusted IPC, and saving |
+| `src/electron-security.js` | Navigation, external-link, download, and IPC-origin policy |
+| `src/preload.js` | Minimal renderer bridge |
+| `src/server.js` | Uploads, detection, target calculation, conversion dispatch, and downloads |
+| `src/config.js` / `src/utils.js` | Format registry, engine discovery, categories, and target calculation |
+| `src/resource-policy.js` | Shared image, PDF, OCR, and batch resource budgets |
+| `src/text-conversion.js` | Markdown/HTML conversion and strict CSV parsing |
+| `src/pdf.js` | PDF routing, DOCX conversion, split, encryption, and decryption |
+| `src/pdf-table-*.js` | Digital/OCR table extraction and workbook modeling |
+| `src/pdf-structure-*.js` | Scanned-document classification, manifest validation, scoring, and engine boundary |
+| `src/office-engine.js` | Isolated LibreOffice profiles, probes, execution, and stable errors |
+| `src/settings-store.js` | Atomic versioned settings in Electron `userData/settings.json` |
 | `public/app.js` | Queue, conversion, preview, save, and mascot-state interaction |
 | `public/i18n.js` | `zh-CN` / `en-US` translation state and migration support |
 

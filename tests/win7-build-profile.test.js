@@ -13,7 +13,7 @@ function resolveArtifactName(profile) {
 }
 
 test("Win7 profile pins the legacy runtime and is NSIS-only without mutating its input", () => {
-  const { createWin7BuildProfile } = require("../win7-build-profile");
+  const { createWin7BuildProfile } = require("../scripts/lib/win7-build-profile");
   const input = structuredClone(rootPackage);
   input.scripts.test += " tests/win7-build-profile.test.js tests/win7-build-script.test.js tests/pe-metadata.test.js";
   input.scripts["test:ci"] += " tests/win7-build-profile.test.js tests/win7-build-script.test.js tests/pe-metadata.test.js";
@@ -50,7 +50,7 @@ test("Win7 profile pins the legacy runtime and is NSIS-only without mutating its
 });
 
 test("Win7 artifact name follows a non-current input version", () => {
-  const { createWin7Package } = require("../win7-build-profile");
+  const { createWin7Package } = require("../scripts/lib/win7-build-profile");
   const input = structuredClone(rootPackage);
   input.version = "9.8.7";
 
@@ -62,32 +62,32 @@ test("Win7 artifact name follows a non-current input version", () => {
 });
 
 test("Win7 profile includes every current runtime module and absolute binary resources", () => {
-  const { createWin7Package } = require("../win7-build-profile");
+  const { createWin7Package } = require("../scripts/lib/win7-build-profile");
   const projectRoot = path.resolve(__dirname, "..");
   const profile = createWin7Package(rootPackage, projectRoot);
 
   for (const file of [
-    "electron-main.js",
-    "electron-security.js",
-    "preload.js",
-    "server.js",
-    "logger.js",
-    "settings-store.js",
-    "markdown-assets.js",
-    "office-engine.js",
-    "config.js",
-    "utils.js",
-    "media.js",
-    "zip-util.js",
-    "image.js",
-    "ocr.js",
-    "pdf-structure-contract.js",
-    "pdfjs.js",
-    "pdf-classifier.js",
-    "pdf-table.js",
-    "pdf.js",
-    "text-docx.js",
-    "office-convert.js"
+    "src/electron-main.js",
+    "src/electron-security.js",
+    "src/preload.js",
+    "src/server.js",
+    "src/logger.js",
+    "src/settings-store.js",
+    "src/markdown-assets.js",
+    "src/office-engine.js",
+    "src/config.js",
+    "src/utils.js",
+    "src/media.js",
+    "src/zip-util.js",
+    "src/image.js",
+    "src/ocr.js",
+    "src/pdf-structure-contract.js",
+    "src/pdfjs.js",
+    "src/pdf-classifier.js",
+    "src/pdf-table.js",
+    "src/pdf.js",
+    "src/text-docx.js",
+    "src/office-convert.js"
   ]) {
     assert.ok(profile.build.files.includes(file), `missing ${file}`);
   }
@@ -116,7 +116,7 @@ test("Win7 profile includes every current runtime module and absolute binary res
 });
 
 test("Win7 excludes a future docstructure extraResource", () => {
-  const { createWin7Package } = require("../win7-build-profile");
+  const { createWin7Package } = require("../scripts/lib/win7-build-profile");
   const input = structuredClone(rootPackage);
   input.build.win.extraResources.push({ from: "bin/docstructure", to: "docstructure" });
   const profile = createWin7Package(input, path.resolve(__dirname, ".."));
@@ -124,16 +124,16 @@ test("Win7 excludes a future docstructure extraResource", () => {
 });
 
 test("stage source entries contain runtime source and assets but exclude node_modules", () => {
-  const { stageSourceEntries } = require("../win7-build-profile");
+  const { stageSourceEntries } = require("../scripts/lib/win7-build-profile");
   const entries = stageSourceEntries(rootPackage);
 
   for (const entry of [
     "build",
     "tests",
-    "win7-build-profile.js",
+    "scripts/lib/win7-build-profile.js",
     "public",
-    "settings-store.js",
-    "office-engine.js"
+    "src/settings-store.js",
+    "src/office-engine.js"
   ]) {
     assert.ok(entries.includes(entry), `missing staged ${entry}`);
   }
@@ -142,63 +142,63 @@ test("stage source entries contain runtime source and assets but exclude node_mo
 });
 
 test("derived package and staging entries restore a missing required runtime module", () => {
-  const { createWin7BuildProfile } = require("../win7-build-profile");
+  const { createWin7BuildProfile } = require("../scripts/lib/win7-build-profile");
   const input = structuredClone(rootPackage);
-  input.build.files = input.build.files.filter((entry) => entry !== "logger.js");
+  input.build.files = input.build.files.filter((entry) => entry !== "src/logger.js");
 
   const { packageJson, stagingEntries } = createWin7BuildProfile(
     input,
     path.resolve(__dirname, "..")
   );
 
-  assert.ok(packageJson.build.files.includes("logger.js"));
-  assert.ok(stagingEntries.includes("logger.js"));
+  assert.ok(packageJson.build.files.includes("src/logger.js"));
+  assert.ok(stagingEntries.includes("src/logger.js"));
 });
 
 test("derived package and staging entries restore the PDF classifier runtime module", () => {
-  const { createWin7BuildProfile } = require("../win7-build-profile");
+  const { createWin7BuildProfile } = require("../scripts/lib/win7-build-profile");
   const input = structuredClone(rootPackage);
-  input.build.files = input.build.files.filter((entry) => entry !== "pdf-classifier.js");
+  input.build.files = input.build.files.filter((entry) => entry !== "src/pdf-classifier.js");
 
   const { packageJson, stagingEntries } = createWin7BuildProfile(
     input,
     path.resolve(__dirname, "..")
   );
 
-  assert.ok(packageJson.build.files.includes("pdf-classifier.js"));
-  assert.ok(stagingEntries.includes("pdf-classifier.js"));
+  assert.ok(packageJson.build.files.includes("src/pdf-classifier.js"));
+  assert.ok(stagingEntries.includes("src/pdf-classifier.js"));
 });
 
 test("derived package and staging entries restore the PDF structure contract runtime module", () => {
-  const { createWin7BuildProfile } = require("../win7-build-profile");
+  const { createWin7BuildProfile } = require("../scripts/lib/win7-build-profile");
   const input = structuredClone(rootPackage);
-  input.build.files = input.build.files.filter((entry) => entry !== "pdf-structure-contract.js");
+  input.build.files = input.build.files.filter((entry) => entry !== "src/pdf-structure-contract.js");
 
   const { packageJson, stagingEntries } = createWin7BuildProfile(
     input,
     path.resolve(__dirname, "..")
   );
 
-  assert.ok(packageJson.build.files.includes("pdf-structure-contract.js"));
-  assert.ok(stagingEntries.includes("pdf-structure-contract.js"));
+  assert.ok(packageJson.build.files.includes("src/pdf-structure-contract.js"));
+  assert.ok(stagingEntries.includes("src/pdf-structure-contract.js"));
 });
 
 test("derived package and staging entries restore the PDF structure engine boundary module", () => {
-  const { createWin7BuildProfile } = require("../win7-build-profile");
+  const { createWin7BuildProfile } = require("../scripts/lib/win7-build-profile");
   const input = structuredClone(rootPackage);
-  input.build.files = input.build.files.filter((entry) => entry !== "pdf-structure-engine.js");
+  input.build.files = input.build.files.filter((entry) => entry !== "src/pdf-structure-engine.js");
 
   const { packageJson, stagingEntries } = createWin7BuildProfile(
     input,
     path.resolve(__dirname, "..")
   );
 
-  assert.ok(packageJson.build.files.includes("pdf-structure-engine.js"));
-  assert.ok(stagingEntries.includes("pdf-structure-engine.js"));
+  assert.ok(packageJson.build.files.includes("src/pdf-structure-engine.js"));
+  assert.ok(stagingEntries.includes("src/pdf-structure-engine.js"));
 });
 
 test("test script filtering rejects shell syntax and unknown command forms", () => {
-  const { createWin7Package } = require("../win7-build-profile");
+  const { createWin7Package } = require("../scripts/lib/win7-build-profile");
   const unsafeCommands = [
     "node --test tests/i18n.test.js && echo unsafe",
     "node --test tests/i18n.test.js || exit 1",
@@ -221,7 +221,7 @@ test("test script filtering rejects shell syntax and unknown command forms", () 
 });
 
 test("profile validation reports missing required manifest fields", () => {
-  const { createWin7Package } = require("../win7-build-profile");
+  const { createWin7Package } = require("../scripts/lib/win7-build-profile");
   const projectRoot = path.resolve(__dirname, "..");
   const invalidInputs = [
     [(input) => delete input.dependencies, /dependencies must be an object/],

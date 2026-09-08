@@ -10,7 +10,7 @@ const {
   convertEpubToMarkdown,
   convertMobiToText,
   splitChapters
-} = require("../ebook");
+} = require("../src/ebook");
 
 const SAMPLES = "C:\\Users\\34615\\Documents\\Codex\\2026-08-08\\zhi\\samples";
 

@@ -41,7 +41,7 @@ function isMissingPdfjsEntry(error, specifier) {
   return Boolean(missingTarget && matchesExpected(missingTarget[1]));
 }
 
-function resolvePdfjsEntrySpecifiers(packageJsonResolver = require.resolve, appRoot = __dirname) {
+function resolvePdfjsEntrySpecifiers(packageJsonResolver = require.resolve, appRoot = path.resolve(__dirname, "..")) {
   const packageJsonPath = path.resolve(packageJsonResolver("pdfjs-dist/package.json"));
   const expectedPackageJsonPath = path.resolve(appRoot, "node_modules", "pdfjs-dist", "package.json");
   const comparablePath = (filePath) => process.platform === "win32" ? filePath.toLowerCase() : filePath;
@@ -59,7 +59,7 @@ function resolvePdfjsEntrySpecifiers(packageJsonResolver = require.resolve, appR
 }
 
 async function loadPdfjsModule({
-  appRoot = __dirname,
+  appRoot = path.resolve(__dirname, ".."),
   importer = (specifier) => import(specifier),
   packageJsonResolver = require.resolve,
   modernSpecifier,

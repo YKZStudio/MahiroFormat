@@ -12,8 +12,8 @@ const {
   extractBestFrame,
   extractAllFrames,
   encodeIco
-} = require("../ico-format");
-const { isBmpFileSync, decodeBmpToRaw } = require("../bmp-input");
+} = require("../src/ico-format");
+const { isBmpFileSync, decodeBmpToRaw } = require("../src/bmp-input");
 
 function buildIcoDir(count) {
   const dir = Buffer.alloc(6 + count * 16);

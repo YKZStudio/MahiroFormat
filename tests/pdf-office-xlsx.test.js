@@ -7,13 +7,13 @@ const test = require("node:test");
 const ExcelJS = require("exceljs");
 const sharp = require("sharp");
 const yazl = require("yazl");
-const { openZipEntries } = require("../zip-util");
+const { openZipEntries } = require("../src/zip-util");
 const {
   HARD_TABLE_CONFIDENCE,
   REVIEW_CELL_CONFIDENCE,
   validatePdfOfficeXlsx,
   writePdfOfficeXlsx
-} = require("../pdf-office-xlsx");
+} = require("../src/pdf-office-xlsx");
 
 async function png(filePath, width = 827, height = 1169, color = "#f5f7fa") {
   await sharp({ create: { width, height, channels: 4, background: color } }).png().toFile(filePath);

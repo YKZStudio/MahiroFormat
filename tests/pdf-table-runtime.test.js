@@ -8,7 +8,7 @@ const {
   normalizeOcrResult,
   detectTableLinesFromRaw,
   buildPdfTableWorkbook
-} = require("../pdf-table-runtime");
+} = require("../src/pdf-table-runtime");
 
 test("converts PDF.js transforms to top-left words for normal and rotated viewports", () => {
   const textContent = { items: [{ str: "Mouse", transform: [1, 0, 0, 10, 20, 30], width: 40, height: 10 }] };

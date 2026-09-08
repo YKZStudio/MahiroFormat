@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
-const { isBmpBuffer, decodeBmpToRaw } = require("../bmp-input");
+const { isBmpBuffer, decodeBmpToRaw } = require("../src/bmp-input");
 
 // 构造未压缩 BMP：fileHeader(14) + BITMAPINFOHEADER(40) + 可选调色板 + 像素。
 function makeBmp({ width, height, bitCount = 24, palette = [], pixels, topDown = false }) {

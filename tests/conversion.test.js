@@ -17,15 +17,15 @@ const isolatedRuntimeRoot = path.join(scratchRoot, "empty-runtime");
 if (!process.env.FLYINGMOUSE_FORMAT_BASE_URL) {
   process.env.FLYINGMOUSE_RUNTIME_DIR = isolatedRuntimeRoot;
 }
-const serverModule = process.env.FLYINGMOUSE_FORMAT_BASE_URL ? null : require("../server");
+const serverModule = process.env.FLYINGMOUSE_FORMAT_BASE_URL ? null : require("../src/server");
 const FFMPEG_BIN = process.env.FLYINGMOUSE_FFMPEG_PATH
   || path.join(__dirname, "..", "bin", "ffmpeg", "ffmpeg.exe");
-const { QPDF_PATH } = require("../config");
+const { QPDF_PATH } = require("../src/config");
 const {
   assetDirectoryNameForMarkdown,
   rewriteMarkdownAssetReferences,
   sanitizeAssetDirectoryName
-} = require("../markdown-assets");
+} = require("../src/markdown-assets");
 const qpdfAvailable = (() => {
   try {
     execFileSync(QPDF_PATH, ["--version"], { timeout: 5000, windowsHide: true });
@@ -590,7 +590,7 @@ test("decrypts a qpdf-encrypted PDF back to readable content (requires qpdf engi
 });
 
 test("PDF table OCR quality gate rejects low-confidence scans with a clear reason", async () => {
-  const { assertPdfTableOcrQuality } = require("../server");
+  const { assertPdfTableOcrQuality } = require("../src/server");
   assert.doesNotThrow(() => assertPdfTableOcrQuality({
     summary: [{ pageNumber: 1, source: "text", tableCount: 3, confidence: 0.9 }]
   }));
@@ -1284,7 +1284,7 @@ const DOCX_NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/200
 const AUTO_NUMBERING_XML = `<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="第 %1 章"/></w:lvl><w:lvl w:ilvl="1"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1.%2"/></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="1"/></w:num></w:numbering>`;
 
 test("injectHeadingPrefixes skips fenced code blocks and keeps heading alignment (regression)", () => {
-  const { injectHeadingPrefixes } = require("../office-convert");
+  const { injectHeadingPrefixes } = require("../src/office-convert");
   const prefixes = [
     { prefix: "第 1 章" },
     { prefix: "1.1" },
@@ -1322,7 +1322,7 @@ test("injectHeadingPrefixes skips fenced code blocks and keeps heading alignment
 });
 
 test("injectHeadingPrefixes respects hand-typed numbering guards and prefix exhaustion", () => {
-  const { injectHeadingPrefixes } = require("../office-convert");
+  const { injectHeadingPrefixes } = require("../src/office-convert");
   const md = [
     "# 第一章 概述",
     "",

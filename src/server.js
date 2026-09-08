@@ -23,7 +23,7 @@ const { inspectXlsxForCsv } = require("./office-quality");
 const logger = require("./logger");
 
 // Prefer the Electron main process's debug.log (set via FLYINGMOUSE_LOG_FILE
-// or setLogFile); standalone `node server.js` falls back to a temp file.
+// or setLogFile); standalone `node src/server.js` falls back to a temp file.
 if (process.env.FLYINGMOUSE_LOG_FILE) {
   logger.setLogFile(process.env.FLYINGMOUSE_LOG_FILE);
 }

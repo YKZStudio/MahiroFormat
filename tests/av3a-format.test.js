@@ -5,8 +5,8 @@ const fsp = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 
-const { detectAudioFormat } = require("../ncm-format");
-const { inspectMp4Audio, extractAv3aTrack, decodeAv3aM4a, prepareDecryptedAudio } = require("../av3a-format");
+const { detectAudioFormat } = require("../src/ncm-format");
+const { inspectMp4Audio, extractAv3aTrack, decodeAv3aM4a, prepareDecryptedAudio } = require("../src/av3a-format");
 
 function box(type, ...parts) {
   const body = Buffer.concat(parts);

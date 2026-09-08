@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const crypto = require("node:crypto");
 const { test } = require("node:test");
 
-const { convertKgma, kugoMd5, xorCollapseU32, detectAudioFormat } = require("../kgma-format");
+const { convertKgma, kugoMd5, xorCollapseU32, detectAudioFormat } = require("../src/kgma-format");
 
 test("kugoMd5 是标准 MD5 的 16-bit 字节序反转", () => {
   const input = Buffer.from([0x6c, 0x2c, 0x2f, 0x27]);

@@ -6,8 +6,8 @@ const path = require("node:path");
 const { test } = require("node:test");
 const sharp = require("sharp");
 
-const { isTgaFileSync } = require("../image");
-const { FFMPEG_PATH } = require("../config");
+const { isTgaFileSync } = require("../src/image");
+const { FFMPEG_PATH } = require("../src/config");
 
 function makeTga(width, height) {
   const header = Buffer.alloc(18);
@@ -55,7 +55,7 @@ test("TGA converts to PNG through the ffmpeg transcode path", { skip: !engineAva
   const outPng = path.join(scratch, "out.png");
   fs.writeFileSync(tgaPath, makeTga(16, 16));
 
-  const { convertImage } = require("../image");
+  const { convertImage } = require("../src/image");
   const result = await convertImage(tgaPath, outPng, "png");
   assert.deepEqual(result.warnings, []);
   const meta = await sharp(outPng).metadata();
@@ -65,8 +65,8 @@ test("TGA converts to PNG through the ffmpeg transcode path", { skip: !engineAva
 });
 
 test("TGA is classified as image and exposes the full image target set", () => {
-  const { categoryForExt, targetsForExt } = require("../utils");
-  const { imageInput } = require("../config");
+  const { categoryForExt, targetsForExt } = require("../src/utils");
+  const { imageInput } = require("../src/config");
   assert.equal(imageInput.has("tga"), true);
   assert.equal(categoryForExt("tga"), "image");
   const targets = targetsForExt("tga", { ffmpeg: true, libreoffice: true, poppler: true, ocr: true });

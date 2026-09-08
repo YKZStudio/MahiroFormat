@@ -10,7 +10,7 @@ const {
   padOrTruncate,
   detectAudioFormat,
   KWM_HEADER_SIZE
-} = require("../kwm-format");
+} = require("../src/kwm-format");
 
 test("padOrTruncate 短串循环补齐到 32", () => {
   const out = padOrTruncate(Buffer.from("557589985", "ascii"), 32);

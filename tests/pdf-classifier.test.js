@@ -19,8 +19,8 @@ const {
   classifyPdf,
   imageCoverageFromOperators,
   rectangleUnionArea
-} = require("../pdf-classifier");
-const { loadPdfjs } = require("../pdfjs");
+} = require("../src/pdf-classifier");
+const { loadPdfjs } = require("../src/pdfjs");
 const { createScannedTablePdf } = require("./helpers/scanned-pdf-fixture");
 
 async function createImagePdf(outputPath, { text, images }) {

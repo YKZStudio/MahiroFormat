@@ -9,9 +9,9 @@ const path = require("node:path");
 const { after, before, test } = require("node:test");
 const { PDFDocument } = require("pdf-lib");
 
-const { convertOfdToPdf } = require("../ofd-convert");
-const { categoryForExt, targetsForExt, extFromName } = require("../utils");
-const { documentInput } = require("../config");
+const { convertOfdToPdf } = require("../src/ofd-convert");
+const { categoryForExt, targetsForExt, extFromName } = require("../src/utils");
+const { documentInput } = require("../src/config");
 
 const scratchRoot = path.join(os.tmpdir(), `flyingmouse-ofd-tests-${process.pid}`);
 const FIXTURE = path.join(__dirname, "fixtures", "sample.ofd");
@@ -21,7 +21,7 @@ const hasFixture = fs.existsSync(FIXTURE);
 if (!process.env.FLYINGMOUSE_FORMAT_BASE_URL) {
   process.env.FLYINGMOUSE_RUNTIME_DIR = path.join(scratchRoot, "runtime");
 }
-const serverModule = process.env.FLYINGMOUSE_FORMAT_BASE_URL ? null : require("../server");
+const serverModule = process.env.FLYINGMOUSE_FORMAT_BASE_URL ? null : require("../src/server");
 let server;
 let baseUrl;
 let sessionToken;

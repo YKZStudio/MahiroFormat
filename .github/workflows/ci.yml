@@ -66,10 +66,10 @@ jobs:
 
       - name: Syntax check
         run: |
-          node --check server.js
-          node --check electron-main.js
-          node --check electron-security.js
-          node --check preload.js
+          node --check src/server.js
+          node --check src/electron-main.js
+          node --check src/electron-security.js
+          node --check src/preload.js
           node --check public/app.js
 
       - name: Run test suite

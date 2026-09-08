@@ -6,7 +6,7 @@ const zlib = require("node:zlib");
 const { test } = require("node:test");
 const sharp = require("sharp");
 const { PDFDocument, PDFName } = require("pdf-lib");
-const { convertImagesToPdf } = require("../image");
+const { convertImagesToPdf } = require("../src/image");
 const { loadWithOverrides } = require("./helpers/load-with-overrides");
 
 async function fixture(t) {
@@ -54,7 +54,7 @@ test("image PDF checks empty input and total pixel budget before opening output"
   await fsp.writeFile(outputPath, "existing result");
   await assert.rejects(convertImagesToPdf([], outputPath), /请选择|请先选择/);
   await assert.rejects(convertImagesToPdf(Array.from({ length: 201 }, () => ({ blank: true })), outputPath),
-    (error) => error instanceof require("../resource-policy").ResourceLimitError);
+    (error) => error instanceof require("../src/resource-policy").ResourceLimitError);
   assert.equal(await fsp.readFile(outputPath, "utf8"), "existing result");
   assert.equal((await fsp.readdir(root)).some((name) => name.includes(".tmp-")), false);
 });
@@ -65,7 +65,7 @@ test("late image decode failure preserves the old output and removes the partial
   await fsp.writeFile(broken, "header-only image fixture");
   await fsp.writeFile(outputPath, "existing result");
   const failure = new Error("decode failed after metadata");
-  const image = loadWithOverrides(path.join(__dirname, "..", "image.js"), {
+  const image = loadWithOverrides(path.join(__dirname, "..", "src/image.js"), {
     sharp: (file, options) => file === broken ? {
       metadata: async () => ({ width: 2, height: 2 }),
       rotate() { throw failure; }
@@ -81,7 +81,7 @@ test("image PDF cleans up write failures without replacing an existing result", 
   await fsp.writeFile(outputPath, "existing result");
   const failure = Object.assign(new Error("disk full"), { code: "ENOSPC" });
   let closed = false;
-  const image = loadWithOverrides(path.join(__dirname, "..", "image.js"), {
+  const image = loadWithOverrides(path.join(__dirname, "..", "src/image.js"), {
     "fs/promises": { ...fsp, async open(...args) {
       const handle = await fsp.open(...args);
       return { writeFile: async () => { throw failure; }, close: async () => { await handle.close(); closed = true; } };
@@ -112,7 +112,7 @@ test("image PDF cleans up publication failure and can replace a regular output",
 test("image PDF compression uses asynchronous zlib for image and blank pages", async (t) => {
   const { inputPath, outputPath } = await fixture(t);
   let calls = 0;
-  const image = loadWithOverrides(path.join(__dirname, "..", "image.js"), {
+  const image = loadWithOverrides(path.join(__dirname, "..", "src/image.js"), {
     zlib: { ...zlib, deflateSync() { assert.fail("compression must not block the main thread"); },
       deflate(...args) { calls += 1; return zlib.deflate(...args); } }
   });
@@ -124,7 +124,7 @@ test("image PDF decodes pages on demand as the output consumes chunks", async (t
   const { inputPath, outputPath } = await fixture(t);
   let decoded = 0;
   let writtenImages = 0;
-  const image = loadWithOverrides(path.join(__dirname, "..", "image.js"), {
+  const image = loadWithOverrides(path.join(__dirname, "..", "src/image.js"), {
     sharp: (...args) => {
       const pipeline = sharp(...args);
       const toBuffer = pipeline.toBuffer.bind(pipeline);

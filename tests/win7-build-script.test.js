@@ -84,10 +84,10 @@ test("prepare-only creates a clean, current Win7 staging tree without changing t
   for (const entry of [
     "public",
     "build",
-    "settings-store.js",
-    "office-engine.js",
-    "electron-main.js",
-    "server.js"
+    "src/settings-store.js",
+    "src/office-engine.js",
+    "src/electron-main.js",
+    "src/server.js"
   ]) {
     assert.ok(fs.existsSync(path.join(stagePath, entry)), `missing staged ${entry}`);
   }

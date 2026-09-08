@@ -5,7 +5,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
-const { inspectPeBuffer, inspectPeFile } = require('../pe-metadata');
+const { inspectPeBuffer, inspectPeFile } = require('../scripts/lib/pe-metadata');
 
 const repoRoot = path.resolve(__dirname, '..');
 const cliPath = path.join(repoRoot, 'scripts', 'inspect-pe.js');

@@ -6,7 +6,7 @@ const {
   buildDiagnosticsReport,
   sanitizeDiagnosticText,
   tailUtf8
-} = require("../diagnostics");
+} = require("../src/diagnostics");
 
 test("diagnostics report contains bounded platform and engine facts without full paths", () => {
   const report = buildDiagnosticsReport({

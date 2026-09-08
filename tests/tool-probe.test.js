@@ -4,11 +4,11 @@ const { test } = require("node:test");
 const { loadWithOverrides } = require("./helpers/load-with-overrides");
 
 function loadServer(overrides) {
-  return loadWithOverrides(path.join(__dirname, "..", "server.js"), {
-    "./utils": { ...require("../utils"), commandExists: overrides.commandExists },
-    "./office-engine": { ...require("../office-engine"), probeLibreOffice: overrides.probeLibreOffice },
+  return loadWithOverrides(path.join(__dirname, "..", "src/server.js"), {
+    "./utils": { ...require("../src/utils"), commandExists: overrides.commandExists },
+    "./office-engine": { ...require("../src/office-engine"), probeLibreOffice: overrides.probeLibreOffice },
     "./ocr": { ocrAvailable: () => true },
-    "./logger": { ...require("../logger"), warn() {} }
+    "./logger": { ...require("../src/logger"), warn() {} }
   });
 }
 

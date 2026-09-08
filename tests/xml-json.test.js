@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
-const { xmlToJson } = require("../xml-json");
+const { xmlToJson } = require("../src/xml-json");
 
 test("XML parses elements with attributes and text", () => {
   const result = xmlToJson('<root><item id="1">Mouse</item></root>');

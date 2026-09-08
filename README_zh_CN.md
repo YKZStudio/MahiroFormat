@@ -111,12 +111,12 @@ npm run dist:win7
 ## 命令行界面（CLI）
 
 ```powershell
-node cli.js capabilities --json
-node cli.js targets example.pdf --json
-node cli.js convert input.docx --to pdf --output output.pdf --json
-node cli.js convert a.png b.png --to webp --output-dir converted --json
-node cli.js images-to-pdf 1.jpg 2.jpg --output album.pdf --json
-node cli.js merge-pdfs a.pdf b.pdf --output merged.pdf --json
+node src/cli.js capabilities --json
+node src/cli.js targets example.pdf --json
+node src/cli.js convert input.docx --to pdf --output output.pdf --json
+node src/cli.js convert a.png b.png --to webp --output-dir converted --json
+node src/cli.js images-to-pdf 1.jpg 2.jpg --output album.pdf --json
+node src/cli.js merge-pdfs a.pdf b.pdf --output merged.pdf --json
 ```
 
 安装版也可在 `--cli` 后使用相同命令：
@@ -140,6 +140,22 @@ node cli.js merge-pdfs a.pdf b.pdf --output merged.pdf --json
 
 [文档索引](docs/README_zh_CN.md)已将当前参考文档、发布流程、用户教程、历史发行说明和归档设计记录分开整理。
 
+### 项目结构
+
+| 路径 | 内容 |
+|---|---|
+| `src/` | Electron 主进程与预加载脚本、本地服务、命令行入口和转换模块 |
+| `public/` | 桌面界面、翻译和美术资源 |
+| `scripts/` | 构建、发布、校验和维护脚本；共用辅助模块放在 `scripts/lib/` |
+| `tests/` | 自动化测试、测试样本和辅助工具 |
+| `build/` | 安装包图标和打包资源 |
+| `bin/` / `tools/` | 本地转换引擎 / 引擎源码与构建工具 |
+| `docs/` | 用户与开发文档、历史记录 |
+| `agent-skill/` | 随软件提供的 Agent 集成 |
+| `website/` | 项目网站 |
+
+根目录保留依赖清单、锁文件、引擎清单和仓库说明。源码命令改为 `node src/cli.js` 和 `node src/server.js`；仍可使用 `npm start` 和 `npm run desktop`。
+
 ## 许可证
 
 Mahiro Format 使用[非商用许可证](LICENSE)。保留许可证和作者署名时，允许个人非商用使用和传播；禁止商业售卖、转卖、收费服务、套壳、换皮或改名后重新打包为其他产品。
@@ -153,6 +169,21 @@ Mahiro Format 使用[非商用许可证](LICENSE)。保留许可证和作者署�
 - [当前仓库](https://github.com/YKZStudio/MahiroFormat)
 - [原项目与历史问题记录](https://github.com/LaoFeng-mouse/flyingmouse-format)
 
+## 自愿支持
+
 Mahiro Format 免费、离线且无广告。如果它帮到了你，欢迎请真寻吃份布丁，完全自愿。
 
-![微信收款码](public/assets/sponsor-qr.jpg)
+### YKZStudio — 升级与维护
+
+以下加密货币捐赠地址与软件主界面捐赠面板一致：
+
+| 方式 | 地址 |
+|---|---|
+| TRON | `TNsEbkyyy9XWpsTT64Zvn7bkN2wkbeWPwM` |
+| GasFree | `TV7w7oi18KiSVz9qoXsvQur2FKNnu3Ry5h` |
+
+### 牢蜂（LaoFeng）— 原作者
+
+微信支付：
+
+<img src="public/assets/sponsor-qr.jpg" alt="牢蜂（LaoFeng）的微信收款码" width="240">

@@ -6,11 +6,11 @@ const path = require("node:path");
 const test = require("node:test");
 const sharp = require("sharp");
 const yazl = require("yazl");
-const { openZipEntries } = require("../zip-util");
+const { openZipEntries } = require("../src/zip-util");
 const {
   writePdfOfficeDocx,
   validatePdfOfficeDocx
-} = require("../pdf-office-docx");
+} = require("../src/pdf-office-docx");
 
 async function png(filePath, width, height, color) {
   await sharp({ create: { width, height, channels: 4, background: color } })

@@ -156,7 +156,7 @@ function assertSchemaError(action) {
 function invalidWith(mutate, root = assetRoot) {
   const manifest = fixture();
   mutate(manifest);
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   assertSchemaError(() => validateStructureManifest(manifest, root));
 }
 
@@ -173,8 +173,8 @@ after(() => {
 });
 
 test("exports the schema contract, bilingual error helper, and shared resource limits", () => {
-  const contract = require("../pdf-structure-contract");
-  const { STRUCTURE_LIMITS } = require("../resource-policy");
+  const contract = require("../src/pdf-structure-contract");
+  const { STRUCTURE_LIMITS } = require("../src/resource-policy");
 
   assert.equal(contract.STRUCTURE_SCHEMA_VERSION, 1);
   assert.equal(contract.MAX_BLOCKS_PER_PAGE, 5000);
@@ -194,7 +194,7 @@ test("exports the schema contract, bilingual error helper, and shared resource l
 });
 
 test("accepts the anonymous fixture, normalizes confidence, deep-freezes output, and preserves input", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const manifest = fixture();
   manifest.pages[0].blocks[0].confidence = "0.75";
   manifest.pages[0].tables[0].confidence = "0.8";
@@ -213,7 +213,7 @@ test("accepts the anonymous fixture, normalizes confidence, deep-freezes output,
 });
 
 test("normalized objects retain safe prototypes", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const normalized = validateStructureManifest(fixture(), assetRoot);
   const pending = [normalized];
   while (pending.length > 0) {
@@ -233,14 +233,14 @@ test("rejects prototype-polluting keys at every nesting level without polluting 
   for (const dangerousKey of ["__proto__", "constructor", "prototype"]) {
     const manifest = fixture();
     manifest.metadata = { nested: JSON.parse(`{"${dangerousKey}":{"${pollutionKey}":true}}`) };
-    const { validateStructureManifest } = require("../pdf-structure-contract");
+    const { validateStructureManifest } = require("../src/pdf-structure-contract");
     assertSchemaError(() => validateStructureManifest(manifest, assetRoot));
     assert.equal(Object.prototype[pollutionKey], undefined);
   }
 });
 
 test("rejects nesting deeper than the manifest budget with the stable schema error", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const manifest = fixture();
   let nested = { leaf: true };
   for (let depth = 0; depth <= expectedStructureLimits.maxNestingDepth; depth += 1) {
@@ -251,7 +251,7 @@ test("rejects nesting deeper than the manifest budget with the stable schema err
 });
 
 test("rejects a manifest wider than the structural node budget before reading its entries", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const manifest = fixture();
   const sentinel = "UNBOUNDED_WIDE_NODE_WALK";
   manifest.extra = throwingFilledArray(expectedStructureLimits.maxManifestNodes + 1, sentinel);
@@ -259,7 +259,7 @@ test("rejects a manifest wider than the structural node budget before reading it
 });
 
 test("bounds aggregate preflight before reading an oversized pages array", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const manifest = fixture();
   let entriesRead = 0;
   manifest.pages = throwingFilledArray(
@@ -273,7 +273,7 @@ test("bounds aggregate preflight before reading an oversized pages array", () =>
 });
 
 test("rejects manifest-wide block totals before cloning block entries", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const manifest = fixture();
   const perPage = expectedStructureLimits.maxBlocksPerPage;
   const pageCount = Math.ceil((expectedStructureLimits.maxTotalBlocks + 1) / perPage);
@@ -287,7 +287,7 @@ test("rejects manifest-wide block totals before cloning block entries", () => {
 });
 
 test("rejects manifest-wide table totals before cloning table entries", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const manifest = fixture();
   const perPage = expectedStructureLimits.maxTablesPerPage;
   const pageCount = Math.ceil((expectedStructureLimits.maxTotalTables + 1) / perPage);
@@ -301,7 +301,7 @@ test("rejects manifest-wide table totals before cloning table entries", () => {
 });
 
 test("rejects manifest-wide cell totals before cloning cell entries", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const manifest = fixture();
   const tableCount = Math.ceil(
     (expectedStructureLimits.maxTotalCells + 1) / expectedStructureLimits.maxCellsPerTable
@@ -322,8 +322,8 @@ test("rejects manifest-wide cell totals before cloning cell entries", () => {
 });
 
 test("accepts and freezes a valid table at the 20,000-cell boundary", () => {
-  const { STRUCTURE_LIMITS } = require("../resource-policy");
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { STRUCTURE_LIMITS } = require("../src/resource-policy");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const manifest = fixture();
   const cells = Array.from({ length: STRUCTURE_LIMITS.maxCellsPerTable }, (_, row) => ({
     row,
@@ -343,7 +343,7 @@ test("accepts and freezes a valid table at the 20,000-cell boundary", () => {
 });
 
 test("safe asset resolution accepts contained regular files without changing manifest paths", () => {
-  const { resolveStructureAsset, validateStructureManifest } = require("../pdf-structure-contract");
+  const { resolveStructureAsset, validateStructureManifest } = require("../src/pdf-structure-contract");
   const resolved = resolveStructureAsset(assetRoot, "seal.png");
   // 实现用 realpathSync.native（返回长路径）；realpathSync（JS 版）在 Windows 8.3 短名
   // 场景会返回 RUNNER~1 形式（runneradmin）——断言必须与实现一致用 .native
@@ -362,7 +362,7 @@ test("rejects unsupported schema versions and malformed manifest containers", ()
   invalidWith((manifest) => { manifest.pages[0].tables[0].cells = {}; });
   invalidWith((manifest) => { manifest.pages[0].tables[0].cells[0] = null; });
 
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   assertSchemaError(() => validateStructureManifest(null, assetRoot));
 });
 
@@ -397,7 +397,7 @@ test("rejects missing assets, directories, unexpected asset types, and invalid r
 });
 
 test("root stat failures redact private filesystem details recursively", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const recognizedSentinel = "RECOGNIZED_PRIVATE_ROOT_TEXT_7D91";
   const missingRoot = path.join(scratch, `private-root-${recognizedSentinel}`);
   assertPrivateDetailsRedacted(
@@ -407,7 +407,7 @@ test("root stat failures redact private filesystem details recursively", () => {
 });
 
 test("root realpath failures redact private filesystem details recursively", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const recognizedSentinel = "RECOGNIZED_PRIVATE_ROOT_REALPATH_TEXT_3B18";
   const privateRoot = path.join(scratch, `real-root-${recognizedSentinel}`);
   fs.mkdirSync(privateRoot);
@@ -420,7 +420,7 @@ test("root realpath failures redact private filesystem details recursively", () 
 });
 
 test("asset stat failures redact private paths and recognized-like filenames recursively", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const recognizedSentinel = "RECOGNIZED_PRIVATE_ASSET_TEXT_4A26";
   const privateRoot = path.join(scratch, `asset-root-${recognizedSentinel}`);
   fs.mkdirSync(privateRoot);
@@ -437,7 +437,7 @@ test("asset stat failures redact private paths and recognized-like filenames rec
 });
 
 test("asset realpath failures redact private paths and recognized-like filenames recursively", () => {
-  const { validateStructureManifest } = require("../pdf-structure-contract");
+  const { validateStructureManifest } = require("../src/pdf-structure-contract");
   const recognizedSentinel = "RECOGNIZED_PRIVATE_ASSET_REALPATH_TEXT_8C53";
   const privateRoot = path.join(scratch, `asset-realpath-root-${recognizedSentinel}`);
   fs.mkdirSync(privateRoot);
@@ -550,7 +550,7 @@ test("rejects malformed block, table, and cell fields", () => {
 });
 
 test("enforces per-page and per-table structure budgets before item validation", () => {
-  const { MAX_BLOCKS_PER_PAGE, MAX_TABLES_PER_PAGE, MAX_CELLS_PER_TABLE } = require("../pdf-structure-contract");
+  const { MAX_BLOCKS_PER_PAGE, MAX_TABLES_PER_PAGE, MAX_CELLS_PER_TABLE } = require("../src/pdf-structure-contract");
   invalidWith((manifest) => {
     manifest.pages[0].blocks = new Array(MAX_BLOCKS_PER_PAGE + 1).fill(null);
   });
@@ -568,5 +568,5 @@ test("package scripts and build whitelist include the contract exactly once", ()
     const entries = packageJson.scripts[scriptName].trim().split(/\s+/);
     assert.equal(entries.filter((entry) => entry === "tests/pdf-structure-contract.test.js").length, 1);
   }
-  assert.equal(packageJson.build.files.filter((entry) => entry === "pdf-structure-contract.js").length, 1);
+  assert.equal(packageJson.build.files.filter((entry) => entry === "src/pdf-structure-contract.js").length, 1);
 });

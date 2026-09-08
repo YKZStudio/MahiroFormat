@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
-const { mergeOcrChineseWords, mergeCnSpaces } = require("../pdf-table-runtime");
+const { mergeOcrChineseWords, mergeCnSpaces } = require("../src/pdf-table-runtime");
 
 test("mergeOcrChineseWords 合并同行 x 邻近的中文碎片", () => {
   const words = [

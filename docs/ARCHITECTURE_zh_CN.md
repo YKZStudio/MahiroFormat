@@ -14,7 +14,7 @@ Electron 主进程
 ├─ 通过 preload 暴露最小化保存/设置 IPC
 └─ 定位安装包或开发环境中的转换引擎
         ↓
-Mahiro UI（public/）→ 本地 API（server.js）→ 转换器/引擎 → 临时结果
+Mahiro UI（public/）→ 本地 API（src/server.js）→ 转换器/引擎 → 临时结果
         ↓
 Electron 保存对话框 → 用户选择的位置
 ```
@@ -23,18 +23,18 @@ Electron 保存对话框 → 用户选择的位置
 
 | 模块 | 职责 |
 |---|---|
-| `electron-main.js` | Electron 生命周期、本地服务、运行时路径、可信 IPC 和保存 |
-| `electron-security.js` | 导航、外链、下载和 IPC 来源策略 |
-| `preload.js` | 最小化渲染进程桥接 |
-| `server.js` | 上传、识别、目标计算、转换调度和下载 |
-| `config.js` / `utils.js` | 格式注册、引擎发现、类别和目标计算 |
-| `resource-policy.js` | 图片、PDF、OCR 和批量资源预算 |
-| `text-conversion.js` | Markdown/HTML 转换和严格 CSV 解析 |
-| `pdf.js` | PDF 路由、DOCX、拆分、加密和解密 |
-| `pdf-table-*.js` | 电子文字/OCR 表格提取与工作簿模型 |
-| `pdf-structure-*.js` | 扫描文档分类、manifest 校验、评分和引擎边界 |
-| `office-engine.js` | 隔离的 LibreOffice profile、探测、执行和稳定错误 |
-| `settings-store.js` | 在 Electron `userData/settings.json` 中原子保存版本化设置 |
+| `src/electron-main.js` | Electron 生命周期、本地服务、运行时路径、可信 IPC 和保存 |
+| `src/electron-security.js` | 导航、外链、下载和 IPC 来源策略 |
+| `src/preload.js` | 最小化渲染进程桥接 |
+| `src/server.js` | 上传、识别、目标计算、转换调度和下载 |
+| `src/config.js` / `src/utils.js` | 格式注册、引擎发现、类别和目标计算 |
+| `src/resource-policy.js` | 图片、PDF、OCR 和批量资源预算 |
+| `src/text-conversion.js` | Markdown/HTML 转换和严格 CSV 解析 |
+| `src/pdf.js` | PDF 路由、DOCX、拆分、加密和解密 |
+| `src/pdf-table-*.js` | 电子文字/OCR 表格提取与工作簿模型 |
+| `src/pdf-structure-*.js` | 扫描文档分类、manifest 校验、评分和引擎边界 |
+| `src/office-engine.js` | 隔离的 LibreOffice profile、探测、执行和稳定错误 |
+| `src/settings-store.js` | 在 Electron `userData/settings.json` 中原子保存版本化设置 |
 | `public/app.js` | 队列、转换、预览、保存和角色状态交互 |
 | `public/i18n.js` | `zh-CN` / `en-US` 翻译状态及旧设置迁移 |
 

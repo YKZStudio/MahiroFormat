@@ -5,7 +5,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { fileURLToPath } = require("node:url");
 
-const { probeLibreOffice, runLibreOffice } = require("../office-engine");
+const { probeLibreOffice, runLibreOffice } = require("../src/office-engine");
 
 function profilePathFromArgs(args) {
   const argument = args.find((item) => item.startsWith("-env:UserInstallation="));

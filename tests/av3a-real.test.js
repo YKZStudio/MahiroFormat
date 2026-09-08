@@ -6,8 +6,8 @@ const path = require("node:path");
 const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
 
-const { convertNcm } = require("../ncm-format");
-const { prepareDecryptedAudio } = require("../av3a-format");
+const { convertNcm } = require("../src/ncm-format");
+const { prepareDecryptedAudio } = require("../src/av3a-format");
 
 const execFileAsync = promisify(execFile);
 

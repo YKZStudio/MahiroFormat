@@ -131,7 +131,7 @@ function candidateDecoderPaths() {
   const candidates = [];
   if (process.env.FLYINGMOUSE_AVS3_DECODER_PATH) candidates.push(process.env.FLYINGMOUSE_AVS3_DECODER_PATH);
   if (process.resourcesPath) candidates.push(path.join(process.resourcesPath, "avs3", "avs3RM0Decoder.exe"));
-  candidates.push(path.join(__dirname, "bin", "avs3", "avs3RM0Decoder.exe"));
+  candidates.push(path.join(__dirname, "..", "bin", "avs3", "avs3RM0Decoder.exe"));
   return [...new Set(candidates)];
 }
 

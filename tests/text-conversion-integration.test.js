@@ -11,8 +11,8 @@ process.env.FLYINGMOUSE_RUNTIME_DIR = runtimeDir;
 const candidateLo = "C:\\Users\\34615\\AppData\\Local\\Programs\\Mahiro Format\\resources\\libreoffice\\LibreOfficePortable\\App\\libreoffice\\program\\soffice.com";
 const LO_AVAILABLE = require("node:fs").existsSync(candidateLo);
 if (LO_AVAILABLE) process.env.FLYINGMOUSE_LIBREOFFICE_PATH = candidateLo;
-const { startServer, platformCapabilities } = require("../server");
-const { DCRAW_PATH, rawInput, experimentalInputsByCategory } = require("../config");
+const { startServer, platformCapabilities } = require("../src/server");
+const { DCRAW_PATH, rawInput, experimentalInputsByCategory } = require("../src/config");
 
 let server;
 let baseUrl;
@@ -207,9 +207,9 @@ test("capabilities expose stable conversion limits and Sharp keeps pixel protect
   assert.deepEqual(capabilities.groups.spreadsheet.experimentalInputs, ["et", "ett"]);
   assert.deepEqual(capabilities.groups.presentation.experimentalInputs, ["dps", "dpt"]);
   assert.deepEqual(capabilities.groups.audio.experimentalInputs, experimentalInputsByCategory.audio);
-  const serverSource = require("node:fs").readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
-  const imageSource = require("node:fs").readFileSync(path.join(__dirname, "..", "image.js"), "utf8");
-  const pdfTableSource = require("node:fs").readFileSync(path.join(__dirname, "..", "pdf-table.js"), "utf8");
+  const serverSource = require("node:fs").readFileSync(path.join(__dirname, "..", "src/server.js"), "utf8");
+  const imageSource = require("node:fs").readFileSync(path.join(__dirname, "..", "src/image.js"), "utf8");
+  const pdfTableSource = require("node:fs").readFileSync(path.join(__dirname, "..", "src/pdf-table.js"), "utf8");
   assert.doesNotMatch(serverSource, /limitInputPixels\s*:\s*false/);
   assert.match(imageSource, /assertImagePdfBudget\(metadataList\)/);
   assert.match(pdfTableSource, /assertPdfPages\(pdf\.numPages\)/);
@@ -228,9 +228,9 @@ test("platform capabilities report restored NCM and AV3A boundaries", () => {
 
 test("packaging and Win7 staging include the new runtime modules", () => {
   const packageJson = require("../package.json");
-  const source = require("node:fs").readFileSync(path.join(__dirname, "..", "win7-build-profile.js"), "utf8");
-  assert.ok(packageJson.build.files.includes("pdf-classifier.js"), "pdf-classifier.js is missing from build.files");
-  for (const file of ["resource-policy.js", "text-conversion.js", "pdf-table-extractor.js", "pdf-table-runtime.js", "config.js", "utils.js", "media.js", "zip-util.js", "image.js", "ocr.js", "pdfjs.js", "pdf-table.js", "pdf.js", "text-docx.js", "office-convert.js", "markdown-assets.js", "ncm-format.js", "ncm-metadata.js", "av3a-format.js", "kgg-format.js", "mflac-format.js", "kgma-format.js", "kwm-format.js", "kgm-vpr-format.js"]) {
+  const source = require("node:fs").readFileSync(path.join(__dirname, "..", "scripts/lib/win7-build-profile.js"), "utf8");
+  assert.ok(packageJson.build.files.includes("src/pdf-classifier.js"), "pdf-classifier.js is missing from build.files");
+  for (const file of ["src/resource-policy.js", "src/text-conversion.js", "src/pdf-table-extractor.js", "src/pdf-table-runtime.js", "src/config.js", "src/utils.js", "src/media.js", "src/zip-util.js", "src/image.js", "src/ocr.js", "src/pdfjs.js", "src/pdf-table.js", "src/pdf.js", "src/text-docx.js", "src/office-convert.js", "src/markdown-assets.js", "src/ncm-format.js", "src/ncm-metadata.js", "src/av3a-format.js", "src/kgg-format.js", "src/mflac-format.js", "src/kgma-format.js", "src/kwm-format.js", "src/kgm-vpr-format.js"]) {
     assert.ok(packageJson.build.files.includes(file), `${file} is missing from build.files`);
     assert.match(source, new RegExp(`["]${file.replace(".", "\\.")}["]`));
   }

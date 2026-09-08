@@ -5,7 +5,7 @@ const os = require("os");
 const path = require("path");
 const { after, before, test } = require("node:test");
 
-const logger = require("../logger");
+const logger = require("../src/logger");
 const scratchRoot = path.join(os.tmpdir(), `flyingmouse-format-logger-tests-${process.pid}`);
 
 function readRoot(fileName) {
@@ -64,8 +64,8 @@ test("logger mirrors warnings and errors to stdout but not info", async () => {
 });
 
 test("server.js routes conversion lifecycle events through the logger", () => {
-  const source = readRoot("server.js");
-  const utilsSource = readRoot("utils.js");
+  const source = readRoot("src/server.js");
+  const utilsSource = readRoot("src/utils.js");
   assert.ok(source.includes('require("./logger")'), "server must require the logger");
   assert.match(source, /logger\.info\(`Convert request/, "convert request start must be logged");
   assert.match(source, /logger\.info\(`Convert succeeded/, "convert success must be logged");
@@ -75,7 +75,7 @@ test("server.js routes conversion lifecycle events through the logger", () => {
 });
 
 test("electron main forwards renderer log events to debug.log behind the trust boundary", () => {
-  const source = readRoot("electron-main.js");
+  const source = readRoot("src/electron-main.js");
   assert.ok(source.includes('require("./logger")'), "main must require the logger");
   assert.match(source, /logger\.setLogFile\(/, "main must point the logger at userData");
   assert.match(source, /ipcMain\.handle\("log-event"/, "log-event IPC handler is missing");
@@ -84,7 +84,7 @@ test("electron main forwards renderer log events to debug.log behind the trust b
 });
 
 test("preload exposes a log bridge to the renderer", () => {
-  const source = readRoot("preload.js");
+  const source = readRoot("src/preload.js");
   assert.match(source, /log\(level, message\)/, "preload must expose log(level, message)");
   assert.match(source, /"log-event"/, "preload must invoke the log-event channel");
 });
@@ -101,7 +101,7 @@ test("renderer reports uncaught errors and conversion failures to the main proce
 test("package.json build whitelist includes logger.js", () => {
   const packageJson = JSON.parse(readRoot("package.json"));
   assert.ok(
-    packageJson.build.files.includes("logger.js"),
+    packageJson.build.files.includes("src/logger.js"),
     "logger.js must be in build.files or the packaged app will crash with MODULE_NOT_FOUND"
   );
 });

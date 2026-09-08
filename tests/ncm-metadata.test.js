@@ -5,8 +5,8 @@ const sharp = require("sharp");
 const {
   normalizeNcmMetadata,
   buildNcmFfmpegOptions
-} = require("../ncm-metadata");
-const { detectCoverFormat } = require("../ncm-format");
+} = require("../src/ncm-metadata");
+const { detectCoverFormat } = require("../src/ncm-format");
 
 test("normalizes common NCM metadata shapes", () => {
   assert.deepEqual(normalizeNcmMetadata({
