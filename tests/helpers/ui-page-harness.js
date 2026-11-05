@@ -1,0 +1,133 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+const { webcrypto } = require("node:crypto");
+const { File } = require("node:buffer");
+
+
+// The seam is the page's file input / convert controls and HTTP responses.
+// Load every real script listed by index.html, in order. Only browser services
+// are represented here: no application function (including error hooks) is
+// invented, replaced or copied out of app.js. Real layout is tested in Electron.
+async function pageHarness(convert, bridge = {}, services = {}) {
+  const publicDir = path.join(__dirname, "..", "..", "public");
+  const html = fs.readFileSync(path.join(publicDir, "index.html"), "utf8");
+  const all = [];
+  function element(tag = "div") {
+    let content = "";
+    const node = { tag, id: "", className: "", value: "", hidden: false, disabled: false,
+      querySelectorAll() { return []; }, children: [], dataset: {}, style: {}, listeners: new Map(), attributes: {},
+      get options() { return this.children.filter(child => child.tag === "option"); },
+      get textContent() { return content + this.children.map(child => child.textContent).join(""); },
+      set textContent(value) { content = String(value); this.children = []; },
+      append(...children) { for (const child of children) child.parentNode = this; this.children.push(...children); if (tag === "select" && !this.value) this.value = children[0]?.value || ""; },
+      replaceWith(child) { const parent = this.parentNode; const index = parent.children.indexOf(this); child.parentNode = parent; parent.children[index] = child; },
+      replaceChildren(...children) { content = ""; this.children = []; if (tag === "select") this.value = ""; this.append(...children); },
+      setAttribute(name, value) { this.attributes[name] = String(value); },
+      removeAttribute(name) { delete this.attributes[name]; },
+      addEventListener(name, callback) { const callbacks = this.listeners.get(name) || []; callbacks.push(callback); this.listeners.set(name, callbacks); },
+      async dispatch(name) { await Promise.all((this.listeners.get(name) || []).map(callback => callback({ target: this, preventDefault() {} }))); },
+      focus() {}, contains(other) { return this === other || this.children.some(child => child.contains(other)); },
+      querySelector(selector) { return this.children.find(child => matches(child, selector)) || null; }
+    };
+    node.classList = { add(value) { node.className += ` ${value}`; }, remove(value) { node.className = node.className.split(/\s+/).filter(item => item !== value).join(" "); },
+      toggle(value, enabled) { this.remove(value); if (enabled) this.add(value); } };
+    return node;
+  }
+  function matches(node, selector) {
+    if (selector.startsWith("#")) return node.id === selector.slice(1);
+    if (selector.startsWith(".")) return node.className.split(/\s+/).includes(selector.slice(1));
+    const data = selector.match(/^\[data-([\w-]+)(?:="([^"]*)")?\]$/);
+    if (data) { const key = data[1].replace(/-([a-z])/g, (_, c) => c.toUpperCase()); return key in node.dataset && (data[2] === undefined || node.dataset[key] === data[2]); }
+    const option = selector.match(/^option\[value="([^"]*)"\]$/);
+    return Boolean(option && node.tag === "option" && node.value === option[1]);
+  }
+  function parseElement(tag, attributes) {
+    const node = element(tag);
+    for (const [, key, value = ""] of attributes.matchAll(/([\w-]+)(?:="([^"]*)")?/g)) {
+      if (["hidden", "disabled", "selected"].includes(key)) node[key] = true;
+      else if (key === "class") node.className = value;
+      else if (key.startsWith("data-")) node.dataset[key.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = value;
+      else node[key] = value;
+    }
+    return node;
+  }
+  for (const [, tag, attributes = ""] of html.matchAll(/<([a-z][\w-]*)(\s[^>]*?)?>/g)) all.push(parseElement(tag, attributes));
+  const find = selector => all.find(node => matches(node, selector)) || null;
+  for (const [, attributes, body] of html.matchAll(/<select\s([^>]+)>([\s\S]*?)<\/select>/g)) {
+    const id = attributes.match(/id="([^"]+)"/)?.[1];
+    if (!id) continue;
+    const select = find(`#${id}`);
+    select.append(...[...body.matchAll(/<option([^>]*)>([\s\S]*?)<\/option>/g)].map(([, attrs, text]) => Object.assign(parseElement("option", attrs), { textContent: text })));
+    select.value = select.options.find(option => option.selected)?.value ?? select.options[0]?.value ?? "";
+  }
+  const document = { querySelector: find, querySelectorAll: selector => all.filter(node => matches(node, selector)),
+    createElement: element, documentElement: element("html"), body: element("body"), addEventListener() {}, contains: () => true };
+  const timers = new Set(), streams = [], requests = [], logs = [], releasedIds = [], progressRequests = [], conversionHeaders = [];
+  let now = 0;
+  const schedule = (callback, delay = 0, interval = false) => {
+    const timer = { callback, at: now + delay, delay, interval }; timers.add(timer); return timer;
+  };
+  const storage = new Map();
+  let ready;
+  const initialized = new Promise(resolve => { ready = resolve; });
+  const response = (body, status = 200) => ({ ok: status >= 200 && status < 300, status,
+    json: async () => body, text: async () => JSON.stringify(body) });
+  const context = vm.createContext({ document, navigator: { language: "en-US" }, crypto: webcrypto, FormData, File, AbortController,
+    console, URL, performance: { now: () => now },
+    setTimeout: services.clock ? (callback, delay) => schedule(callback, delay) : setTimeout,
+    clearTimeout: services.clock ? timer => timers.delete(timer) : clearTimeout,
+    setInterval(callback, delay) { return schedule(callback, delay, true); },
+    clearInterval(timer) { timers.delete(timer); },
+    localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
+    matchMedia: () => ({ matches: false, addEventListener() {} }), addEventListener() {},
+    EventSource: class { constructor(url) { this.url = url; this.closed = false; streams.push(this); } close() { this.closed = true; } },
+    flyingMouseFormat: { getAppVersion: async () => "0.7.6", rendererReady: async () => ready(),
+      log: async (level, message) => logs.push({ level, message }), ...bridge },
+    fetch: async (url, options = {}) => {
+      if (url === "/api/session") return response({ token: "a".repeat(64) });
+      if (url === "/api/capabilities") return response({ tools: {}, toolDetails: {}, groups: {} });
+      if (url === "/api/targets") return response(services.targets ? services.targets(options) : { category: "pdf", targets: ["docx", "html"] });
+      if (url === "/api/downloads/release") { releasedIds.push(...JSON.parse(options.body).ids); return response({ ok: true }); }
+      if (url.startsWith('/api/conversion-progress/')) {
+        progressRequests.push({url, signal: options.signal});
+        const result = services.progress ? await services.progress(url, progressRequests.length) : {body:{},status:404};
+        return response(result.body, result.status);
+      }
+      if (["/api/convert", "/api/convert-images-to-pdf", "/api/merge-pdfs"].includes(url)) {
+        const file = options.body.get("file") || options.body.getAll('files')[0]; requests.push(file.name);
+        conversionHeaders.push(options.headers);
+        const result = await convert(file, requests.length, url, options.body);
+        return response(result.body, result.status);
+      }
+      throw new Error(`Unexpected HTTP request: ${url}`);
+    }
+  });
+  context.window = context;
+  for (const [, file] of html.matchAll(/<script\s+src="\/([^"]+)"/g)) vm.runInContext(fs.readFileSync(path.join(publicDir, file), "utf8"), context, { filename: file });
+  await initialized;
+  assert.equal(logs.some(entry => entry.level === "error"), false, JSON.stringify(logs));
+  return { find, timers, streams, requests, logs, releasedIds, progressRequests, conversionHeaders,
+    async advance(ms) {
+      now += ms;
+      for (const timer of [...timers]) {
+        if (timer.at > now) continue;
+        if (timer.interval) timer.at = now + timer.delay;
+        else timers.delete(timer);
+        timer.callback();
+      }
+      await new Promise(resolve => setImmediate(resolve));
+    },
+    async select(names) {
+      find("#fileInput").files = names.map(name => new File(["fixture"], name));
+      await find("#fileInput").dispatch("change");
+      for (let attempt = 0; attempt < 20 && find("#targetSelect").disabled; attempt++) await new Promise(resolve => setImmediate(resolve));
+      assert.equal(find("#targetSelect").disabled, false, find("#statusBox").textContent);
+    },
+    convert: () => find("#convertButton").dispatch("click")
+  };
+}
+
+
+module.exports = { pageHarness };

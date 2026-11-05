@@ -24,7 +24,7 @@ test("concurrent capability callers share one parallel probe and cache its resul
     commandExists: (_command, args) => probe(args ? "poppler" : "ffmpeg", true)
   });
   const requests = Array.from({ length: 30 }, () => server.getToolDiagnostics());
-  assert.deepEqual(started, ["office", "ffmpeg", "poppler"], "all engines start before any has completed");
+  assert.deepEqual(started.slice().sort(), ["ffmpeg", "office", "poppler"], "all engines start before any has completed");
   release.forEach((finish) => finish());
   const results = await Promise.all(requests);
   assert.equal(results.every((result) => result.libreoffice.enabled && result.ffmpeg.enabled && result.poppler.enabled), true);

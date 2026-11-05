@@ -1,6 +1,7 @@
 """Local-only PP-StructureV3 construction and bounded PDF parsing."""
 
 import json
+import math
 import os
 import shutil
 import stat
@@ -129,9 +130,37 @@ def _ascii_staging_root() -> Path:
     # `C:\...\飞鼠格式\...` model path). Prefer a temp root that is itself ASCII.
     for candidate in (os.environ.get("TEMP"), os.environ.get("TMP"),
                       os.environ.get("LOCALAPPDATA"), tempfile.gettempdir()):
-        if candidate and _is_ascii(candidate):
-            return Path(candidate)
+        if not candidate: continue
+        root = Path(candidate)
+        if not root.is_dir(): continue
+        if _is_ascii(candidate): return root
+        short = _windows_short_path(root)
+        if short is not None: return short
     raise MissingModelError()
+
+
+def _windows_short_path(value: Path) -> Path | None:
+    """Use an existing NTFS short alias of the same per-user directory.
+
+    Do not create a global C:\\Temp or place user models in a shared public
+    directory. GetShortPathNameW performs no filesystem mutation.
+    """
+    if os.name != "nt": return None
+    import ctypes
+    from ctypes import wintypes
+    get_short = ctypes.WinDLL("kernel32", use_last_error=True).GetShortPathNameW
+    get_short.argtypes = (wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD)
+    get_short.restype = wintypes.DWORD
+    size = get_short(str(value), None, 0)
+    if size < 1: return None
+    buffer = ctypes.create_unicode_buffer(size)
+    written = get_short(str(value), buffer, size)
+    if written < 1 or written >= size or not _is_ascii(buffer.value): return None
+    short = Path(buffer.value)
+    try:
+        if not os.path.samefile(value, short): return None
+    except OSError: return None
+    return short
 
 
 def _link_or_copy(source: Path, target: Path) -> None:
@@ -146,8 +175,16 @@ def _link_or_copy(source: Path, target: Path) -> None:
         shutil.copy2(source, target)
 
 
+def _native_paths_are_utf8() -> bool:
+    if os.name != "nt": return True
+    import ctypes
+    # The EXE manifest opts ANSI native file APIs into UTF-8 on Windows 10 1903+.
+    # Older Windows ignores that declaration; keep ASCII staging as fallback.
+    return ctypes.WinDLL("kernel32").GetACP() == 65001
+
+
 def _stage_ascii_models(models: dict[str, Path]) -> tuple[dict[str, Path], Path | None]:
-    if all(_is_ascii(str(path)) for path in models.values()):
+    if all(_is_ascii(str(path)) for path in models.values()) or _native_paths_are_utf8():
         return models, None
     staging = Path(tempfile.mkdtemp(prefix="flyingmouse-models-", dir=str(_ascii_staging_root())))
     staged: dict[str, Path] = {}
@@ -189,8 +226,42 @@ def _resolve_models(models_root: Path) -> dict[str, Path]:
             raise MissingModelError() from error
         if not target.is_dir() or not _contained(root, target) or _is_reparse(lexical):
             raise MissingModelError()
+        for alternatives in (("inference.json", "inference.pdmodel"),
+                             ("inference.pdiparams",), ("inference.yml",)):
+            found = False
+            for filename in alternatives:
+                model_file = target / filename
+                try:
+                    if (model_file.is_file() and not _is_reparse(model_file)
+                            and _contained(root, model_file.resolve(strict=True))
+                            and model_file.stat().st_size > 0):
+                        found = True
+                        break
+                except OSError: pass
+            if not found: raise MissingModelError()
         resolved[name] = target
     return resolved
+
+
+def preflight_pdf(input_path: Path) -> None:
+    """Reject geometry budgets before importing Paddle or constructing models."""
+    try:
+        import fitz
+        with fitz.open(str(input_path)) as document:
+            if document.page_count < 1: raise ParseError()
+            if document.page_count > DEFAULT_LIMITS.max_pages: raise ResourceLimitError()
+            total_pixels = 0
+            for index in range(document.page_count):
+                rectangle = document.load_page(index).rect
+                width, height = math.ceil(rectangle.width * 2), math.ceil(rectangle.height * 2)
+                if width < 1 or height < 1: raise ParseError()
+                total_pixels += width * height
+                if (width > DEFAULT_LIMITS.max_dimension or height > DEFAULT_LIMITS.max_dimension
+                        or width * height > DEFAULT_LIMITS.max_page_pixels
+                        or total_pixels > DEFAULT_LIMITS.max_total_pixels):
+                    raise ResourceLimitError()
+    except (ResourceLimitError, ParseError): raise
+    except Exception as error: raise ParseError() from error
 
 
 @dataclass
@@ -224,8 +295,8 @@ class LocalPipeline:
                 page = document.load_page(page_index)
                 # Inspect geometry before raster allocation.
                 rectangle = page.rect
-                estimated_width = round(rectangle.width * 2)
-                estimated_height = round(rectangle.height * 2)
+                estimated_width = math.ceil(rectangle.width * 2)
+                estimated_height = math.ceil(rectangle.height * 2)
                 if (estimated_width > DEFAULT_LIMITS.max_dimension or
                         estimated_height > DEFAULT_LIMITS.max_dimension or
                         estimated_width * estimated_height > DEFAULT_LIMITS.max_page_pixels):

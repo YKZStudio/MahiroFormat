@@ -1,5 +1,7 @@
 {
-  "tag": "v0.6.5",
-  "requestedOn": "2026-09-06",
-  "sourceBase": "ad8d7b2016996fbd70a23c2ee537b3e4a620f157"
+  "tag": "v0.8.4",
+  "requestedOn": "2026-11-05",
+  "sourceBase": "bebcf9fb398f51a3306d0e99fac03f9e3c56e1b1",
+  "upstream": "LaoFeng-mouse/flyingmouse-format",
+  "upstreamCommit": "f7d9eab18e91848f9740261d348717bae3f40c21"
 }

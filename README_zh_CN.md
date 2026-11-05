@@ -1,6 +1,6 @@
 # Mahiro Format
 
-当前发行版本：**0.6.5**。
+当前发行版本：**0.8.4**。
 
 项目网站源码：[website/](website/)。提供系统选择、GitHub 发行版、最新构建与 GhProxy 加速下载入口。
 
@@ -187,3 +187,5 @@ Mahiro Format 免费、离线且无广告。如果它帮到了你，欢迎请真
 微信支付：
 
 <img src="public/assets/sponsor-qr.jpg" alt="牢蜂（LaoFeng）的微信收款码" width="240">
+
+当前安装包：`Mahiro-Format-Setup-0.8.4-x64.exe`、`Mahiro.Format-Setup-0.8.4-win7-x64.exe`、`Mahiro.Format-Setup-0.8.4-mac-<arch>.dmg`。见 [0.8.4 更新说明](docs/release-notes-084_zh_CN.md)。

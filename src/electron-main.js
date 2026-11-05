@@ -1,9 +1,13 @@
+(function startDesktop() {
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
-const http = require("http");
-const https = require("https");
 const { app, BrowserWindow, shell, ipcMain, dialog } = require("electron");
+const saveDownload = require("./save-download");
+const storeEngineCache = require("./store-engine-cache");
+const officeReadiness = require("./office-readiness");
+const { saveConvertedResult } = require("./save-converted-result");
+const { chooseConvertedSavePath } = require("./save-dialog");
 const {
   isTrustedRendererUrl,
   resolveTrustedDownloadUrl,
@@ -13,12 +17,9 @@ const logger = require("./logger");
 const { buildDiagnosticsReport } = require("./diagnostics");
 const { discoverSkillRoots, installAgentSkill } = require("./agent-skill-installer");
 const { resolveRuntimePaths } = require("./runtime-paths");
-const { zipDirectory } = require("./zip-util");
-const {
-  assetDirectoryNameForMarkdown,
-  rewriteMarkdownAssetReferences,
-  sanitizeAssetDirectoryName
-} = require("./markdown-assets");
+const { createDesktopRecovery } = require("./desktop-recovery");
+const ownedTasks = require("./owned-tasks");
+const { createDesktopShutdown, captureRuntimeIdentity, cleanupOwnedRuntime } = require("./desktop-shutdown");
 const {
   mergeLegacySettings,
   readLastSaveDirectory,
@@ -28,17 +29,51 @@ const {
 } = require("./settings-store");
 
 let mainWindow = null;
+let desktopRecovery = null;
 let server = null;
 let serverUrl = "";
 let serverRuntime = null;
-const settingsPath = path.join(app.getPath("userData"), "settings.json");
+let runtimeOwner;
+const desktopShutdown = createDesktopShutdown({
+  app, log,
+  stopTasks: () => ownedTasks.stopAll(),
+  closeServer: () => { server?.close(); server?.closeAllConnections?.(); },
+  closeWindows: () => { for (const window of BrowserWindow.getAllWindows()) window.destroy(); },
+  cleanup: () => cleanupOwnedRuntime(runtimeOwner)
+});
 const cliMarkerIndex = process.argv.indexOf("--cli");
 const cliMode = cliMarkerIndex >= 0;
+let settingsPath;
+let startupPath = "userData";
 
-// Route all logging (including from server.js and renderer-forwarded IPC
-// messages) to a single debug.log in the Electron userData directory.
-logger.setLogFile(path.join(app.getPath("userData"), "debug.log"));
-process.env.FLYINGMOUSE_LOG_FILE = logger.getLogFile();
+try {
+  // Electron can replace an unusable --user-data-dir with its default before
+  // this module runs. Validate the original switch before touching that fallback.
+  if (app.commandLine.hasSwitch("user-data-dir")) {
+    const requestedProfile = app.commandLine.getSwitchValue("user-data-dir");
+    if (!requestedProfile) {
+      throw Object.assign(new Error("--user-data-dir requires a directory path."), { code: "EINVAL", path: "--user-data-dir" });
+    }
+    startupPath = path.resolve(requestedProfile);
+    fs.mkdirSync(startupPath, { recursive: true });
+    if (path.resolve(app.getPath("userData")) !== startupPath) app.setPath("userData", startupPath);
+  }
+  startupPath = app.getPath("userData");
+  settingsPath = path.join(startupPath, "settings.json");
+  startupPath = path.join(startupPath, "debug.log");
+  // Server and renderer-forwarded messages share this profile's log.
+  logger.setLogFile(startupPath);
+  process.env.FLYINGMOUSE_LOG_FILE = logger.getLogFile();
+} catch (error) {
+  const detail = `无法准备配置或日志目录；应用已停止启动，未切换到备用配置。\nCould not prepare the selected profile or log directory. Startup stopped without switching to another profile.\n\n${error?.path || startupPath}\n${error?.code || "STARTUP_PROFILE_ERROR"}: ${error?.message || error}`;
+  console.error(detail);
+  try {
+    if (!cliMode) dialog.showErrorBox("Mahiro Format启动失败 / Mahiro Format could not start", detail);
+  } finally {
+    app.exit(1);
+  }
+  return;
+}
 
 function log(message, error) {
   if (error) {
@@ -48,7 +83,16 @@ function log(message, error) {
   }
 }
 
+function finishCli(code) {
+  // CLI owns its own workspace in cli.js, but Store preparation may still be
+  // running after a command that did not need Office. Stop that helper too.
+  createDesktopShutdown({ app, log, exitCode: code, releaseLock: false,
+    stopTasks: () => ownedTasks.stopAll(), closeServer: () => {}, cleanup: () => {}
+  }).beforeQuit();
+}
+
 function createWindow(url) {
+  if (desktopShutdown.isStopping()) return;
   log(`Creating window for ${url}`);
   mainWindow = new BrowserWindow({
     width: 1180,
@@ -66,32 +110,94 @@ function createWindow(url) {
     }
   });
 
+  if (process.platform === "win32" && app.isPackaged && !process.windowsStore) {
+    const launcher = currentCliLauncher().executable;
+    mainWindow.setAppDetails({
+      appId: "com.flyingmouse.format",
+      appIconPath: launcher,
+      relaunchCommand: `"${launcher}"`,
+      relaunchDisplayName: "Mahiro Format"
+    });
+  }
+
   mainWindow.webContents.on("will-navigate", (event, navigationUrl) => {
     if (isTrustedRendererUrl(navigationUrl, serverUrl)) return;
     event.preventDefault();
     log("Blocked renderer navigation");
   });
-  mainWindow.loadURL(url);
-  mainWindow.webContents.on("did-finish-load", () => log("Window finished loading"));
-  mainWindow.webContents.on("did-fail-load", (_event, code, description) => log(`Window failed loading ${code}: ${description}`));
+  desktopRecovery = createDesktopRecovery({ window: mainWindow, url, dialog, shell,
+    log, logPath: logger.getLogFile() });
+  void desktopRecovery.start();
   mainWindow.on("closed", () => {
     log("Main window closed");
     mainWindow = null;
+    desktopRecovery = null;
   });
 }
+
+ipcMain.handle("renderer-ready", (event) => {
+  assertTrustedIpc(event);
+  if (event.sender !== mainWindow?.webContents || event.senderFrame !== event.sender.mainFrame) {
+    throw new Error("Rejected interface readiness sender.");
+  }
+  desktopRecovery?.markReady();
+});
 
 ipcMain.handle("get-app-version", (event) => {
   assertTrustedIpc(event);
   return app.getVersion();
 });
 
+// MSIX/Store installs (C:\Program Files\WindowsApps\...) are read-only to the app.
+// LibreOfficePortable cannot initialize from a read-only install dir and fails with
+// "installation could not be completed". Copy the engine bundle once to a writable
+// per-user location and run from there. Dev / non-Store installs already run from a
+// writable resources dir, so they skip this entirely.
+// Select the eventual writable path before config/server modules are loaded.
+// Copy and validation run in a worker after the window is created; the server
+// advertises a pending Office engine and awaits readiness only for Office work.
+function configureWritableLibreOfficeForStore(bundledSofficePath) {
+  const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
+  const enginesRoot = storeEngineCache.resolveOfficeEnginesRoot(localAppData);
+  const options = {
+    bundledBundle: path.join(process.resourcesPath || "", "libreoffice"),
+    bundledSofficePath,
+    enginesRoot,
+    log
+  };
+  const destination = storeEngineCache.resolveWritableEngineBundle(options);
+  officeReadiness.configureOfficePreparation({
+    path: destination.path,
+    prepare: async () => {
+      const result = await storeEngineCache.prepareWritableEngineBundleAsync({ ...options, bundleName: destination.bundleName });
+      if (result.source === "bundled") log(`Writable Office engine unavailable: ${result.reason}`);
+      else log(`Writable Office engine ready (${result.source}): ${result.path}`);
+      return result;
+    }
+  });
+  return destination.path;
+}
+
 function configureRuntime() {
-  process.env.FLYINGMOUSE_RUNTIME_DIR = path.join(os.tmpdir(), "flyingmouse-format-runtime");
-  const runtimePaths = resolveRuntimePaths({ resourcesPath: process.resourcesPath });
+  // 每个进程独立的临时工作目录。旧版固定用同一个 %TEMP%\flyingmouse-format-runtime，
+  // 双开实例时各自 server 会在同目录互相清掉对方的产物（cleanupOldFiles 按 mtime 删），
+  // 并共享 downloads 登记表之外的文件——本机日志实证过两实例并行（2026-08-25）。
+  // 以 pid 为后缀后各实例完全隔离，互不干扰。
+  // CLI owns a fresh child workspace and disposes it before app.exit; preserve
+  // an explicit caller-owned parent until that lifecycle has initialized it.
+  if (!cliMode) process.env.FLYINGMOUSE_RUNTIME_DIR = path.join(os.tmpdir(), `flyingmouse-format-runtime-${process.pid}`);
+  const runtimePaths = resolveRuntimePaths({ resourcesPath: process.resourcesPath, platform: process.platform, arch: process.arch });
   process.env.FLYINGMOUSE_FFMPEG_PATH = runtimePaths.ffmpeg;
-  process.env.FLYINGMOUSE_LIBREOFFICE_PATH = runtimePaths.libreoffice;
+  if (process.windowsStore) {
+    // Store/MSIX install dir is read-only; LibreOfficePortable can't initialize there.
+    process.env.FLYINGMOUSE_LIBREOFFICE_PATH = configureWritableLibreOfficeForStore(runtimePaths.libreoffice);
+  } else {
+    process.env.FLYINGMOUSE_LIBREOFFICE_PATH = runtimePaths.libreoffice;
+  }
   process.env.FLYINGMOUSE_PDFTOPPM_PATH = runtimePaths.pdftoppm;
   process.env.FLYINGMOUSE_TESSDATA_PATH = runtimePaths.tessdata;
+  const pandoc = path.join(process.resourcesPath || path.join(__dirname, "..", "bin"), "pandoc", process.platform === "win32" ? "pandoc.exe" : "pandoc");
+  if (app.isPackaged && fs.existsSync(pandoc)) process.env.FLYINGMOUSE_PANDOC_PATH = pandoc;
   if (runtimePaths.docstructureEngine) process.env.FLYINGMOUSE_DOCSTRUCTURE_ENGINE_PATH = runtimePaths.docstructureEngine;
   else delete process.env.FLYINGMOUSE_DOCSTRUCTURE_ENGINE_PATH;
   if (runtimePaths.docstructureModels) process.env.FLYINGMOUSE_DOCSTRUCTURE_MODEL_DIR = runtimePaths.docstructureModels;
@@ -106,16 +212,40 @@ function configureRuntime() {
 }
 
 async function boot() {
+  if (desktopShutdown.isStopping()) return;
   log("Boot started");
+  // 单实例锁：禁止双开（旧版允许并行，两份 server 共享同一 runtime 目录，会互删产物）。
+  // 第二个实例直接退出，聚焦已有窗口。
+  const gotLock = app.requestSingleInstanceLock();
+  if (!gotLock) {
+    log("Another Mahiro Format instance is running; quitting this one");
+    app.quit();
+    return;
+  }
+  app.on("second-instance", () => {
+    if (desktopShutdown.isStopping()) return;
+    log("Second instance launched; focusing existing window");
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      if (!mainWindow.isVisible()) mainWindow.show();
+      mainWindow.focus();
+    }
+  });
   configureRuntime();
+  runtimeOwner = await captureRuntimeIdentity({ runtimeDir: process.env.FLYINGMOUSE_RUNTIME_DIR });
+  if (desktopShutdown.isStopping()) { await cleanupOwnedRuntime(runtimeOwner); return; }
   serverRuntime = require("./server");
 
   const started = await serverRuntime.startServer(0);
   server = started.server;
+  if (desktopShutdown.isStopping()) { server.close(); server.closeAllConnections?.(); return; }
   serverUrl = started.url;
   console.log(`Mahiro Format started at ${started.url}`);
   log(`Server started at ${started.url}`);
   createWindow(started.url);
+  // Worker-based preparation allows both rendering and non-Office conversion
+  // while a first Store launch copies and validates the engine.
+  void officeReadiness.startOfficePreparation();
 }
 
 function bundledSkillSource() {
@@ -123,8 +253,10 @@ function bundledSkillSource() {
 }
 
 function currentCliLauncher() {
+  const bootstrap = path.join(path.dirname(process.execPath), "Mahiro Format.exe");
   return {
-    executable: process.execPath,
+    executable: app.isPackaged && process.platform === "win32" && fs.existsSync(bootstrap)
+      ? bootstrap : process.execPath,
     args: app.isPackaged ? [] : [app.getAppPath()]
   };
 }
@@ -161,58 +293,16 @@ ipcMain.handle("install-agent-skill", async (event, payload) => {
   });
 });
 
-function downloadToFile(url, destination) {
-  const client = url.startsWith("https:") ? https : http;
-  return new Promise((resolve, reject) => {
-    const request = client.get(url, (response) => {
-      if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-        response.resume();
-        let redirectedUrl;
-        try {
-          redirectedUrl = trustedDownloadUrl(new URL(response.headers.location, url).toString());
-        } catch (error) {
-          reject(error);
-          return;
-        }
-        downloadToFile(redirectedUrl, destination).then(resolve, reject);
-        return;
-      }
-      if (response.statusCode !== 200) {
-        reject(new Error(`保存失败：下载服务返回 ${response.statusCode}`));
-        response.resume();
-        return;
-      }
-
-      const file = fs.createWriteStream(destination);
-      response.pipe(file);
-      file.on("finish", () => file.close(resolve));
-      file.on("error", reject);
-    });
-    request.on("error", reject);
+// P1（2026-09-10 复核，最高危）：旧实现失败时 `rm(destination)` 删的是用户选择
+// 的最终路径——404（写流未创建）也走这条，导致「保存失败误删已有文件」。
+// 下载落盘逻辑抽到 save-download.js：只写随机 .partial，完整校验后 rename 发布，
+// 失败只清本次临时文件，destination 永远不被删除。重定向信任校验由这里注入。
+function downloadToFile(url, destination, options = {}) {
+  return saveDownload.downloadToFile(url, destination, {
+    ...options,
+    log,
+    resolveRedirect: trustedDownloadUrl
   });
-}
-
-// md 转换产物带图片外置目录时，把 assets 清单里的图片下载到
-// `<md所在目录>/<最终保存名basename>.assets/`。用户改名后同步改写 md 引用。
-async function downloadAssetsToMdSidecar(assets, mdDestination, sourceAssetDirectoryName) {
-  if (!Array.isArray(assets) || !assets.length) return;
-  const mdDir = path.dirname(mdDestination);
-  const targetAssetDirectoryName = assetDirectoryNameForMarkdown(mdDestination);
-  const assetsDir = path.join(mdDir, targetAssetDirectoryName);
-  await fs.promises.mkdir(assetsDir, { recursive: true });
-  for (const asset of assets) {
-    const name = path.basename(String(asset?.name || ""));
-    if (!name) continue;
-    const absoluteUrl = trustedDownloadUrl(asset?.url);
-    await downloadToFile(absoluteUrl, path.join(assetsDir, name));
-  }
-
-  const source = sanitizeAssetDirectoryName(sourceAssetDirectoryName);
-  if (source && source !== targetAssetDirectoryName) {
-    const markdown = await fs.promises.readFile(mdDestination, "utf8");
-    const rewritten = rewriteMarkdownAssetReferences(markdown, source, targetAssetDirectoryName);
-    await fs.promises.writeFile(mdDestination, rewritten, "utf8");
-  }
 }
 
 function assertTrustedIpc(event) {
@@ -267,7 +357,7 @@ ipcMain.handle("export-diagnostics", async (event) => {
   const lastSaveDirectory = await readLastSaveDirectory(settingsPath, app.getPath("downloads"));
   const result = await dialog.showSaveDialog(mainWindow, {
     title: "导出诊断报告 / Export diagnostics",
-    defaultPath: path.join(lastSaveDirectory, "FlyingMouse-Format-diagnostics.txt"),
+    defaultPath: path.join(lastSaveDirectory, "Mahiro-Format-diagnostics.txt"),
     buttonLabel: "保存 / Save"
   });
   if (result.canceled || !result.filePath) return { canceled: true };
@@ -282,12 +372,21 @@ ipcMain.handle("export-diagnostics", async (event) => {
     release: os.release(),
     arch: process.arch,
     packageType: packageType(),
+    noStdioInit: app.commandLine.hasSwitch("no-stdio-init"),
     engines,
     logText,
     userHome: os.homedir(),
     environment: process.env
   });
-  await fs.promises.writeFile(result.filePath, report, "utf8");
+  const stagedReport = saveDownload.partialPathFor(result.filePath);
+  try {
+    await fs.promises.writeFile(stagedReport, report, { encoding: "utf8", flag: "wx" });
+    await saveDownload.publishDownloadedFile(stagedReport, result.filePath, { log });
+  } finally {
+    // A failed report write must not truncate an existing user-selected file.
+    await fs.promises.rm(stagedReport, { force: true })
+      .catch((error) => log("Failed to remove staged diagnostics report", error));
+  }
   await writeLastSaveDirectory(settingsPath, path.dirname(result.filePath))
     .catch((error) => log("Failed to remember diagnostics directory", error));
   return { canceled: false, filePath: result.filePath };
@@ -298,24 +397,20 @@ ipcMain.handle("save-converted-file", async (event, payload) => {
   const fileName = path.basename(String(payload?.fileName || "converted-file"));
   const absoluteUrl = trustedDownloadUrl(payload?.downloadUrl);
   const assets = Array.isArray(payload?.assets) ? payload.assets : [];
-  const assetDirectoryName = sanitizeAssetDirectoryName(payload?.assetDirectoryName);
   const lastSaveDirectory = await readLastSaveDirectory(settingsPath, app.getPath("downloads"));
-  const result = await dialog.showSaveDialog(mainWindow, {
-    title: "保存转换后的文件",
-    defaultPath: path.join(lastSaveDirectory, fileName),
-    buttonLabel: "保存"
+  const result = await chooseConvertedSavePath({
+    dialog, window: mainWindow, directory: lastSaveDirectory, fileName
   });
 
   if (result.canceled || !result.filePath) {
     return { canceled: true };
   }
 
-  await downloadToFile(absoluteUrl, result.filePath);
-  // md 转换产物带图片外置目录时，把图片下载到 md 同目录的 <下载名>.assets/，
-  // 保证 md 里的相对图片引用（./xxx.assets/...）可用。
-  await downloadAssetsToMdSidecar(assets, result.filePath, assetDirectoryName);
+  await saveConvertedResult({ downloadUrl: absoluteUrl, fileName, assets }, result.filePath,
+    { download: downloadToFile, resolveUrl: trustedDownloadUrl, log, overwrite: result.overwrite });
   await writeLastSaveDirectory(settingsPath, path.dirname(result.filePath))
     .catch((error) => log("Failed to remember save directory", error));
+  log(`Saved converted file: ${result.filePath}`);
   return { canceled: false, filePath: result.filePath };
 });
 
@@ -329,8 +424,7 @@ ipcMain.handle("save-converted-files", async (event, payload) => {
   const trustedFiles = files.map((item) => ({
     fileName: path.basename(String(item?.fileName || "converted-file")),
     downloadUrl: trustedDownloadUrl(item?.downloadUrl),
-    assets: Array.isArray(item?.assets) ? item.assets : [],
-    assetDirectoryName: sanitizeAssetDirectoryName(item?.assetDirectoryName)
+    assets: Array.isArray(item?.assets) ? item.assets : []
   }));
 
   const lastSaveDirectory = await readLastSaveDirectory(settingsPath, app.getPath("downloads"));
@@ -348,51 +442,28 @@ ipcMain.handle("save-converted-files", async (event, payload) => {
 
   const directory = result.filePaths[0];
   const saved = [];
+  const failed = [];
 
   for (const item of trustedFiles) {
-    const destination = uniqueDestination(directory, item.fileName);
-    await downloadToFile(item.downloadUrl, destination);
-    await downloadAssetsToMdSidecar(item.assets, destination, item.assetDirectoryName);
-    saved.push(destination);
+    let destination;
+    try {
+      destination = uniqueDestination(directory, item.fileName);
+      await saveConvertedResult(item, destination, { download: downloadToFile, resolveUrl: trustedDownloadUrl, log, overwrite: false });
+      saved.push(destination);
+    } catch (error) {
+      // 逐项容错：一个文件失败不再打断队列（旧实现整个 IPC reject，后续文件全部不落盘）。
+      // 失败已由 downloadToFile 记录到 debug.log，这里一并汇总返回给渲染器展示。
+      failed.push({ name: item.fileName, reason: error instanceof Error ? error.message : String(error) });
+      log(`Save batch item failed: ${item.fileName}`, error instanceof Error ? error : new Error(String(error)));
+    }
   }
 
-  await writeLastSaveDirectory(settingsPath, directory)
-    .catch((error) => log("Failed to remember save directory", error));
-
-  return { canceled: false, directory, savedCount: saved.length, files: saved };
-});
-
-ipcMain.handle("compress-folder", async (event, payload) => {
-  assertTrustedIpc(event);
-  const level = Math.min(9, Math.max(0, Number.isFinite(Number(payload?.compressionLevel)) ? Number(payload.compressionLevel) : 6));
-
-  const openResult = await dialog.showOpenDialog(mainWindow, {
-    title: "选择要压缩的文件夹",
-    buttonLabel: "选择这个文件夹",
-    properties: ["openDirectory"]
-  });
-  const folderPath = openResult.filePaths?.[0];
-  if (openResult.canceled || !folderPath) {
-    return { canceled: true };
+  if (saved.length) {
+    await writeLastSaveDirectory(settingsPath, directory)
+      .catch((error) => log("Failed to remember save directory", error));
   }
 
-  const lastSaveDirectory = await readLastSaveDirectory(settingsPath, app.getPath("downloads"));
-  const folderName = path.basename(folderPath) || "folder";
-  const saveResult = await dialog.showSaveDialog(mainWindow, {
-    title: "保存压缩包",
-    defaultPath: path.join(lastSaveDirectory, `${folderName}.zip`),
-    buttonLabel: "保存",
-    filters: [{ name: "ZIP 压缩包", extensions: ["zip"] }]
-  });
-  if (saveResult.canceled || !saveResult.filePath) {
-    return { canceled: true };
-  }
-
-  const fileCount = await zipDirectory(folderPath, saveResult.filePath, level);
-  await writeLastSaveDirectory(settingsPath, path.dirname(saveResult.filePath))
-    .catch((error) => log("Failed to remember save directory", error));
-
-  return { canceled: false, filePath: saveResult.filePath, fileCount };
+  return { canceled: false, directory, savedCount: saved.length, failed, files: saved };
 });
 
 // Renderer forwards uncaught errors / console diagnostics here so they land
@@ -418,7 +489,7 @@ app.disableHardwareAcceleration();
 // 模块（sharp/ffmpeg/LibreOffice 子进程），不受此限制影响。
 app.commandLine.appendSwitch("js-flags", "--max-old-space-size=1024");
 
-if (process.platform === "win32") {
+if (process.platform === "win32" && !process.windowsStore) {
   app.setAppUserModelId("com.flyingmouse.format");
 }
 
@@ -428,18 +499,21 @@ process.on("unhandledRejection", (error) => log("Unhandled rejection", error));
 if (cliMode) {
   app.whenReady().then(async () => {
     configureRuntime();
+    void officeReadiness.startOfficePreparation();
     const { runCli } = require("./cli");
     const code = await runCli(process.argv.slice(cliMarkerIndex + 1));
-    app.exit(code);
+    finishCli(code);
   }).catch((error) => {
     log("CLI boot failed", error);
     console.error(error);
-    app.exit(1);
+    finishCli(1);
   });
 } else {
   app.whenReady().then(boot).catch((error) => {
     log("Boot failed", error);
     console.error(error);
+    dialog.showErrorBox("Mahiro Format启动失败 / Mahiro Format could not start",
+      `应用未能启动，请保留以下日志并检查安装是否完整。\nThe app could not start. Keep this log and check that installation completed.\n\n${logger.getLogFile()}\n\n${error?.message || error}`);
     app.quit();
   });
 }
@@ -453,7 +527,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
-  if (!cliMode && !mainWindow && server?.listening) {
+  if (!cliMode && !desktopShutdown.isStopping() && !mainWindow && server?.listening) {
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 5177;
     serverUrl = `http://127.0.0.1:${port}`;
@@ -461,12 +535,10 @@ app.on("activate", () => {
   }
 });
 
-app.on("before-quit", () => {
+app.on("before-quit", (event) => {
   if (cliMode) return;
   log("Before quit");
-  if (server?.listening) {
-    server.close();
-  }
+  desktopShutdown.beforeQuit(event);
 });
 
 app.on("web-contents-created", (_event, contents) => {
@@ -482,3 +554,4 @@ app.on("web-contents-created", (_event, contents) => {
     return { action: "deny" };
   });
 });
+})();

@@ -32,6 +32,8 @@
 
 版本化文件保留相应版本当时的说明或测量结果，不会为了匹配当前功能而重写。
 
+- [v0.8.4 English](release-notes-084.md) / [简体中文](release-notes-084_zh_CN.md)
+
 - [v0.3.5 English](releases/v0.3.5.md) / [简体中文](releases/v0.3.5_zh_CN.md)
 - [v0.3.9](release-notes-039.md)
 - [v0.4.0](release-notes-040.md)

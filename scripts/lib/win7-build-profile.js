@@ -5,7 +5,14 @@ const STAGING_EXCLUDED_TESTS = new Set([
   "tests/conversion.test.js",
   "tests/win7-build-profile.test.js",
   "tests/win7-build-script.test.js",
-  "tests/pe-metadata.test.js"
+  "tests/pe-metadata.test.js",
+  "tests/build-engine-manifest.test.js",
+  "tests/pandoc-engine.test.js",
+  "tests/libraw-restore.test.js",
+  "tests/public-package.test.js",
+  "tests/distribution-footprint.test.js",
+  "tests/dependency-patch.test.js",
+  "tests/dependency-compatibility.test.js"
 ]);
 
 const REQUIRED_RUNTIME_FILES = [
@@ -20,11 +27,13 @@ const REQUIRED_RUNTIME_FILES = [
   "src/pdf-structure-score.js",
   "src/pdf-structure-engine.js",
   "src/text-conversion.js",
+  "src/text-encoding.js",
   "src/office-engine.js",
   "src/office-quality.js",
   "src/diagnostics.js",
   "src/runtime-paths.js",
   "src/image-conversion.js",
+  "src/design-export.js",
   "src/ico-format.js",
   "src/pdf-table-extractor.js",
   "src/pdf-table-runtime.js",
@@ -120,6 +129,14 @@ function createWin7Package(basePackage, projectRoot) {
   profile.dependencies["pdfjs-dist"] = "2.16.105";
   profile.dependencies.turndown = "7.2.0";
   profile.devDependencies.electron = "22.3.27";
+  // Keep the legacy lock separate from the modern Node/Electron dependency repair.
+  profile.devDependencies["electron-builder"] = "^26.15.3";
+  profile.engines = { ...profile.engines, node: ">=18" };
+  for (const name of ["minimatch", "@electron/asar", "@electron/universal", "archiver", "unzipper", "readdir-glob", "glob", "fast-csv", "temp", "fast-uri"]) {
+    delete profile.overrides?.[name];
+  }
+  delete profile.scripts.postinstall;
+  delete profile.scripts["verify:dependency-compat"];
 
   for (const scriptName of ["test", "test:ci"]) {
     profile.scripts[scriptName] = removeStagingExcludedTests(
@@ -135,10 +152,13 @@ function createWin7Package(basePackage, projectRoot) {
   profile.build.artifactName = "${productName}-Setup-${version}-win7-${arch}.${ext}";
   profile.build.win.target = ["nsis"];
   delete profile.build.appx;
+  delete profile.build.beforePack;
+  // Electron 22 uses its independently validated legacy startup path.
+  delete profile.build.afterSign;
   // Python-backed docengine and docstructure runtimes are excluded from Win7;
   // their JavaScript boundary modules remain available for static imports.
   profile.build.extraResources = profile.build.win.extraResources
-    .filter((item) => ![item.from, item.to].some((value) => /docengine|docstructure/i.test(String(value))))
+    .filter((item) => ![item.from, item.to].some((value) => /docengine|docstructure|pandoc|libraw/i.test(String(value))))
     .map((item) => ({
       ...item,
       from: item.from.startsWith("bin/")
@@ -158,6 +178,9 @@ function stageSourceEntries(basePackage) {
 
   const entries = new Set(["build", "tests", "scripts/lib/win7-build-profile.js", ...REQUIRED_RUNTIME_FILES]);
   for (const pattern of basePackage.build.files) {
+    // Keep exclusions in build.files for electron-builder, but do not treat
+    // them as source paths when preparing the independent legacy workspace.
+    if (pattern.startsWith("!")) continue;
     if (pattern === "node_modules" || pattern.startsWith("node_modules/")) continue;
     if (pattern.endsWith("/**/*")) {
       entries.add(pattern.slice(0, -5));

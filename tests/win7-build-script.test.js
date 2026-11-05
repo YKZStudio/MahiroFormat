@@ -107,7 +107,12 @@ test("prepare-only creates a clean, current Win7 staging tree without changing t
   const rootWin7Lock = JSON.parse(beforeWin7Lock.toString("utf8"));
   const stagedPackage = JSON.parse(fs.readFileSync(path.join(stagePath, "package.json"), "utf8"));
   const stagedLock = JSON.parse(fs.readFileSync(path.join(stagePath, "package-lock.json"), "utf8"));
-  assert.equal(rootPackage.name, "mahiro-format");
+  const distributionExclusions = rootPackage.build.files.filter((entry) => entry.startsWith("!"));
+  assert.ok(distributionExclusions.some((entry) => entry.includes(".map")));
+  assert.ok(distributionExclusions.some((entry) => entry.includes("traineddata.gz")));
+  assert.deepEqual(stagedPackage.build.files.filter((entry) => entry.startsWith("!")), distributionExclusions);
+  assert.ok(!fs.readdirSync(stagePath).some((entry) => entry.startsWith("!")), "exclusion glob was copied as a source directory");
+  assert.equal(rootPackage.name, "flyingmouse-format");
   assert.notEqual(stagedPackage.name, rootPackage.name);
   assert.equal(stagedPackage.dependencies.sharp, "0.32.6");
   assert.equal(stagedPackage.dependencies["pdfjs-dist"], "2.16.105");
@@ -203,7 +208,7 @@ test("build commands use only the installed local builder and stop after a faile
   fs.mkdirSync(path.dirname(npmCliPath), { recursive: true });
   fs.writeFileSync(npmCliPath, "local npm CLI");
   const stagedPackage = {
-    name: "flyingmouse-format-win7",
+    name: "mahiro-format-win7",
     version: "0.3.2",
     dependencies: { sharp: "0.32.6" },
     devDependencies: { electron: "22.3.27" },
@@ -386,7 +391,7 @@ test("build commands bind validation to unchanged staged manifest and lock bytes
   const temporaryStage = path.join(temporaryRoot, "output", "win7-stage");
   const npmCliPath = path.join(temporaryRoot, "npm-cli.js");
   const packageJson = {
-    name: "flyingmouse-format-win7",
+    name: "mahiro-format-win7",
     version: "0.3.2",
     dependencies: { sharp: "0.32.6" },
     devDependencies: { electron: "22.3.27" },
@@ -480,7 +485,7 @@ test("build commands reject a junctioned local builder CLI before executing it",
   const temporaryStage = path.join(temporaryRoot, "output", "win7-stage");
   const npmCliPath = path.join(temporaryRoot, "npm-cli.js");
   const packageJson = {
-    name: "flyingmouse-format-win7",
+    name: "mahiro-format-win7",
     version: "0.3.2",
     dependencies: { sharp: "0.32.6" },
     devDependencies: { electron: "22.3.27" },
@@ -513,8 +518,8 @@ test("build commands reject a junctioned local builder CLI before executing it",
     "builder shim"
   );
   fs.mkdirSync(path.join(externalBuilder, "out", "cli"), { recursive: true });
-  fs.writeFileSync(path.join(externalBuilder, "cli.js"), "external builder CLI");
-  fs.writeFileSync(path.join(externalBuilder, "out", "cli", "cli.js"), "external old CLI");
+  fs.writeFileSync(path.join(externalBuilder, "src/cli.js"), "external builder CLI");
+  fs.writeFileSync(path.join(externalBuilder, "out", "cli", "src/cli.js"), "external old CLI");
   const sentinel = path.join(externalBuilder, "do-not-touch.txt");
   fs.writeFileSync(sentinel, "external content");
   const builderJunction = path.join(temporaryStage, "node_modules", "electron-builder");
@@ -608,7 +613,7 @@ test("Win7 lock validation fails closed before npm when the lock is missing or m
   const temporaryStage = path.join(temporaryRoot, "output", "win7-stage");
   const npmCliPath = path.join(temporaryRoot, "npm-cli.js");
   const packageJson = {
-    name: "flyingmouse-format-win7",
+    name: "mahiro-format-win7",
     version: "0.3.2",
     dependencies: { sharp: "0.32.6", "pdfjs-dist": "2.16.105" },
     devDependencies: { electron: "22.3.27", "electron-builder": "^26.15.3" },
@@ -677,7 +682,7 @@ test("build commands reject junction and nested staging paths before npm", (t) =
   const output = path.join(temporaryRoot, "output");
   const npmCliPath = path.join(temporaryRoot, "npm-cli.js");
   const packageJson = {
-    name: "flyingmouse-format-win7",
+    name: "mahiro-format-win7",
     version: "0.3.2",
     dependencies: { sharp: "0.32.6" },
     devDependencies: { electron: "22.3.27" },

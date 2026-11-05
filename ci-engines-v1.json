@@ -22,8 +22,8 @@
           ]
         },
         {
-          "assetName": "ci-engines-v1-win32-docstructure.tar.zst",
-          "sha256": "a012b9f7a5dc3a3530beac1545c01f1f976b4fdbf0e4d045bbf5c9a85e8586f5",
+          "assetName": "ci-engines-v1-win32-docstructure-1.0.1.tar.zst",
+          "sha256": "f159fd0b0698e5b5d81a47ca7a7d8fbc73775b4c2a13bcc916c0a3024e98dd35",
           "requiredFiles": [
             "docstructure/docstructure-engine.exe",
             "docstructure/models/layout_detection/inference.pdiparams",

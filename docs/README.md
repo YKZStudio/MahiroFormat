@@ -34,6 +34,8 @@ These guides are currently maintained in Chinese because they target specific lo
 
 Versioned files preserve what was stated or measured for that release. They are not updated to match the current feature set.
 
+- [v0.8.4 English](release-notes-084.md) / [简体中文](release-notes-084_zh_CN.md)
+
 - [v0.3.5 English](releases/v0.3.5.md) / [简体中文](releases/v0.3.5_zh_CN.md)
 - [v0.3.9](release-notes-039.md)
 - [v0.4.0](release-notes-040.md)

@@ -19,8 +19,9 @@ class PyInstallerSpecTests(unittest.TestCase):
         self.assertIn('collect_data_files("paddlex")', spec)
         self.assertIn('collect_dynamic_libs("paddle")', spec)
         self.assertIn('collect_submodules', spec)
-        self.assertIn('"*.dist-info"', spec)
-        self.assertIn('"*.egg-info"', spec)
+        self.assertIn('copy_metadata(_name)', spec)
+        self.assertIn('requirements-win-x64.lock', spec)
+        self.assertNotIn('site.getsitepackages()', spec)
         self.assertIn('import setuptools', spec)
 
 

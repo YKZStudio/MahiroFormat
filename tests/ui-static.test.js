@@ -2,12 +2,28 @@ const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
 const { test } = require("node:test");
+const vm = require("node:vm");
 
 const publicRoot = path.join(__dirname, "..", "public");
 
 function readPublic(fileName) {
   return fs.readFileSync(path.join(publicRoot, fileName), "utf8");
 }
+
+test("Word targets are recognizable in both languages and PDF splitting names its ZIP output", () => {
+  const source = readPublic("app.js");
+  const labels = source.slice(source.indexOf("function targetFormatLabel("), source.indexOf("function commonTargetsFrom("));
+  const context = { state: { fileInfos: [{ category: "pdf" }] }, i18n: { language: "zh-CN" } };
+  vm.runInNewContext(labels, context);
+  assert.equal(context.targetFormatLabel("docx"), "Word（DOCX）");
+  assert.equal(context.targetFormatLabel("xlsx"), "Excel（智能表格提取）");
+  assert.equal(context.targetFormatLabel("pdf"), "PDF");
+  context.i18n.language = "en-US";
+  assert.equal(context.targetFormatLabel("docx"), "Word (DOCX)");
+  assert.equal(context.targetFormatLabel("xlsx"), "Excel (smart table extraction)");
+  assert.match(readPublic("index.html"), /data-i18n="pdfAction\.split"[^>]*>拆分 PDF（输出 ZIP）/);
+  assert.match(source, /"pdfAction\.split": "Split PDF \(ZIP output\)"/);
+});
 
 test("renderer exposes workflow hooks and drop zone copy", () => {
   const html = readPublic("index.html");
@@ -46,9 +62,8 @@ test("renderer uses the Mahiro brand and favicon", () => {
 
 test("Mahiro pastel visual theme classes and motion states are present", () => {
   const css = readPublic("styles.css");
-  assert.match(css, /--accent:\s*#ff82ad/);
-  assert.match(css, /--sky:\s*#7fb8f5/);
-  assert.match(css, /--mint:\s*#79d9c2/);
+  assert.match(css, /background:\s*var\(--accent\)/);
+  assert.match(css, /:root\[data-theme="dark"\]/);
   assert.match(css, /\.workflow-steps/);
   assert.match(css, /\.mahiro-stage/);
   assert.match(css, /\.mahiro-mascot/);
@@ -78,7 +93,9 @@ test("renderer restores and updates target preferences through durable Electron 
   assert.match(html, /conversion-preferences\.js/);
   assert.match(app, /migrateLegacySettings/);
   assert.match(app, /preferredTarget\(state\.settings\.targetBySource/);
-  assert.match(app, /logBridge\.updateSettings\(\{\s*targetBySource\s*\}/s);
+  // P2（0.6.10）：持久化统一走 persistSettings()（失败降级），回调不再裸调 IPC。
+  assert.match(app, /await persistSettings\(\{ targetBySource \}\)/);
+  assert.match(app, /logBridge\.updateSettings\(patch\)/);
   assert.doesNotMatch(app, /preferredTarget\(localStorage/);
   assert.doesNotMatch(app, /rememberTarget\(localStorage/);
 });
@@ -117,6 +134,35 @@ test("PDF to XLSX uses a contextual bilingual smart-table label and warning", ()
   assert.match(app, /targetSelect\.value === "xlsx"[\s\S]*info\.category === "pdf"/);
 });
 
+test("ICO target shows its bilingual size and transparency hint only while selected", async () => {
+  const { pageHarness } = require("./helpers/ui-page-harness");
+  const page = await pageHarness(() => assert.fail("Changing a target must not start conversion"), {}, {
+    targets: () => ({ category: "image", targets: ["png", "ico"] })
+  });
+  const hint = page.find("#icoHint");
+  assert.ok(hint, "The real page must contain the ICO explanation");
+  assert.equal(hint.hidden, true);
+  await page.select(["icon.png"]);
+  const target = page.find("#targetSelect");
+  target.value = "ico";
+  await target.dispatch("change");
+  assert.equal(hint.hidden, false);
+  assert.match(hint.textContent, /256 px.*transparency/);
+  assert.match(hint.textContent, /proportions.*padded instead of enlarged/);
+  const language = page.find("#languageSelect");
+  language.value = "zh-CN";
+  await language.dispatch("change");
+  assert.equal(hint.hidden, false);
+  assert.match(hint.textContent, /256 像素.*透明背景与原图比例/);
+  target.value = "png";
+  await target.dispatch("change");
+  assert.equal(hint.hidden, true);
+  target.value = "ico";
+  await target.dispatch("change");
+  await page.find("#clearButton").dispatch("click");
+  assert.equal(hint.hidden, true);
+});
+
 test("video targets expose a codec selector (h264/h265/av1) for mp4/mov/mkv", () => {
   const html = readPublic("index.html");
   const app = readPublic("app.js");
@@ -142,7 +188,29 @@ test("video targets expose a transparent background color selector", () => {
   assert.match(app, /form\.append\("alphaBackground"/);
 });
 
+test("multiple images to PDF expose a merge/separate mode selector", () => {
+  const html = readPublic("index.html");
+  const app = readPublic("app.js");
+  assert.match(html, /id="imagePdfModeField"[^>]*hidden/);
+  assert.match(html, /id="imagePdfMode"/);
+  assert.match(app, /"imagePdfMode\.label"/);
+  assert.match(app, /"imagePdfMode\.merge"/);
+  assert.match(app, /"imagePdfMode\.separate"/);
+  assert.match(app, /imagePdfModeField\.hidden/);
+  assert.match(app, /imagePdfMode\?\.value === "separate"/);
+});
 
+test("image capabilities include design inputs and expanded output formats", () => {
+  const { imageInput, designInput, imageFormatTargets } = require("../src/config");
+  const inputs = new Set([...imageInput, ...designInput]);
+  for (const expected of ["svg", "ai", "psd", "jp2", "j2k", "jxl", "qoi", "ppm"]) {
+    assert.ok(inputs.has(expected), `${expected} missing from image inputs`);
+  }
+  const targets = new Set(imageFormatTargets);
+  for (const expected of ["png", "jpg", "webp", "gif", "avif", "tiff", "ico", "bmp", "tga", "jp2", "jxl", "qoi", "ppm", "pdf"]) {
+    assert.ok(targets.has(expected), `${expected} missing from imageFormatTargets`);
+  }
+});
 
 test("renderer enforces the server-provided batch budget and localizes resource errors", () => {
   const app = readPublic("app.js");
@@ -166,6 +234,25 @@ test("renderer labels unstable experimental inputs bilingually", () => {
   assert.match(app, /Unstable\/experimental inputs/);
   assert.match(app, /不稳定\/实验性输入/);
   assert.match(app, /NCM \/ KGG \/ QQ 音乐 QMC \/ KGMA \/ KWM \/ VPR/);
+});
+
+test("public runtime keeps encrypted music unsupported even with former local environment flags", () => {
+  const { execFileSync } = require("node:child_process");
+  const inputs = ["ncm", "kgg", "kgma", "vpr", "kwm", "mflac", "mgg", "qmcflac", "av3a"];
+  const result = JSON.parse(execFileSync(process.execPath, ["-e", `
+    const config = require('./src/config');
+    const { targetsForExt } = require('./src/utils');
+    const inputs = ${JSON.stringify(inputs)};
+    process.stdout.write(JSON.stringify({
+      inputs: inputs.map(ext => config.audioInput.has(ext)),
+      targets: inputs.map(ext => targetsForExt(ext, {ffmpeg: true})),
+      ordinaryTargets: targetsForExt('flac', {ffmpeg: true})
+    }));
+  `], { cwd: path.join(__dirname, ".."), windowsHide: true, encoding: "utf8",
+    env: { ...process.env, FLYINGMOUSE_LOCAL_QQ_MUSIC: "1", FLYINGMOUSE_LOCAL_MUSIC: "1" } }));
+  assert.deepEqual(result.inputs, inputs.map(() => false));
+  assert.deepEqual(result.targets, inputs.map(() => []));
+  assert.ok(result.ordinaryTargets.includes("mp3"));
 });
 
 test("renderer surfaces a feedback hint without personal contact details", () => {
@@ -206,16 +293,16 @@ test("PDF split mode exposes page/group options and a group-size field bilingual
   assert.match(app, /pdfSplitMode\.addEventListener\("change", syncPdfActionFields\)/);
 });
 
-test("folder compression is exposed through the trusted bridge bilingually", () => {
+test("folder compression is removed from the UI (2026-09-04 feature removal)", () => {
   const html = readPublic("index.html");
   const app = readPublic("app.js");
-  assert.match(html, /id="compressFolderButton"/);
-  assert.match(app, /"action\.compressFolder": "压缩文件夹"/);
-  assert.match(app, /"action\.compressFolder": "Compress folder"/);
-  assert.match(app, /"compressFolder\.saved": "已压缩 \{count\} 个文件到：\{path\}"/);
-  assert.match(app, /"compressFolder\.saved": "Compressed \{count\} files to: \{path\}"/);
-  assert.match(app, /logBridge\.compressFolder/);
-  assert.match(app, /compressFolderButton\.addEventListener\("click"/);
+  const css = readPublic("styles.css");
+  assert.doesNotMatch(html, /compressFolderButton/);
+  assert.doesNotMatch(html, /zipCompressionField/);
+  assert.doesNotMatch(app, /compressFolder/);
+  assert.doesNotMatch(app, /zipCompression/);
+  assert.doesNotMatch(app, /"zip\./);
+  assert.doesNotMatch(css, /compress-folder-button/);
   assert.doesNotMatch(app, /\.innerHTML\s*=/);
 });
 
@@ -227,7 +314,7 @@ test("folder-to-PDF entry is exposed bilingually with webkitdirectory input", ()
   assert.match(html, /id="chooseFolderButton"/);
   assert.match(app, /"upload\.chooseFolder": "选择文件夹转 PDF"/);
   assert.match(app, /"upload\.chooseFolder": "Choose folder → PDF"/);
-  assert.match(app, /chooseFolderButton\.addEventListener\("click", \(\) => folderInput\.click\(\)\)/);
+  assert.match(app, /chooseFolderButton\.addEventListener\("click", \(\) => \{ if \(!state\.isConverting\) folderInput\.click\(\); \}\)/);
   assert.match(app, /folderInput\.addEventListener\("change"/);
   assert.match(app, /state\.folderName/);
   assert.match(app, /webkitRelativePath/);
@@ -247,18 +334,14 @@ test("blank page insertion is exposed in the image merge queue", () => {
   assert.doesNotMatch(app, /\.innerHTML\s*=/);
 });
 
-test("Mahiro branding, attribution, unstable warning, and QQ guide are present", () => {
+test("non-commercial notice is present in UI and styles with author attribution", () => {
   const html = readPublic("index.html");
   const app = readPublic("app.js");
   const css = readPublic("styles.css");
-  assert.match(html, /<title>Mahiro Format<\/title>/);
-  assert.match(html, /原作者：牢蜂（LaoFeng）/);
-  assert.match(html, /YKZStudio/);
-  assert.match(html, /class="compatibility-warning"/);
-  assert.match(html, /NCM \/ KGG \/ QQ 音乐 QMC \/ KGMA \/ KWM \/ VPR/);
-  assert.match(html, /id="qqTutorialModal"/);
-  assert.match(app, /MFLAC_EKEY_REQUIRED/);
-  assert.match(app, /function maybeShowQqTutorial/);
+  assert.match(html, /class="author-line"/);
+  assert.match(html, /LaoFeng/);
+  assert.match(html, /仅支持普通音乐格式转换，不支持其他音乐平台的加密特殊格式/);
+  assert.match(html, /禁止商业售卖/);
   assert.match(css, /\.author-line/);
   assert.match(css, /\.compatibility-warning/);
   assert.doesNotMatch(app, /\.innerHTML\s*=/);

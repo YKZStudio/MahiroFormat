@@ -1,9 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
-import site
+import re
 from pathlib import Path
 
 import setuptools  # activates the _vendor sys.path insert so vendored top-level modules resolve
-from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules, copy_metadata
 
 root = Path(SPECPATH)
 
@@ -15,14 +15,11 @@ datas = (
 
 binaries = collect_dynamic_libs("paddle")
 
-# paddlex.utils.deps reads importlib.metadata at import time (validates the "ocr"
-# extra), so every installed distribution's metadata must be shipped.
-for _sp in site.getsitepackages():
-    _sp_path = Path(_sp)
-    if not _sp_path.is_dir():
-        continue
-    for _entry in list(_sp_path.glob("*.dist-info")) + list(_sp_path.glob("*.egg-info")):
-        datas.append((str(_entry), _entry.name))
+# PaddleX validates its extras through importlib.metadata. Only the locked
+# runtime distributions belong in the application, not unrelated build-host
+# packages (including credentials-bearing tooling and GPU frameworks).
+for _name in re.findall(r"^([A-Za-z0-9_.-]+)(?:\[[^\]]+\])?==", (root / "requirements-win-x64.lock").read_text("utf-8"), re.M):
+    datas += copy_metadata(_name)
 
 hiddenimports = ["paddleocr", "paddlex", "img2table", "fitz", "PIL"]
 
@@ -45,12 +42,17 @@ a = Analysis(
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
-    hookspath=[], hooksconfig={}, runtime_hooks=[], excludes=["tkinter"],
+    hookspath=[], hooksconfig={}, runtime_hooks=[],
+    excludes=["tkinter", "torch", "torchvision", "torchaudio", "tensorflow",
+              "jax", "jaxlib", "cupy", "nvidia", "triton", "pytest", "IPython",
+              "transformers", "sentence_transformers", "diffusers", "accelerate",
+              "librosa", "numba", "llvmlite", "onnxruntime"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="docstructure-engine",
           debug=False, bootloader_ignore_signals=False, strip=False, upx=False,
-          console=True, disable_windowed_traceback=True)
+          console=True, disable_windowed_traceback=True,
+          manifest=str(root / "windows-utf8.manifest"))
 dist = COLLECT(exe, a.binaries, a.datas, strip=False, upx=False,
                name="docstructure-engine")

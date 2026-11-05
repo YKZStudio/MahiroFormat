@@ -75,7 +75,7 @@ test("renderer exposes all nine Mahiro action states", async () => {
   assert.match(html, /mahiro-format\/mahiro-upload\.png/);
   assert.match(app, /const mahiroAssets/);
   assert.match(app, /function setMahiroState/);
-  assert.doesNotMatch(app, /mouseAssets|setMouseState|mouseMascot/);
+  assert.doesNotMatch(app, /mouseAssets|setMahiroState|mouseMascot/);
 
   for (const name of ["idle", "upload", "analyzing", "converting", "pdf-pages", "ocr", "batch", "success", "error"]) {
     const filePath = path.join(themeRoot, `mahiro-${name}.png`);

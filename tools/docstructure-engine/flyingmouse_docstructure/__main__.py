@@ -11,7 +11,7 @@ from pathlib import Path
 from flyingmouse_docstructure import __version__
 from flyingmouse_docstructure.normalize import ResourceLimitError
 from flyingmouse_docstructure.pipeline import (InvalidOutputError, MissingModelError, ParseError,
-                                                build_pipeline, validate_manifest_limits)
+                                                build_pipeline, preflight_pdf, validate_manifest_limits)
 
 
 def _status(code: str, page_count: int, started: float) -> None:
@@ -104,6 +104,7 @@ def main(argv=None) -> int:
         output = Path(args.output)
         _prepare_output(output)
         with _private_engine_io():
+            preflight_pdf(Path(args.input))
             pipeline = build_pipeline(Path(args.models), args.language)
             pages = pipeline.parse(Path(args.input), output)
         validate_manifest_limits(pages)

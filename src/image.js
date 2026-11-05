@@ -8,12 +8,16 @@ const fsp = require("fs/promises");
 const os = require("os");
 const path = require("path");
 const zlib = require("zlib");
+const { finished } = require("stream/promises");
 const { promisify } = require("util");
 const { randomUUID } = require("crypto");
 const sharp = require("sharp");
-const { FFMPEG_PATH, DCRAW_PATH, rawInput } = require("./config");
+const { FFMPEG_PATH, DCRAW_PATH, CR2_DECODER_PATH, rawInput } = require("./config");
 const RAW_EXTENSIONS = rawInput;
+const FFMPEG_IMAGE_EXTENSIONS = new Set(["tga", "jp2", "j2k", "jxl", "qoi", "ppm"]);
 const { run } = require("./utils");
+const { throwIfCanceled } = require("./conversion-cancellation");
+const { reportConversionProgress } = require("./conversion-progress");
 const {
   LIMITS,
   ResourceLimitError,
@@ -21,14 +25,14 @@ const {
   assertImagePdfBudget
 } = require("./resource-policy");
 const { isBmpFileSync, decodeBmpToRaw } = require("./bmp-input");
-const { isIcoFileSync, extractBestFrame, encodeIco } = require("./ico-format");
+const { isIcoFileSync, readIcoFile, extractBestFrame, decodeIcoBitmap, encodeIco } = require("./ico-format");
 const { convertRasterImage, WARNING_MESSAGES } = require("./image-conversion");
 const deflate = promisify(zlib.deflate);
 
 // ICO 输出：把输入图缩放到多尺寸（16/24/32/48/64/128/256）生成 PNG 帧，组装成 ICO 容器。
 // ICO 是静态格式；动图只取第一帧并附动画压平警告（与其它静态图片目标一致）。
-async function convertToIco(inputPath, outputPath) {
-  const metadata = await sharp(inputPath, { animated: true, limitInputPixels: LIMITS.maxImagePixels }).metadata();
+async function convertToIco(inputPath, outputPath, options = {}) {
+  const metadata = await inspectImageMetadata(inputPath, true);
   const animated = Number(metadata.pages || 1) > 1;
   const warnings = [];
   if (animated) warnings.push({ code: "ANIMATION_FLATTENED", messages: WARNING_MESSAGES.ANIMATION_FLATTENED });
@@ -36,38 +40,74 @@ async function convertToIco(inputPath, outputPath) {
   // 尺寸自适应：只生成不超过源图尺寸的帧（避免上采样放大产生模糊），
   // 但小图标档（16/24/32）必须保留——即使源图是 48px 小图，Windows 图标
   // 也需要 16/32 档（2026-08-15 增强：原固定 7 档对小源图会生成模糊的 128/256 帧）。
-  const src = Math.max(metadata.width || 0, metadata.height || 0);
+  const src = Math.max(metadata.width || 0, metadata.pageHeight || metadata.height || 0);
   const sizes = [16, 24, 32, 48, 64, 128, 256]
     .filter((size) => size <= src || size <= 32);
   const frames = [];
   for (const size of sizes) {
+    throwIfCanceled(options.signal);
     const png = await sharp(inputPath, { page: 0, pages: 1, limitInputPixels: LIMITS.maxImagePixels })
       .rotate()
-      .resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .resize(size, size, { fit: "contain", withoutEnlargement: true, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .toColorspace("srgb")
+      .ensureAlpha()
       .png()
       .toBuffer();
     frames.push({ size, data: png });
   }
+  throwIfCanceled(options.signal);
   await fsp.writeFile(outputPath, encodeIco(frames));
   return { warnings };
 }
 
-async function convertImage(inputPath, outputPath, target) {
-  const prepared = await prepareImageInput(inputPath);
+async function convertImage(inputPath, outputPath, target, options = {}) {
+  throwIfCanceled(options.signal);
+  const prepared = await prepareImageInput(inputPath, options.inputName);
   try {
+    throwIfCanceled(options.signal);
     if (target === "pdf") {
-      await convertImagesToPdf([{ inputPath: prepared.inputPath, originalName: path.basename(prepared.inputPath) }], outputPath);
+      await convertImagesToPdf([{ inputPath: prepared.inputPath, originalName: path.basename(prepared.inputPath) }], outputPath, options);
       return { warnings: [] };
     }
 
     if (target === "txt") {
       const { convertImageToOcrText } = require("./ocr");
-      await convertImageToOcrText(prepared.inputPath, outputPath);
-      return { warnings: [] };
+      return await convertImageToOcrText(prepared.inputPath, outputPath, options);
+    }
+
+    if (target === "docx" || target === "md") {
+      const { recognizeImageResult } = require("./ocr");
+      const result = await recognizeImageResult(prepared.inputPath, options);
+      if (!result.text.trim()) {
+        const error = new Error("OCR 没有识别出文字，请确认图片清晰、方向正确。");
+        error.code = "OCR_NO_TEXT";
+        error.messages = { zhCN: error.message, enUS: "OCR found no text. Check image clarity and orientation." };
+        throw error;
+      }
+      if (target === "docx") {
+        await require("./text-docx").convertTextToDocx(result.text, "txt", outputPath);
+      } else {
+        const text = result.text.replace(/([\\`*_\[\]<>|#])/g, '\\$1');
+        await fsp.writeFile(outputPath, text + '\n', "utf8");
+      }
+      return { warnings: [...result.warnings, { code: "OCR_EDITABLE_TEXT", messages: {
+        zhCN: "已生成可编辑文字；原图中的表格、图片位置和样式未重建，请对照原图复核。",
+        enUS: "Editable text was created. Original tables, image positions and styling were not reconstructed; review against the source image."
+      } }] };
     }
 
     if (target === "ico") {
-      return await convertToIco(prepared.inputPath, outputPath);
+      return await convertToIco(prepared.inputPath, outputPath, options);
+    }
+
+    // 专业/新式位图输出：sharp 的预编译编码器不全，统一走打包内置 ffmpeg。
+    // jxl 显式指定 libjxl，其余按扩展名选 muxer；五种格式均已做编码→解码闭环实测。
+    if (FFMPEG_IMAGE_EXTENSIONS.has(target)) {
+      const args = ["-hide_banner", "-y", "-i", prepared.inputPath, "-frames:v", "1"];
+      if (target === "jxl") args.push("-c:v", "libjxl");
+      args.push(outputPath);
+      await run(FFMPEG_PATH, args, { timeout: 1000 * 60 * 5 });
+      return { warnings: [] };
     }
 
     if (target === "mp4" || target === "webm") {
@@ -90,29 +130,43 @@ async function convertImage(inputPath, outputPath, target) {
 //   - BMP   -> 纯 JS 解码成 PNG
 //   - HEIC  -> 打包内置 ffmpeg（含 hevc 解码器）转 PNG
 // 让下游统一走 PNG。
-async function prepareImageInput(inputPath) {
+async function prepareImageInput(inputPath, inputName) {
+  // 设计稿（.ai/.psd）：先统一栅格化成 PNG 再走通用图片链路。
+  // multer 临时文件无扩展名，按上传原始名（inputName）识别；多页 .ai 只取第 1 页
+  // （包装稿典型为单页；实验性输入已附提示复核产物）。
+  const designExt = path.extname(String(inputName || inputPath)).toLowerCase().replace(/^\./, "");
+  if (designExt === "ai" || designExt === "psd") {
+    const { designToPng } = require("./design-export");
+    return await designToPng(inputPath, designExt);
+  }
+
   // 先读文件头判断（不整读大图）；只有需要中转的格式才解码进内存。
   if (isIcoFileSync(inputPath)) {
     // ICO 容器：提取最清晰帧（PNG 帧直接落盘；BMP DIB 帧解码成 raw 再转 PNG）。
+    const frame = extractBestFrame(await readIcoFile(inputPath));
     const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-ico-input-"));
     const pngPath = path.join(tempDir, "decoded.png");
-    const frame = extractBestFrame(await fsp.readFile(inputPath));
-    if (frame.png) {
-      await fsp.writeFile(pngPath, frame.data);
-    } else {
-      const { width, height, data } = decodeBmpToRaw(frame.data);
-      await sharp(data, { raw: { width, height, channels: 3 }, limitInputPixels: LIMITS.maxImagePixels })
-        .png()
-        .toFile(pngPath);
+    try {
+      if (frame.png) {
+        await fsp.writeFile(pngPath, frame.data);
+      } else {
+        const { width, height, channels, data } = decodeIcoBitmap(frame);
+        await sharp(data, { raw: { width, height, channels }, limitInputPixels: LIMITS.maxImagePixels })
+          .png()
+          .toFile(pngPath);
+      }
+      return { inputPath: pngPath, tempDir };
+    } catch (error) {
+      await fsp.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+      throw error;
     }
-    return { inputPath: pngPath, tempDir };
   }
 
   if (isBmpFileSync(inputPath)) {
-    const { width, height, data } = decodeBmpToRaw(await fsp.readFile(inputPath));
+    const { width, height, channels, data } = decodeBmpToRaw(await fsp.readFile(inputPath));
     const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-bmp-input-"));
     const pngPath = path.join(tempDir, "decoded.png");
-    await sharp(data, { raw: { width, height, channels: 3 }, limitInputPixels: LIMITS.maxImagePixels })
+    await sharp(data, { raw: { width, height, channels }, limitInputPixels: LIMITS.maxImagePixels })
       .png()
       .toFile(pngPath);
     return { inputPath: pngPath, tempDir };
@@ -129,43 +183,61 @@ async function prepareImageInput(inputPath) {
     return { inputPath: pngPath, tempDir };
   }
 
-  if (isTgaFileSync(inputPath)) {
-    const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-tga-input-"));
+  // 专业/新式位图输入在 Electron 上传后临时路径没有扩展名；这类容器的探测并非都
+  // 稳定，先按 inputName 补回扩展名，再用 ffmpeg 解码成 PNG 供下游统一处理。
+  if (FFMPEG_IMAGE_EXTENSIONS.has(designExt) || isTgaFileSync(inputPath)) {
+    const sourceExt = FFMPEG_IMAGE_EXTENSIONS.has(designExt) ? designExt : "tga";
+    const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-ffmpeg-image-input-"));
+    const namedInput = path.join(tempDir, `input.${sourceExt}`);
     const pngPath = path.join(tempDir, "decoded.png");
-    // -frames:v 1 确保只输出单帧（避免 image2 序列名警告，也防止多帧 TGA 撑爆输出）。
-    await run(FFMPEG_PATH, ["-hide_banner", "-y", "-i", inputPath, "-frames:v", "1", pngPath], { timeout: 1000 * 60 * 5 });
+    await fsp.copyFile(inputPath, namedInput);
+    await run(FFMPEG_PATH, ["-hide_banner", "-y", "-i", namedInput, "-frames:v", "1", pngPath], { timeout: 1000 * 60 * 5 });
     if (!fs.existsSync(pngPath)) {
       await fsp.rm(tempDir, { recursive: true, force: true }).catch(() => {});
-      throw new Error("TGA 图片解码失败：无法从该文件提取像素数据。");
+      throw new Error(`${sourceExt.toUpperCase()} 图片解码失败：无法从该文件提取像素数据。`);
     }
     return { inputPath: pngPath, tempDir };
   }
 
   // 相机 RAW 原片（CR2/NEF/ARW/DNG 等）：sharp/libvips 无 dcraw delegate，用打包内置
-  // dcraw.exe 解出 16-bit TIFF（sRGB）让下游统一走 sharp。
-  if (isRawFileSync(inputPath)) {
-    if (!DCRAW_PATH) {
+  // dcraw.exe 按相机白平衡解出 sRGB TIFF，让下游统一走 sharp。
+  if (RAW_EXTENSIONS.has(designExt) || isRawFileSync(inputPath)) {
+    const rawExt = designExt || path.extname(inputPath).slice(1).toLowerCase();
+    const useLibRaw = rawExt === "cr2" && Boolean(CR2_DECODER_PATH);
+    const decoder = useLibRaw ? CR2_DECODER_PATH : DCRAW_PATH;
+    if (!decoder) {
       throw new Error("RAW 解码引擎（dcraw）不可用：未找到 dcraw.exe。");
     }
     const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-raw-input-"));
     // dcraw 不支持 -O（部分版本报 Unknown option），输出 <basename>.tiff 固定生成在输入
     // 所在目录。先把输入复制到临时目录再解码：源目录可能只读（U 盘/系统目录），
     // 且避免在用户目录残留 .tiff。
-    const tempInput = path.join(tempDir, path.basename(inputPath));
-    await fsp.copyFile(inputPath, tempInput);
-    // dcraw -T 输出 16-bit TIFF；-o 1 = sRGB 色彩空间（默认 ACES 线性会偏灰，勿去掉）
-    await run(DCRAW_PATH, ["-T", "-o", "1", tempInput], { timeout: 1000 * 60 * 5 });
-    const stem = path.basename(tempInput, path.extname(tempInput));
-    const tiffCandidates = [
-      path.join(tempDir, `${stem}.tiff`),
-      path.join(tempDir, `${stem}.tif`)
-    ];
-    const tiffPath = tiffCandidates.find((c) => fs.existsSync(c));
-    if (!tiffPath) {
+    const tempInput = path.join(tempDir, `input.${designExt || path.extname(inputPath).replace(/^\./, "") || "raw"}`);
+    try {
+      await fsp.copyFile(inputPath, tempInput);
+      // -T selects TIFF (8-bit by default); -o 1 selects sRGB.
+      // Without -w dcraw uses fixed daylight WB, ignoring the camera setting.
+      // Preserve intentional warm lighting; do not auto-neutralize every photo.
+      const args = ["-T", "-o", "1", "-w"];
+      // LibRaw defaults to input.cr2.tiff; use its explicit output option.
+      // CR2 uses maintained LibRaw because legacy dcraw crashes on e.g. EOS M100.
+      if (useLibRaw) args.push("-Z", path.join(tempDir, "input.tiff"));
+      args.push(tempInput);
+      await run(decoder, args, { timeout: 1000 * 60 * 5 });
+      const stem = path.basename(tempInput, path.extname(tempInput));
+      const tiffCandidates = [
+        path.join(tempDir, `${stem}.tiff`),
+        path.join(tempDir, `${stem}.tif`)
+      ];
+      const tiffPath = tiffCandidates.find((c) => fs.existsSync(c));
+      if (!tiffPath) throw new Error("RAW 图片解码失败：无法从该文件提取像素数据。");
+      return { inputPath: tiffPath, tempDir };
+    } catch (error) {
+      // prepareImageInput can fail before convertImage's finally is entered.
+      // Preserve the decoder's original error while removing this attempt only.
       await fsp.rm(tempDir, { recursive: true, force: true }).catch(() => {});
-      throw new Error("RAW 图片解码失败：无法从该文件提取像素数据。");
+      throw error;
     }
-    return { inputPath: tiffPath, tempDir };
   }
 
   return { inputPath, tempDir: null };
@@ -206,6 +278,14 @@ function isTgaFileSync(filePath) {
 }
 
 async function inspectImageMetadata(inputPath, animated = false) {
+  if (isIcoFileSync(inputPath)) {
+    const frame = extractBestFrame(await readIcoFile(inputPath));
+    const metadata = frame.png
+      ? await sharp(frame.data, { limitInputPixels: LIMITS.maxImagePixels }).metadata()
+      : { width: frame.width, height: frame.height, pages: 1, hasAlpha: true };
+    assertImageMetadata(metadata);
+    return metadata;
+  }
   let metadata;
   try {
     metadata = await sharp(inputPath, {
@@ -257,15 +337,35 @@ function pdfNumber(value) {
   return Number(value).toFixed(2).replace(/\.00$/, "");
 }
 
-async function readImageForPdf(inputPath) {
+async function readImageForPdf(inputPath, options = {}) {
+  throwIfCanceled(options.signal);
+  if (isIcoFileSync(inputPath)) {
+    const prepared = await prepareImageInput(inputPath);
+    try {
+      throwIfCanceled(options.signal);
+      return await readPngAsPdfImage(prepared.inputPath);
+    } finally {
+      await fsp.rm(prepared.tempDir, { recursive: true, force: true }).catch(() => {});
+    }
+  }
   // sharp 的预编译构建不支持 BMP 输入：批量/ZIP 图片合并 PDF 时直接解码 BMP。
   // 先读文件头判断，避免把非 BMP 大图整读进内存。
   if (isBmpFileSync(inputPath)) {
     const rawBmp = decodeBmpToRaw(await fsp.readFile(inputPath));
+    let data = rawBmp.data;
+    // PDF 位图流按 RGB 三通道写入：带 alpha 的 32bpp BMP（decodeBmpToRaw 输出 4 通道）
+    // 必须先剥掉 alpha 拍平为 RGB，否则每行多一字节导致整图错位。
+    if (rawBmp.channels === 4) {
+      const rgb = Buffer.alloc(rawBmp.width * rawBmp.height * 3);
+      for (let i = 0, j = 0; i < data.length; i += 4, j += 3) {
+        rgb[j] = data[i]; rgb[j + 1] = data[i + 1]; rgb[j + 2] = data[i + 2];
+      }
+      data = rgb;
+    }
     return {
       width: rawBmp.width,
       height: rawBmp.height,
-      data: await deflate(rawBmp.data)
+      data: await deflate(data)
     };
   }
 
@@ -274,7 +374,8 @@ async function readImageForPdf(inputPath) {
     const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-heic-pdf-"));
     try {
       const pngPath = path.join(tempDir, "decoded.png");
-      await run(FFMPEG_PATH, ["-hide_banner", "-y", "-i", inputPath, pngPath], { timeout: 1000 * 60 * 5 });
+      await run(FFMPEG_PATH, ["-hide_banner", "-y", "-i", inputPath, pngPath], { timeout: 1000 * 60 * 5, signal: options.signal });
+      throwIfCanceled(options.signal);
       return await readPngAsPdfImage(pngPath);
     } finally {
       await fsp.rm(tempDir, { recursive: true, force: true }).catch(() => {});
@@ -286,7 +387,8 @@ async function readImageForPdf(inputPath) {
     const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-tga-pdf-"));
     try {
       const pngPath = path.join(tempDir, "decoded.png");
-      await run(FFMPEG_PATH, ["-hide_banner", "-y", "-i", inputPath, "-frames:v", "1", pngPath], { timeout: 1000 * 60 * 5 });
+      await run(FFMPEG_PATH, ["-hide_banner", "-y", "-i", inputPath, "-frames:v", "1", pngPath], { timeout: 1000 * 60 * 5, signal: options.signal });
+      throwIfCanceled(options.signal);
       return await readPngAsPdfImage(pngPath);
     } finally {
       await fsp.rm(tempDir, { recursive: true, force: true }).catch(() => {});
@@ -323,19 +425,37 @@ async function readPngAsPdfImage(inputPath) {
   };
 }
 
-async function convertImagesToPdf(imageFiles, outputPath) {
+// 流式写入辅助：向 PDF 输出流逐块写入，并同步累计字节位置（供 xref 偏移使用）。
+// 每块等待实际写入完成，既限制写缓冲，也把打开/写盘失败交回转换请求。
+function writePdfChunk(stream, buffer, pos) {
+  pos.value += buffer.length;
+  return new Promise((resolve, reject) => {
+    stream.write(buffer, (error) => error ? reject(error) : resolve());
+  });
+}
+
+// 图片合并为 PDF：逐张解码、流式写盘并释放整图数据，元数据与页目录仍按页数增长。
+// 先检查设备预算；每张图以原始分辨率整页内嵌，不为满足预算而缩放。
+async function convertImagesToPdf(imageFiles, outputPath, options = {}) {
+  const { signal, onProgress = () => {} } = options;
+  throwIfCanceled(signal);
   if (!imageFiles.length) {
     throw new Error("请先选择要转换为 PDF 的图片。");
   }
 
+  // Validate dimensions and the finite device budget before decoding pixels or
+  // writing pages, so invalid/oversized input cannot produce partial success.
+  reportConversionProgress({ stage: "preparing" });
   const metadataList = [];
   for (const file of imageFiles) {
+    throwIfCanceled(signal);
     if (file?.blank) {
       metadataList.push({ width: 595, height: 842, pages: 1, pageHeight: 842 });
       continue;
     }
     metadataList.push(await inspectImageMetadata(file.inputPath));
   }
+  throwIfCanceled(signal);
   assertImagePdfBudget(metadataList);
 
   // Stream to a sibling file: decoding/writing failures must not replace an existing output.
@@ -344,18 +464,23 @@ async function convertImagesToPdf(imageFiles, outputPath) {
   try {
     try {
       // FileHandle.writeFile consumes the async iterable with backpressure (Node 18+).
-      await handle.writeFile(imagePdfChunks(imageFiles));
+      await handle.writeFile(imagePdfChunks(imageFiles, options));
     } finally {
       await handle.close();
     }
+    throwIfCanceled(signal);
     await fsp.rename(temporaryPath, outputPath);
+    reportConversionProgress({ stage: "validating" });
   } catch (error) {
     await fsp.rm(temporaryPath, { force: true }).catch(() => {});
     throw error;
   }
 }
 
-async function* imagePdfChunks(imageFiles) {
+async function* imagePdfChunks(imageFiles, options = {}) {
+  const { signal } = options;
+  const onProgress = options.onProgress || (() => {});
+  reportConversionProgress({ stage: "merging", completed: 0, total: imageFiles.length, unit: "pages" });
   let byteLength = 0;
   const offsets = [0];
   const chunk = (content) => {
@@ -377,12 +502,13 @@ endobj
 
   let blankImage;
   for (let index = 0; index < imageFiles.length; index += 1) {
+    throwIfCanceled(signal);
     const file = imageFiles[index];
     if (file?.blank && !blankImage) {
       // Reuse the same white A4 image for blank pages in this conversion only.
       blankImage = { width: 595, height: 842, data: await deflate(Buffer.alloc(595 * 842 * 3, 0xff)) };
     }
-    const image = file?.blank ? blankImage : await readImageForPdf(file.inputPath);
+    const image = file?.blank ? blankImage : await readImageForPdf(file.inputPath, options);
     const pageNumber = 3 + index * 3;
     const imageNumber = pageNumber + 1;
     const contentNumber = pageNumber + 2;
@@ -411,8 +537,12 @@ stream
 ${content}endstream
 endobj
 `);
+    reportConversionProgress({ stage: "merging", completed: index + 1, total: imageFiles.length, unit: "pages" });
+    onProgress({ stage: "merging", completedPages: index + 1, totalPages: imageFiles.length, percent: (index + 1) / imageFiles.length * 100 });
+    throwIfCanceled(signal);
   }
 
+  throwIfCanceled(signal);
   const xrefOffset = byteLength;
   const objectCount = 2 + imageFiles.length * 3;
   let xref = `xref\n0 ${objectCount + 1}\n0000000000 65535 f \n`;

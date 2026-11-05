@@ -6,6 +6,7 @@
     <title>Mahiro Format</title>
     <meta name="theme-color" content="#edf7ff">
     <link rel="icon" href="/assets/mahiro-format/mahiro-avatar.png">
+    <script src="/theme.js"></script>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -31,6 +32,14 @@
             </div>
           </div>
           <div class="topbar-actions">
+            <label class="language-field theme-field">
+              <span data-i18n="theme.label">外观</span>
+              <select id="themeSelect" data-i18n-aria="theme.label" aria-label="外观">
+                <option value="system" data-i18n="theme.system">跟随系统</option>
+                <option value="light" data-i18n="theme.light">浅色</option>
+                <option value="dark" data-i18n="theme.dark">深色</option>
+              </select>
+            </label>
             <div class="health" id="toolHealth" data-i18n="health.checking">正在检测转换引擎</div>
             <button class="ghost-button diagnostics-button" id="agentInstallButton" type="button" data-i18n="agent.install">接入 Agent</button>
             <button class="ghost-button diagnostics-button" id="diagnosticsButton" type="button" data-i18n="diagnostics.export">导出诊断</button>
@@ -162,7 +171,27 @@
                 </label>
 
                 <div class="action-stack">
-                  <button class="primary-button" id="convertButton" type="button" disabled data-i18n="action.convert">开始转换</button>
+              <div class="field" id="textEncodingField" hidden>
+              <label for="textEncoding" data-i18n="textEncoding.label">源文件编码</label>
+              <select id="textEncoding" aria-describedby="textEncodingHint">
+                <option value="auto" selected data-i18n="textEncoding.auto">自动（UTF-8 / UTF-16 BOM）</option>
+                <option value="utf-8" data-i18n="textEncoding.utf8">UTF-8</option>
+                <option value="gb18030" data-i18n="textEncoding.gb18030">GBK / GB18030</option>
+                <option value="utf-16le" data-i18n="textEncoding.utf16le">UTF-16LE</option>
+                <option value="utf-16be" data-i18n="textEncoding.utf16be">UTF-16BE</option>
+              </select>
+              <p class="field-help" id="textEncodingHint" data-i18n="textEncoding.hint">自动仅识别 UTF-8 或带 BOM 的 UTF-16。GBK 文本请手动选择；批量文本使用同一编码。</p>
+            </div>
+
+            <label class="field" id="imagePdfModeField" hidden>
+              <span data-i18n="imagePdfMode.label">多图转 PDF</span>
+              <select id="imagePdfMode">
+                <option value="merge" selected data-i18n="imagePdfMode.merge">合并为一个 PDF（默认）</option>
+                <option value="separate" data-i18n="imagePdfMode.separate">每张图片单独生成 PDF</option>
+              </select>
+            </label>
+                <p class="format-hint" id="icoHint" hidden></p>
+                <button class="primary-button" id="convertButton" type="button" disabled data-i18n="action.convert">开始转换</button>
                   <button class="ghost-button compress-folder-button" id="compressFolderButton" type="button" data-i18n="action.compressFolder">压缩文件夹</button>
                 </div>
 
@@ -174,6 +203,8 @@
                   <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-i18n-aria="progress.label" aria-label="转换进度">
                     <div class="progress-fill" id="progressFill"></div>
                   </div>
+                  <div class="progress-details" id="progressDetails"></div>
+                  <div class="progress-summary"><span id="progressBatch"></span><span id="progressElapsed" role="timer" aria-live="off"></span></div>
                 </div>
 
                 <div class="status-box" id="statusBox" role="status" data-i18n="status.ready">选择文件后会显示可用的转换格式。</div>
@@ -333,6 +364,7 @@
 
     <script src="/i18n.js"></script>
     <script src="/conversion-preferences.js"></script>
+    <script src="/settings-sync.js"></script>
     <script src="/app.js"></script>
   </body>
 </html>

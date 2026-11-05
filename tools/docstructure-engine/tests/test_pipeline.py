@@ -28,6 +28,8 @@ class PipelineTests(unittest.TestCase):
                     "seal_text_detection"]
         for name in required:
             (root / name).mkdir(parents=True)
+            for filename in ("inference.json", "inference.pdiparams", "inference.yml"):
+                (root / name / filename).write_bytes(b"test-model")
         return required
 
     def test_build_pipeline_uses_local_cpu_single_process_configuration(self):
@@ -103,7 +105,8 @@ class PipelineTests(unittest.TestCase):
             self._models(root)
             fake_module = mock.Mock()
             fake_module.PPStructureV3.return_value = object()
-            with mock.patch.dict(sys.modules, {"paddleocr": fake_module}):
+            with mock.patch.dict(sys.modules, {"paddleocr": fake_module}), \
+                 mock.patch("flyingmouse_docstructure.pipeline._native_paths_are_utf8", return_value=False):
                 built = build_pipeline(root, "ch")
             self.assertIsNotNone(built.staging_root)
             staging = built.staging_root

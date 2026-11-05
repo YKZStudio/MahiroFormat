@@ -94,6 +94,23 @@ async function loadWorkbook(filePath) {
   return workbook;
 }
 
+test("validates a real XLSX containing a reference image larger than a stream buffer", { timeout: 10000 }, async t => {
+  const root = await workspace(t);
+  const pixels = Buffer.alloc(300 * 400 * 3);
+  let seed = 0x5832ad;
+  for (let index = 0; index < pixels.length; index++) {
+    seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+    pixels[index] = seed & 255;
+  }
+  const reference = await sharp(pixels, { raw: { width: 300, height: 400, channels: 3 } }).png().toBuffer();
+  assert.ok(reference.length > 65536);
+  await fs.writeFile(path.join(root, "page-001.png"), reference);
+  const outputPath = path.join(root, "large-reference.xlsx");
+  await writePdfOfficeXlsx({ manifest: manifest(), assetRoot: root, outputPath });
+  const workbook = await loadWorkbook(outputPath);
+  assert.ok(workbook.worksheets.some(sheet => sheet.getCell('A3').text === '00123'));
+});
+
 async function rewriteZipEntry(inputPath, outputPath, entryName, mutate, additions = []) {
   const zipfile = await openZipEntries(inputPath);
   const entries = await new Promise((resolve, reject) => {
@@ -195,6 +212,23 @@ async function validateInvalidZip(root, fileName, input = manifest()) {
 test("uses the documented hard and review confidence thresholds", () => {
   assert.equal(HARD_TABLE_CONFIDENCE, 0.65);
   assert.equal(REVIEW_CELL_CONFIDENCE, 0.85);
+});
+
+test("empty form cells stay blank and do not create false OCR review entries", async (t) => {
+  const root = await workspace(t);
+  const source = manifest();
+  const blank = source.pages[0].tables[0].cells.find((item) => item.row === 1 && item.column === 2);
+  blank.text = "";
+  blank.confidence = 0;
+  const outputPath = path.join(root, "blank-form.xlsx");
+  const result = await writePdfOfficeXlsx({ manifest: source, assetRoot: root, outputPath });
+  assert.equal(result.reviewCellCount, 1); // The existing uncertain populated D3 remains reviewed.
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(outputPath);
+  const actual = workbook.getWorksheet("P001-T01").getCell("C2");
+  assert.ok(actual.value === null || actual.value === "");
+  assert.equal(actual.note, undefined);
+  assert.equal(workbook.getWorksheet("待核对").getCell("C2").value, "D3");
 });
 
 test("writes deterministic structured sheets, exact recognized strings, merges, review records, metadata and references", async (t) => {

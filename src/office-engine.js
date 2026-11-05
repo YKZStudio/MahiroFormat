@@ -1,8 +1,8 @@
-const crypto = require("node:crypto");
 const fsp = require("node:fs/promises");
-const path = require("node:path");
-const { execFile } = require("node:child_process");
 const { pathToFileURL } = require("node:url");
+const { createOfficeWorkspace } = require("./office-runtime");
+const { defaultExecutor } = require("./office-process");
+const logger = require("./logger");
 
 const MESSAGES = {
   OFFICE_ENGINE_MISSING: {
@@ -21,6 +21,10 @@ const MESSAGES = {
     zhCN: "LibreOffice 文档引擎启动失败，请导出诊断报告后重试。",
     enUS: "The LibreOffice document engine failed to start. Export diagnostics and try again."
   },
+  OFFICE_ENGINE_TIMEOUT: {
+    zhCN: "LibreOffice 文档引擎长时间未响应，已尝试结束本次转换。请重试；仍失败时请导出诊断报告。",
+    enUS: "The LibreOffice engine stopped responding. FlyingMouse attempted to stop this conversion. Retry or export diagnostics if it continues."
+  },
   OFFICE_CONVERSION_FAILED: {
     zhCN: "LibreOffice 未能完成文档转换，文件可能损坏或目标格式不受支持。",
     enUS: "LibreOffice could not complete the conversion. The file may be damaged or the target format unsupported."
@@ -38,25 +42,12 @@ class OfficeEngineError extends Error {
   }
 }
 
-function defaultExecutor(command, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    execFile(command, args, { timeout: options.timeout }, (error, stdout, stderr) => {
-      if (error) {
-        error.stdout = stdout;
-        error.stderr = stderr;
-        reject(error);
-        return;
-      }
-      resolve({ stdout, stderr });
-    });
-  });
-}
-
 function classifyExecutionError(error, operation) {
   if (error instanceof OfficeEngineError) return error;
   const detail = `${error?.stderr || ""}\n${error?.stdout || ""}\n${error?.message || ""}`;
   let code = operation === "convert" ? "OFFICE_CONVERSION_FAILED" : "OFFICE_ENGINE_START_FAILED";
   if (error?.code === "ENOENT") code = "OFFICE_ENGINE_MISSING";
+  else if (error?.timedOut || error?.code === "ETIMEDOUT") code = "OFFICE_ENGINE_TIMEOUT";
   // 注意：不能只匹配单词 "profile"——LibreOffice headless 启动的 stderr 常常
   // 包含 "profile"（如 -env:UserInstallation 的路径回显、Could not find platform
   // independent libraries 等），转换真正失败时会被误判成 PROFILE_FAILED
@@ -66,24 +57,29 @@ function classifyExecutionError(error, operation) {
   else if (/not a valid win32|incompatible|unsupported operating system|requires windows/i.test(detail)) code = "OFFICE_ENGINE_INCOMPATIBLE";
   return new OfficeEngineError(code, {
     exitCode: typeof error?.code === "number" ? error.code : null,
-    signal: error?.signal || null
+    signal: error?.signal || null,
+    fileCode: typeof error?.code === "string" ? error.code : null,
+    treeTerminated: error?.treeTerminated ?? null,
+    cleanupError: error?.cleanupError || null,
+    childPid: error?.childPid || null,
+    // Bounded native diagnostics are retained for logs; UI uses bilingual messages.
+    stdout: String(error?.stdout || "").slice(-4096),
+    stderr: String(error?.stderr || "").slice(-4096)
   });
 }
 
 async function executeWithProfile(command, commandArgs, options = {}) {
   const runtimeDir = options.runtimeDir;
   if (!runtimeDir) throw new TypeError("runtimeDir is required.");
-  const mkdir = options.mkdir || fsp.mkdir;
   const rm = options.rm || fsp.rm;
   const executor = options.executor || defaultExecutor;
-  const id = options.randomUUID ? options.randomUUID() : crypto.randomUUID();
-  const profileRoot = path.join(runtimeDir, `office-${id}`);
-  const profileDir = path.join(profileRoot, "profile");
+  let workspace;
   try {
     try {
-      await mkdir(profileDir, { recursive: true });
+      workspace = createOfficeWorkspace(options);
     } catch (error) {
-      throw new OfficeEngineError("OFFICE_ENGINE_PROFILE_FAILED", { fileCode: error?.code || null });
+      throw new OfficeEngineError("OFFICE_ENGINE_PROFILE_FAILED", { fileCode: error?.code || null,
+        profileFailures: error?.profileFailures || [] });
     }
     const args = [
       "--headless",
@@ -91,16 +87,22 @@ async function executeWithProfile(command, commandArgs, options = {}) {
       "--nofirststartwizard",
       "--nodefault",
       "--nolockcheck",
-      `-env:UserInstallation=${pathToFileURL(profileDir).href}`,
+      `-env:UserInstallation=${pathToFileURL(workspace.profileDir).href}`,
       ...commandArgs
     ];
     try {
       return await executor(command, args, { timeout: options.timeout });
     } catch (error) {
-      throw classifyExecutionError(error, options.operation);
+      const classified = classifyExecutionError(error, options.operation);
+      classified.details.profilePathLength = workspace.profileDir.length;
+      classified.details.profileFallback = workspace.fallback;
+      throw classified;
     }
+  } catch (error) {
+    if (error instanceof OfficeEngineError) logger.warn(`Office engine failed: ${error.code} ${JSON.stringify(error.details)}`);
+    throw error;
   } finally {
-    await rm(profileRoot, { recursive: true, force: true }).catch(() => {});
+    if (workspace) await rm(workspace.root, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 }).catch(() => {});
   }
 }
 

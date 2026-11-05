@@ -1,14 +1,35 @@
 const { randomBytes, timingSafeEqual } = require("crypto");
 const fsp = require("fs/promises");
+const fs = require("fs");
 const path = require("path");
 const express = require("express");
+const config = require("./config");
 const mime = require("mime-types");
-const multer = require("multer");
+const { createBudgetedUpload } = require("./upload-budget");
+const { createProgressHttpLifecycle, reportConversionProgress } = require("./conversion-progress");
+const { cancellationError, throwIfCanceled } = require("./conversion-cancellation");
+const sanitize = require("sanitize-filename");
 const sharp = require("sharp");
+const ExcelJS = require("exceljs");
+const yazl = require("yazl");
+const yauzl = require("yauzl");
+const { PDFDocument } = require("pdf-lib");
+const { assertPdfInputHeader } = require("./pdf-input");
 
 const { csvToHtmlTable } = require("./text-conversion");
 const { convertEbook, convertTextToEpub } = require("./ebook");
-const { LIMITS, ResourceLimitError, assertBatchBytes } = require("./resource-policy");
+const { readTextInput } = require("./text-encoding");
+const { pandocPath } = require("./markdown-document");
+const yaml = require("js-yaml");
+const {
+  LIMITS,
+  ResourceLimitError,
+  assertImageMetadata,
+  assertImagePdfBudget,
+  assertBatchBytes,
+  assertPdfPages
+} = require("./resource-policy");
+const { buildPdfTableWorkbook, detectTableLinesFromRaw } = require("./pdf-table-runtime");
 const { convertOfdToPdf } = require("./ofd-convert");
 const { convertNcm } = require("./ncm-format");
 const { buildNcmFfmpegOptions } = require("./ncm-metadata");
@@ -18,7 +39,10 @@ const { convertMflac } = require("./mflac-format");
 const { convertKgma } = require("./kgma-format");
 const { convertKwm } = require("./kwm-format");
 const { convertVpr } = require("./kgm-vpr-format");
-const { OfficeEngineError, probeLibreOffice } = require("./office-engine");
+
+const { OfficeEngineError, probeLibreOffice, runLibreOffice } = require("./office-engine");
+const { getOfficeState, waitForOfficeReady, OfficePreparationError } = require("./office-readiness");
+const { getStructuredPdfAvailability } = require("./pdf-structure-engine");
 const { inspectXlsxForCsv } = require("./office-quality");
 const logger = require("./logger");
 
@@ -42,14 +66,24 @@ const {
   outputExtFor,
   outputNameFor,
   outputPathFor,
-  registerDownload
+  registerDownload,
+  releaseDownloads,
+  retainDownloadResponse,
+  escapeHtml
 } = require("./utils");
-const { convertMedia } = require("./media");
-const { zipFile } = require("./zip-util");
+const { convertMedia, probeAudioTrack } = require("./media");
+const { convertSubtitle } = require("./subtitles");
+const { zipFiles, openZipEntries, readZipEntryToFile, listZipEntries } = require("./zip-util");
 const {
   assertPdfTableOcrQuality,
   convertPdf,
   mergePdfFiles,
+  renderPdfPages,
+  emitPdfPageImages,
+  convertScannedPdfToOcrText,
+  convertScannedPdfToOcrDocx,
+  convertScannedPdfToOcrHtml,
+  ocrScannedPdfPages,
   convertPresentationToImages,
   convertPresentationToHtml,
   convertZipImagesToPdf
@@ -71,7 +105,9 @@ const {
   PDFTOPPM_PATH,
   TESSDATA_PATH,
   DCRAW_PATH,
+  CR2_DECODER_PATH,
   imageInput,
+  designInput,
   rawInput,
   imageFormatTargets,
   imageVideoTargets,
@@ -95,7 +131,8 @@ const {
   experimentalInputsByCategory,
   experimentalInputSet,
   allTargets,
-  downloads
+  downloads,
+  PRODUCT_EXPIRY_MS
 } = require("./config");
 
 const app = express();
@@ -115,36 +152,110 @@ const CONTENT_SECURITY_POLICY = [
   "form-action 'self'"
 ].join("; ");
 
-const upload = multer({
-  dest: UPLOAD_DIR,
-  limits: { fileSize: MAX_UPLOAD_BYTES }
-});
+let cachedTesseract = null;
 
-async function cleanupOldFiles(options = {}) {
-  const now = Number.isFinite(options.now) ? options.now : Date.now();
-  const cutoff = now - 1000 * 60 * 60;
-  const directories = Array.isArray(options.directories) ? options.directories : [UPLOAD_DIR, OUTPUT_DIR];
-  for (const [id, item] of downloads.entries()) {
-    if (item.createdAt < cutoff) downloads.delete(id);
+const upload = createBudgetedUpload({ directory: UPLOAD_DIR, maxFileBytes: MAX_UPLOAD_BYTES });
+const conversionProgress = createProgressHttpLifecycle();
+
+// 只清理「孤儿」临时文件：不在 downloads 登记表里、且超过 PRODUCT_EXPIRY_MS 未修改
+// 的（上传残留/崩溃残片）。已登记产物在程序运行期间永不过期（2026-09-07 决策：
+// 「转换出来的文件放在里面不该过期」），全量清理由退出时 purge + 启动时对历史
+// 实例目录的回收负责。dirs/registry 参数化供单测注入。
+function registeredFilePaths(registry) {
+  const paths = new Set();
+  for (const item of registry.values()) {
+    if (item.filePath) paths.add(path.resolve(item.filePath));
+    if (item.assetsDir) paths.add(path.resolve(item.assetsDir));
   }
-  for (const dir of directories) {
+  return paths;
+}
+
+async function cleanupOldFiles({ dirs = [UPLOAD_DIR, OUTPUT_DIR], registry = downloads } = {}) {
+  const cutoff = Date.now() - PRODUCT_EXPIRY_MS;
+  const registered = registeredFilePaths(registry);
+  for (const dir of dirs) {
     const files = await fsp.readdir(dir).catch(() => []);
     await Promise.all(files.map(async (file) => {
       const filePath = path.join(dir, file);
+      if (registered.has(path.resolve(filePath))) return;
       const stat = await fsp.stat(filePath).catch(() => null);
       if (stat && stat.mtimeMs < cutoff) {
-        await fsp.rm(filePath, { recursive: stat.isDirectory(), force: true }).catch(() => {});
+        await fsp.rm(filePath, { recursive: true, force: true }).catch(() => {});
       }
     }));
   }
 }
 
-// md 转换产物若带图片外置目录（<下载名>.assets/），返回该目录路径；否则 null。
-// 目录名基于 downloadName（与 office-convert 的 outputNameFor(originalName,"md") 一致），
-// 不能用 mdPath 前缀（outputPath 带时间戳-uuid，会找不到）。
-async function findMarkdownAssetsDir(mdPath, downloadName) {
-  const mdBasename = path.basename(downloadName, path.extname(downloadName));
-  const assetsDir = path.join(path.dirname(mdPath), `${mdBasename}.assets`);
+// 退出前清空本实例的上传/产物目录（downloads 表随进程消失，产物再无保存机会）。
+async function purgeRuntimeDirs({ dirs = [UPLOAD_DIR, OUTPUT_DIR] } = {}) {
+  for (const dir of dirs) {
+    await fsp.rm(dir, { recursive: true, force: true }).catch(() => {});
+    await fsp.mkdir(dir, { recursive: true }).catch(() => {});
+  }
+}
+
+// Legacy explicit maintenance helper; desktop shutdown uses bounded async cleanup.
+function purgeRuntimeDirsSync({ dirs = [UPLOAD_DIR, OUTPUT_DIR], fsModule = fs } = {}) {
+  for (const dir of dirs) {
+    try { fsModule.rmSync(dir, { recursive: true, force: true }); } catch { /* best effort */ }
+    try { fsModule.mkdirSync(dir, { recursive: true }); } catch { /* best effort */ }
+  }
+}
+
+function runtimeProcessIsAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    // Lack of permission is not evidence that another instance has exited.
+    return error.code !== "ESRCH";
+  }
+}
+
+// Reclaim only old, exactly named PID directories whose process has exited.
+// The parent directory timestamp does not track changes to nested output files.
+async function purgeStaleRuntimeDirs({ runtimeDir = RUNTIME_DIR } = {}) {
+  runtimeDir = path.resolve(runtimeDir);
+  const parent = path.dirname(runtimeDir);
+  const base = path.basename(runtimeDir);
+  const currentInstance = /^(.*-)(\d+)$/.exec(base);
+  if (!currentInstance) return;
+  const prefix = currentInstance[1];
+  const cutoff = Date.now() - PRODUCT_EXPIRY_MS;
+  const entries = await fsp.readdir(parent, { withFileTypes: true }).catch(() => []);
+  await Promise.all(entries
+    .filter((entry) => {
+      if (!entry.isDirectory() || !entry.name.startsWith(prefix)
+        || path.join(parent, entry.name) === runtimeDir) return false;
+      const suffix = entry.name.slice(prefix.length);
+      const pid = Number(suffix);
+      return /^\d+$/.test(suffix) && Number.isSafeInteger(pid) && pid > 0 && !runtimeProcessIsAlive(pid);
+    })
+    .map(async (entry) => {
+      const dirPath = path.join(parent, entry.name);
+      const { PENDING_CLEANUP_FILE, assertRuntimeIdentity, removeMarkedRuntime } = require("./desktop-shutdown");
+      const stat = await fsp.lstat(dirPath).catch(() => null);
+      if (!stat?.isDirectory() || stat.isSymbolicLink()) return;
+      const owner = { runtimeDir: dirPath, identity: stat, realPath: await fsp.realpath(dirPath) };
+      const pid = Number(entry.name.slice(prefix.length));
+      const markerPath = path.join(dirPath, PENDING_CLEANUP_FILE);
+      const markerStat = await fsp.lstat(markerPath).catch(() => null);
+      let marked = false;
+      if (markerStat?.isFile() && !markerStat.isSymbolicLink() && markerStat.size <= 256) {
+        const marker = await fsp.readFile(markerPath, "utf8").then(JSON.parse).catch(() => null);
+        marked = marker?.schema === 1 && marker.pid === pid && marker.dev === stat.dev && marker.ino === stat.ino;
+      }
+      if ((marked || stat.mtimeMs < cutoff) && !runtimeProcessIsAlive(pid)
+        && await assertRuntimeIdentity(owner)) {
+        if (marked) await removeMarkedRuntime(owner);
+        else await fsp.rm(dirPath, { recursive: true, force: true });
+      }
+    }));
+}
+
+// Each result owns a unique resource directory, even when download names match.
+async function findMarkdownAssetsDir(mdPath) {
+  const assetsDir = `${mdPath}.assets`;
   try {
     const stat = await fsp.stat(assetsDir);
     if (stat.isDirectory()) return assetsDir;
@@ -170,49 +281,74 @@ async function listDownloadAssets(assetsDir, downloadUrl) {
   return assets;
 }
 
-let toolsPromise = null;
+let cachedTools = null;
 let cachedToolDetails = {};
+let toolsPromise = null;
+let officeProbePromise = null;
 
-async function probeOfficeCapabilities() {
-  try {
-    return await probeLibreOffice(LIBREOFFICE_PATH, { runtimeDir: RUNTIME_DIR });
-  } catch (error) {
-    logger.warn("LibreOffice capability probe failed", error);
-    return {
-      enabled: false,
-      errorCode: error.code || "OFFICE_ENGINE_START_FAILED",
-      messages: error.messages
+async function refreshOfficeCapability() {
+  const state = getOfficeState();
+  if (state.status !== "ready") {
+    cachedToolDetails.libreoffice = {
+      enabled: false, status: state.status,
+      ...(state.error ? { errorCode: state.error.code, messages: state.error.messages, details: state.error.details } : {})
     };
+    officeProbePromise = null;
+    return false;
   }
-}
-
-async function detectTools() {
-  const [officeProbe, ffmpeg, poppler] = await Promise.all([
-    probeOfficeCapabilities(),
-    commandExists(FFMPEG_PATH),
-    commandExists(PDFTOPPM_PATH, ["-v"])
-  ]);
-  cachedToolDetails = { libreoffice: officeProbe };
-  return {
-    ffmpeg,
-    libreoffice: Boolean(officeProbe?.enabled),
-    poppler,
-    ocr: ocrAvailable(),
-    pdf: true,
-    sharp: true,
-    zip: true
-  };
-}
-
-function getTools() {
-  // Cache the in-flight probe too: simultaneous API requests share one engine startup.
-  if (!toolsPromise) {
-    toolsPromise = detectTools().catch((error) => {
-      toolsPromise = null;
-      throw error;
+  if (!officeProbePromise) {
+    officeProbePromise = probeLibreOffice(LIBREOFFICE_PATH, { runtimeDir: RUNTIME_DIR }).then((probe) => {
+      cachedToolDetails.libreoffice = { ...probe, status: probe.enabled ? "ready" : "failed" };
+      return Boolean(probe.enabled);
+    }).catch((error) => {
+      cachedToolDetails.libreoffice = { enabled: false, status: "failed",
+        errorCode: error.code || "OFFICE_ENGINE_START_FAILED", messages: error.messages, details: error.details };
+      logger.warn("LibreOffice capability probe failed", error);
+      return false;
     });
   }
-  return toolsPromise;
+  return officeProbePromise;
+}
+
+async function getTools({ includeOffice = true } = {}) {
+  if (!toolsPromise) toolsPromise = (async () => {
+    const basicProbes = Promise.all([commandExists(FFMPEG_PATH), commandExists(PDFTOPPM_PATH, ["-v"])]);
+    basicProbes.catch(() => {});
+    const pandocExecutable = pandocPath();
+    let pandocEnabled = false;
+    try {
+      if (!pandocExecutable || !fs.existsSync(pandocExecutable)) throw new Error("missing engine");
+      const result = await run(pandocExecutable, ["--version"], { timeout: 10000, maxStdoutBytes: 64 * 1024 });
+      const version = /^pandoc\s+(\S+)/m.exec(result.stdout)?.[1];
+      if (!version) throw new Error("invalid engine response");
+      pandocEnabled = true;
+      cachedToolDetails.pandoc = { enabled: true, version, executable: pandocExecutable };
+    } catch {
+      cachedToolDetails.pandoc = {
+        enabled: false, errorCode: "MARKDOWN_ENGINE_MISSING",
+        messages: { zhCN: "Markdown 文档引擎缺失或无法启动；Word/PDF 转换暂不可用，请修复安装。", enUS: "The Markdown document engine is missing or cannot start. Repair the installation to enable Word/PDF conversion." }
+      };
+    }
+    cachedToolDetails.pdfStructure = await getStructuredPdfAvailability();
+    const [ffmpeg, poppler] = await basicProbes;
+    return {
+      ffmpeg,
+      libreoffice: false,
+      pandoc: pandocEnabled,
+      poppler,
+      ocr: ocrAvailable(),
+      pdf: true,
+      pdfStructure: Boolean(cachedToolDetails.pdfStructure.enabled),
+      sharp: true
+    };
+  })().catch(error => { toolsPromise = null; officeProbePromise = null; throw error; });
+  // PDF target discovery has no Office dependency. Leave the shared Office
+  // probe and its cached diagnostics untouched; full capability/conversion
+  // requests still await the verified engine result below.
+  if (!includeOffice) return { ...await toolsPromise };
+  const [baseTools, officeEnabled] = await Promise.all([toolsPromise, refreshOfficeCapability()]);
+  cachedTools = { ...baseTools, libreoffice: officeEnabled };
+  return { ...cachedTools };
 }
 
 async function getToolDiagnostics() {
@@ -220,10 +356,13 @@ async function getToolDiagnostics() {
   return {
     ffmpeg: { enabled: tools.ffmpeg, executable: FFMPEG_PATH },
     libreoffice: { ...cachedToolDetails.libreoffice, executable: LIBREOFFICE_PATH },
+    pandoc: { ...cachedToolDetails.pandoc },
     poppler: { enabled: tools.poppler, executable: PDFTOPPM_PATH },
     ocr: { enabled: tools.ocr, version: require("tesseract.js/package.json").version },
     pdfjs: { enabled: tools.pdf, version: require("pdfjs-dist/package.json").version },
-    sharp: { enabled: tools.sharp, version: sharp.versions.sharp }
+    pdfStructure: { ...cachedToolDetails.pdfStructure },
+    sharp: { enabled: tools.sharp, version: sharp.versions.sharp },
+    cr2: { enabled: Boolean(CR2_DECODER_PATH || DCRAW_PATH), executable: CR2_DECODER_PATH || DCRAW_PATH, cameraWhiteBalance: true }
   };
 }
 
@@ -282,7 +421,22 @@ function resourceErrorPayload(error) {
   };
 }
 
+function normalizeResourceError(error) {
+  if (error instanceof ResourceLimitError) return error;
+  if (/^Input image exceeds pixel limit\b/i.test(String(error?.message || ""))) {
+    return new ResourceLimitError("IMAGE_PIXELS_EXCEEDED");
+  }
+  if (error?.code === "LIMIT_FILE_COUNT") {
+    return new ResourceLimitError("UPLOAD_FILE_COUNT_EXCEEDED", { limitFiles: LIMITS.maxUploadFiles });
+  }
+  if (error?.code === "LIMIT_FILE_SIZE") {
+    return new ResourceLimitError("UPLOAD_FILE_SIZE_EXCEEDED", { limitGiB: MAX_UPLOAD_BYTES / 1024 ** 3 });
+  }
+  return error;
+}
+
 function sendResourceError(res, error) {
+  error = normalizeResourceError(error);
   if (!(error instanceof ResourceLimitError)) return false;
   res.status(413).json(resourceErrorPayload(error));
   return true;
@@ -297,19 +451,21 @@ app.get("/api/capabilities", async (_req, res) => {
     maxUploadBytes: MAX_UPLOAD_BYTES,
     limits: LIMITS,
     groups: {
-      image: { inputs: [...imageInput, ...(DCRAW_PATH ? rawInput : [])].sort(), targets: [...imageFormatTargets, ...(tools.ffmpeg ? imageVideoTargets : []), ...(tools.ocr ? imageOcrTargets : [])], experimentalInputs: [...(experimentalInputsByCategory.image || []), ...(DCRAW_PATH ? rawInput : [])].sort() },
+      image: { inputs: [...imageInput, ...designInput, ...(DCRAW_PATH ? rawInput : [])].sort(), targets: [...imageFormatTargets, ...(tools.ffmpeg ? imageVideoTargets : []), ...(tools.ocr ? imageOcrTargets : [])], experimentalInputs: [...(experimentalInputsByCategory.image || []), ...(DCRAW_PATH ? rawInput : [])].sort() },
       text: { inputs: [...textInput].sort(), targets: [...textTargets, ...(tools.libreoffice ? ["pdf"] : []), "docx"] },
+      subtitle: { inputs: [...config.subtitleInput], targets: config.subtitleTargets },
       document: { inputs: [...documentInput].sort(), targets: documentTargets, experimentalInputs: experimentalInputsByCategory.document },
       spreadsheet: { inputs: [...spreadsheetInput].sort(), targets: spreadsheetTargets, experimentalInputs: experimentalInputsByCategory.spreadsheet },
       presentation: { inputs: [...presentationInput].sort(), targets: presentationTargets, experimentalInputs: experimentalInputsByCategory.presentation },
       pdf: { inputs: [...pdfInput].sort(), targets: [...pdfTextTargets, ...(tools.poppler ? [...pdfImageTargets, "pdf"] : [])] },
       audio: { inputs: [...audioInput].filter((ext) => !process.windowsStore || !unlockAudioInputs.has(ext)).sort(), targets: mediaAudioTargets, experimentalInputs: experimentalInputsByCategory.audio },
       video: { inputs: [...videoInput].sort(), targets: mediaTargets },
-      any: { inputs: ["*"], targets: ["zip"] }
+      any: { inputs: ["*"], targets: [] }
     },
     optional: [
       { name: "LibreOffice", enabled: tools.libreoffice, formats: ["doc", "docx", "xls", "xlsx", "ppt", "pptx", "wps", "pdf"] },
-      { name: "PDF table extractor", enabled: tools.pdf, formats: ["pdf", "xlsx", "txt", "html"] },
+      { name: "Pandoc Markdown", enabled: tools.pandoc, formats: ["md", "docx", "pdf"] },
+      { name: "PDF structure and scanned tables", enabled: tools.pdfStructure, formats: ["pdf", "xlsx", "docx"], limits: cachedToolDetails.pdfStructure?.limits },
       { name: "Poppler PDF renderer", enabled: tools.poppler, formats: ["pdf", "png", "jpg"] },
       { name: "Tesseract OCR", enabled: tools.ocr, formats: ["image", "pdf", "txt"] }
     ]
@@ -317,12 +473,14 @@ app.get("/api/capabilities", async (_req, res) => {
 });
 
 app.post("/api/targets", assertLocalWebRequest, async (req, res) => {
-  const tools = await getTools();
   const ext = normalizeExt(String(req.body?.extension || "").toLowerCase());
+  const tools = await getTools({ includeOffice: categoryForExt(ext) !== "pdf" });
   res.json({ extension: ext, category: categoryForExt(ext), targets: targetsForExt(ext, tools), experimental: experimentalInputSet.has(ext) });
 });
 
-app.post("/api/convert-images-to-pdf", assertLocalWebRequest, upload.array("files"), async (req, res) => {
+app.get("/api/conversion-progress/:id", assertLocalWebRequest, conversionProgress.get);
+
+app.post("/api/convert-images-to-pdf", assertLocalWebRequest, conversionProgress.begin, upload.array("files"), conversionProgress.enter, async (req, res) => {
   const files = req.files || [];
 
   try {
@@ -350,13 +508,16 @@ app.post("/api/convert-images-to-pdf", assertLocalWebRequest, upload.array("file
   // 空白页：前端队列里插入的空白页条目。blanks=0,3 表示在上传文件流（不含
   // 空白页）的第 0 个文件之前、第 3 个文件之后插入空白页；从后往前插入避免
   // 索引错位，PDF 生成时空白页输出纯白 A4 页。
-  const blankAfter = new Set(
+  const blankAfter = (
     String(req.body?.blanks || "")
       .split(",")
-      .map((item) => Number(item.trim()))
-      .filter((item) => Number.isFinite(item) && item >= 0 && item <= imageFiles.length)
+      .map((item) => item.trim())
+      .filter((item) => item !== "")
+      .map(Number)
+      .filter((item) => Number.isInteger(item) && item >= 0 && item <= imageFiles.length)
   );
-  for (const blankIndex of [...blankAfter].sort((a, b) => b - a)) {
+  // Equal positions represent consecutive pages and must not be deduplicated.
+  for (const blankIndex of blankAfter.sort((a, b) => b - a)) {
     imageFiles.splice(blankIndex, 0, { inputPath: "", originalName: "", category: "image", blank: true });
   }
 
@@ -380,12 +541,18 @@ app.post("/api/convert-images-to-pdf", assertLocalWebRequest, upload.array("file
   logger.info(`Images-to-PDF request: ${imageFiles.length} image(s) -> "${downloadName}"`);
 
   try {
-    await convertImagesToPdf(imageFiles, outputPath);
+    reportConversionProgress({ stage: "merging" });
+    await withRequestCancellation(req, res, signal => convertImagesToPdf(imageFiles, outputPath, { signal }));
+    reportConversionProgress({ stage: "validating" });
     await Promise.all(files.map((file) => fsp.rm(file.path, { force: true }).catch(() => {})));
     const mimeType = "application/pdf";
-    logger.info(`Images-to-PDF succeeded: "${downloadName}"`);
-    const registered = registerDownload(outputPath, downloadName, mimeType);
     const previewSize = (await fsp.stat(outputPath)).size;
+    // A disconnected caller cannot receive or release this result. Complete all
+    // asynchronous output checks before registering the owned download.
+    if (req.aborted || res.destroyed) throw cancellationError();
+    const registered = registerDownload(outputPath, downloadName, mimeType);
+    logger.info(`Images-to-PDF succeeded: "${downloadName}"`);
+    conversionProgress.outputReady(req);
     res.json({
       ok: true,
       fileName: downloadName,
@@ -402,7 +569,7 @@ app.post("/api/convert-images-to-pdf", assertLocalWebRequest, upload.array("file
   }
 });
 
-app.post("/api/merge-pdfs", assertLocalWebRequest, upload.array("files"), async (req, res) => {
+app.post("/api/merge-pdfs", assertLocalWebRequest, conversionProgress.begin, upload.array("files"), conversionProgress.enter, async (req, res) => {
   const files = req.files || [];
 
   try {
@@ -436,12 +603,17 @@ app.post("/api/merge-pdfs", assertLocalWebRequest, upload.array("files"), async 
   logger.info(`Merge-PDFs request: ${pdfFiles.length} PDF(s) -> "${downloadName}"`);
 
   try {
-    await mergePdfFiles(pdfFiles, outputPath);
+    reportConversionProgress({ stage: "merging" });
+    for (const file of pdfFiles) await assertPdfInputHeader(file.inputPath, file.originalName);
+    await withRequestCancellation(req, res, signal => mergePdfFiles(pdfFiles, outputPath, { signal }));
+    reportConversionProgress({ stage: "validating" });
     await Promise.all(files.map((file) => fsp.rm(file.path, { force: true }).catch(() => {})));
-    logger.info(`Merge-PDFs succeeded: "${downloadName}"`);
     const mimeType = "application/pdf";
-    const registered = registerDownload(outputPath, downloadName, mimeType);
     const previewSize = (await fsp.stat(outputPath)).size;
+    if (req.aborted || res.destroyed) throw cancellationError();
+    const registered = registerDownload(outputPath, downloadName, mimeType);
+    logger.info(`Merge-PDFs succeeded: "${downloadName}"`);
+    conversionProgress.outputReady(req);
     res.json({
       ok: true,
       fileName: downloadName,
@@ -454,12 +626,33 @@ app.post("/api/merge-pdfs", assertLocalWebRequest, upload.array("files"), async 
     logger.error(`Merge-PDFs failed: "${combinedName}"`, error);
     await Promise.all(files.map((file) => fsp.rm(file.path, { force: true }).catch(() => {})));
     await fsp.rm(outputPath, { force: true }).catch(() => {});
+    if (["PDF_ENCRYPTED_INPUT", "PDF_INVALID_INPUT"].includes(error.code)) {
+      res.status(422).json({ error: error.message, errorCode: error.code, messages: error.messages });
+      return;
+    }
     if (!sendResourceError(res, error)) res.status(500).json({ error: error.message || "合并 PDF 失败。" });
   }
 });
 
-app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (req, res) => {
-  const tools = await getTools();
+async function withRequestCancellation(req, res, operation) {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const closed = () => { if (!res.writableFinished) abort(); };
+  req.once("aborted", abort);
+  res.once("close", closed);
+  if (req.aborted || res.destroyed) abort();
+  try {
+    const result = await operation(controller.signal);
+    throwIfCanceled(controller.signal);
+    return result;
+  } finally {
+    req.removeListener("aborted", abort);
+    res.removeListener("close", closed);
+  }
+}
+
+app.post("/api/convert", assertLocalWebRequest, conversionProgress.begin, upload.single("file"), conversionProgress.enter, async (req, res) => {
+  let tools = await getTools();
   const file = req.file;
   const originalName = decodeUploadFileName(file?.originalname);
   const requestedTarget = normalizeExt(String(req.body.targetFormat || "").toLowerCase());
@@ -478,6 +671,28 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
 
   const inputExt = normalizeExt(extFromName(originalName));
   const category = categoryForExt(inputExt);
+  // A queued CLI/API Office conversion may arrive while the first Store launch
+  // is still preparing its writable engine. Only this conversion waits; normal
+  // capability requests and all unrelated formats remain responsive.
+  if (!tools.libreoffice && targetsForExt(inputExt, { ...tools, libreoffice: true }).includes(requestedTarget)
+    && !targetsForExt(inputExt, tools).includes(requestedTarget)) {
+    try {
+      reportConversionProgress({ stage: "queued" });
+      await waitForOfficeReady();
+      reportConversionProgress({ stage: "preparing" });
+      tools = await getTools();
+      if (!tools.libreoffice) {
+        const detail = cachedToolDetails.libreoffice;
+        throw Object.assign(new Error(detail.messages?.zhCN || "Office 引擎不可用，请修复安装。"), {
+          code: detail.errorCode || "OFFICE_ENGINE_START_FAILED", messages: detail.messages, details: detail.details
+        });
+      }
+    } catch (error) {
+      await fsp.rm(file.path, { force: true }).catch(() => {});
+      res.status(503).json({ error: error.message, errorCode: error.code, messages: error.messages, details: error.details });
+      return;
+    }
+  }
   const allowedTargets = targetsForExt(inputExt, tools);
   logger.info(`Convert request: "${originalName}" (${inputExt}/${category}) -> ${requestedTarget} (${file.size} bytes)`);
 
@@ -495,30 +710,55 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
     ? "pdf"
     : outputExt;
   const outputPath = outputPathFor(originalName, requestedTarget, effectiveOutputExt);
-  const downloadName = outputNameFor(originalName, requestedTarget, effectiveOutputExt);
+  let downloadName = outputNameFor(originalName, requestedTarget, effectiveOutputExt);
   let conversionResult = { warnings: [] };
 
   try {
-    if (requestedTarget === "zip") {
-      const levelNum = Number(req.body?.compressionLevel);
-      const level = Number.isFinite(levelNum) ? Math.min(9, Math.max(0, levelNum)) : 6;
-      await zipFile(file.path, outputPath, originalName, level);
-    } else if (category === "image") {
-      conversionResult = await convertImage(file.path, outputPath, requestedTarget);
+    reportConversionProgress({ stage: "converting" });
+    if (category === "pdf") await assertPdfInputHeader(file.path, originalName);
+    if (category === "image") {
+      conversionResult = await convertImage(file.path, outputPath, requestedTarget, { inputName: originalName });
+    } else if (category === "subtitle") {
+      conversionResult = await convertSubtitle(file.path, outputPath, inputExt, requestedTarget);
     } else if (category === "text") {
       if (["epub", "mobi"].includes(inputExt)) {
-        await convertEbook(file.path, outputPath, inputExt, requestedTarget, originalName);
+        conversionResult = await convertEbook(file.path, outputPath, inputExt, requestedTarget, originalName);
       } else if (requestedTarget === "epub") {
-        await convertTextToEpub(await fsp.readFile(file.path, "utf8"), inputExt, originalName, outputPath);
+        await withRequestCancellation(req, res, async signal => {
+          const text = await readTextInput(file.path, { encoding: req.body?.textEncoding || "auto", signal });
+          return convertTextToEpub(text, inputExt, originalName, outputPath, { signal });
+        });
       } else {
         conversionResult = await convertText(file.path, outputPath, inputExt, requestedTarget, originalName);
       }
     } else if (category === "pdf") {
-      await convertPdf(file.path, outputPath, requestedTarget, {
-        pdfAction,
-        password: String(req.body?.password || ""),
-        splitMode: String(req.body?.splitMode || "page"),
-        groupSize: String(req.body?.groupSize || "1")
+      conversionResult = await withRequestCancellation(req, res, async signal => {
+        if (pdfImageTargets.includes(requestedTarget)) {
+          // 单页直接出图；多页才打包，且包内页图带源文件名前缀，避免解压重名。
+          const base = safeBaseName(originalName);
+          const emitted = await emitPdfPageImages(file.path, base, requestedTarget, { signal });
+          try {
+            throwIfCanceled(signal);
+            if (emitted.single) {
+              await fsp.copyFile(emitted.files[0].filePath, outputPath);
+              downloadName = `${base}.${requestedTarget}`;
+            } else {
+              reportConversionProgress({ stage: "converting" });
+              await zipFiles(emitted.files.map((item) => ({ inputPath: item.filePath, archiveName: item.name })), outputPath);
+              downloadName = `${base}.${requestedTarget}.zip`;
+            }
+          } finally {
+            await emitted.cleanup().catch(() => {});
+          }
+          return;
+        }
+        return convertPdf(file.path, outputPath, requestedTarget, {
+          signal,
+          pdfAction,
+          password: String(req.body?.password || ""),
+          splitMode: String(req.body?.splitMode || "page"),
+          groupSize: String(req.body?.groupSize || "1")
+        });
       });
     } else if (category === "zip") {
       await convertZipImagesToPdf(file.path, outputPath);
@@ -526,17 +766,23 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
       conversionResult = await convertText(file.path, outputPath, inputExt, requestedTarget, originalName);
     } else if (category === "spreadsheet" && ["csv", "tsv"].includes(inputExt) && ["epub", "xlsx", "html", "pdf"].includes(requestedTarget)) {
       // LO 的 csv/tsv 导入过滤器 headless 下假成功（exit 0 零输出），全部用自有实现
-      const tabular = await readTabularText(file.path, inputExt);
-      if (requestedTarget === "epub") await convertTextToEpub(tabular, "csv", originalName, outputPath);
-      else if (requestedTarget === "xlsx") await convertCsvToXlsx(tabular, outputPath);
-      else if (requestedTarget === "html") await fsp.writeFile(outputPath, csvToHtmlTable(tabular), "utf8");
-      else await convertCsvToPdf(tabular, outputPath);
+      if (requestedTarget === "epub") {
+        await withRequestCancellation(req, res, async signal => {
+          const tabular = await readTabularText(file.path, inputExt, { encoding: req.body?.textEncoding || "auto", signal });
+          return convertTextToEpub(tabular, "csv", originalName, outputPath, { signal });
+        });
+      } else {
+        const tabular = await readTabularText(file.path, inputExt);
+        if (requestedTarget === "xlsx") await convertCsvToXlsx(tabular, outputPath);
+        else if (requestedTarget === "html") await fsp.writeFile(outputPath, csvToHtmlTable(tabular), "utf8");
+        else await convertCsvToPdf(tabular, outputPath);
+      }
     } else if (category === "document" || category === "spreadsheet" || category === "presentation") {
       if (inputExt === "ofd") {
         // OFD（国标 GB/T 33190）走自有链路（ofd-convert.js → PDF），LibreOffice 打不开。
-        // targetsForExt 已把 ofd 的目标限定为 pdf/zip，zip 在顶部分支处理，此处必为 pdf。
+        // OFD 仅开放 PDF；校验所有页面后才允许注册下载结果。
         // originalName 用于扩展名校验（multer 临时文件无扩展名）。
-        await convertOfdToPdf(file.path, outputPath, originalName);
+        await withRequestCancellation(req, res, signal => convertOfdToPdf(file.path, outputPath, originalName, { signal }));
       } else if (category === "presentation" && ["png", "jpg"].includes(requestedTarget)) {
         await convertPresentationToImages(file.path, outputPath, originalName, requestedTarget);
       } else if (category === "presentation" && requestedTarget === "html") {
@@ -583,26 +829,33 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
           : "h264";
         // 透明背景色：white / black / 十六进制色值（白名单在 alphaCompositeArgs 内校验）。
         const alphaBackground = String(req.body?.alphaBackground || "").trim() || "white";
-        await convertMedia(file.path, outputPath, requestedTarget, category, { videoCodec, alphaBackground });
+        conversionResult = await withRequestCancellation(req, res, signal => convertMedia(
+          file.path, outputPath, requestedTarget, category, { videoCodec, alphaBackground, inputExt, signal }
+        ));
       }
     } else {
       throw new Error("暂时无法识别这个文件类型。");
     }
 
+    reportConversionProgress({ stage: "validating" });
     await fsp.rm(file.path, { force: true }).catch(() => {});
     const mimeType = mime.lookup(downloadName) || "application/octet-stream";
     // md 转换产物若带图片外置目录（.assets/），随 downloads 一起注册，
     // 保存时主进程按 assets 清单把图片拷到 md 同目录，保证相对引用可用。
     let mdAssetsDir = null;
     if (requestedTarget === "md" && category === "document") {
-      mdAssetsDir = await findMarkdownAssetsDir(outputPath, downloadName);
+      mdAssetsDir = await findMarkdownAssetsDir(outputPath);
     }
+    const assets = mdAssetsDir ? await listDownloadAssets(mdAssetsDir, "") : null;
+    const previewSize = (await fsp.stat(outputPath)).size;
+    // Finish every asynchronous output check before publication. A closed HTTP
+    // response has no owner to receive/release a newly registered download.
+    if (req.aborted || res.destroyed) throw cancellationError();
     const registered = registerDownload(outputPath, downloadName, mimeType, { assetsDir: mdAssetsDir });
-    if (mdAssetsDir) {
-      registered.assets = await listDownloadAssets(mdAssetsDir, registered.downloadUrl);
+    if (assets) {
+      registered.assets = assets.map(asset => ({ ...asset, url: registered.downloadUrl + asset.url }));
       registered.assetDirectoryName = path.basename(mdAssetsDir);
     }
-    const previewSize = (await fsp.stat(outputPath)).size;
     const payload = {
       ok: true,
       fileName: downloadName,
@@ -617,18 +870,11 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
     if (experimentalInputSet.has(inputExt)) {
       payload.warnings = [...(payload.warnings || []), experimentalInputWarning(inputExt)];
     }
-    if (requestedTarget === "zip") {
-      const originalBytes = file.size || 0;
-      const compressedBytes = (await fsp.stat(outputPath)).size;
-      payload.originalBytes = originalBytes;
-      payload.compressedBytes = compressedBytes;
-      payload.compressionRatio = compressedBytes >= originalBytes
-        ? 0
-        : Math.round((1 - compressedBytes / originalBytes) * 100);
-    }
     logger.info(`Convert succeeded: "${originalName}" -> ${downloadName} (${requestedTarget})`);
+    conversionProgress.outputReady(req);
     res.json(payload);
   } catch (error) {
+    error = normalizeResourceError(error);
     const isClientConversionError = [
       "CSV_PARSE_FAILED",
       "AV3A_UNSUPPORTED_PLATFORM",
@@ -638,25 +884,34 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
       "VPR_INVALID_FILE",
       "VPR_MASK_RANGE_EXCEEDED",
       "VPR_DECRYPT_FAILED",
+      "CONVERSION_CANCELED",
       "PDF_TABLE_OCR_REQUIRED",
       "PDF_TABLE_OCR_EMPTY",
+      "PDF_STRUCTURE_MEMORY_INSUFFICIENT",
       "MEDIA_NO_AUDIO_TRACK",
+      "MEDIA_MST_NOT_VIDEO",
+      "MEDIA_INVALID_TRANSPORT_STREAM",
       "PDF_OCR_REQUIRED",
+      "PDF_NATIVE_MATH_UNVERIFIED",
+      "PDF_SCAN_COLUMNS_UNVERIFIED",
       "XML_JSON_PARSE_FAILED",
       "YAML_JSON_PARSE_FAILED",
       "PDF_ENCRYPT_UNAVAILABLE",
       "PDF_ENCRYPT_NO_PASSWORD",
+      "PDF_ENCRYPTED_INPUT",
+      "PDF_INVALID_INPUT",
       "PRESENTATION_HTML_EMPTY",
       "BMP_UNSUPPORTED_VARIANT",
       "JSON_CSV_PATH_COLLISION",
       "PDF_TABLE_OCR_LOW_QUALITY"
-    ].includes(error?.code);
+    ].includes(error?.code) || /^(?:MARKDOWN|EPUB|MOBI|OFD)_/.test(error?.code || "");
     const isResourceLimitError = error instanceof ResourceLimitError;
-    const isOfficeEngineError = error instanceof OfficeEngineError;
+    const isOfficeEngineError = error instanceof OfficeEngineError || error instanceof OfficePreparationError;
     if (isClientConversionError || isResourceLimitError) logger.warn(`Convert rejected: "${originalName}" -> ${requestedTarget}`, error);
     else logger.error(`Convert failed: "${originalName}" -> ${requestedTarget}`, error);
     await fsp.rm(file.path, { force: true }).catch(() => {});
     await fsp.rm(outputPath, { force: true }).catch(() => {});
+    await fsp.rm(`${outputPath}.assets`, { recursive: true, force: true }).catch(() => {});
     const payload = isResourceLimitError ? resourceErrorPayload(error) : { error: error.message || "转换失败。" };
     if (error?.code) payload.errorCode = error.code;
     if (error?.messages) payload.messages = error.messages;
@@ -668,13 +923,25 @@ app.post("/api/convert", assertLocalWebRequest, upload.single("file"), async (re
   }
 });
 
+app.post("/api/downloads/release", assertLocalWebRequest, async (req, res) => {
+  const ids = req.body?.ids;
+  if (!Array.isArray(ids) || !ids.length || ids.length > 1000
+    || ids.some(id => typeof id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))) {
+    res.status(400).json({ error: "Invalid download IDs." });
+    return;
+  }
+  await releaseDownloads([...new Set(ids)]);
+  res.json({ ok: true });
+});
+
 app.get("/downloads/:id", (req, res) => {
   const item = downloads.get(req.params.id);
-  if (!item) {
+  if (!item || item.discarded) {
     res.status(404).send("File expired or not found.");
     return;
   }
 
+  retainDownloadResponse(item, res);
   res.download(item.filePath, item.downloadName, (error) => {
     if (!error) return;
     if (!res.headersSent) res.status(500).send(error.message);
@@ -685,7 +952,7 @@ app.get("/downloads/:id", (req, res) => {
 // 只允许读取该 downloads 条目登记的 assets 目录内的文件，防止路径穿越。
 app.get("/downloads/:id/asset/:name", async (req, res) => {
   const item = downloads.get(req.params.id);
-  if (!item || !/^[A-Za-z0-9-]+$/.test(req.params.id)) {
+  if (!item || item.discarded || !/^[A-Za-z0-9-]+$/.test(req.params.id)) {
     res.status(404).send("File expired or not found.");
     return;
   }
@@ -700,6 +967,7 @@ app.get("/downloads/:id/asset/:name", async (req, res) => {
     return;
   }
   const filePath = path.join(assetsDir, name);
+  retainDownloadResponse(item, res);
   try {
     const stat = await fsp.stat(filePath);
     if (!stat.isFile()) throw new Error("not a file");
@@ -715,10 +983,11 @@ app.get("/downloads/:id/asset/:name", async (req, res) => {
 
 app.get("/previews/:id", (req, res) => {
   const item = downloads.get(req.params.id);
-  if (!item || !/^[A-Za-z0-9-]+$/.test(req.params.id) || req.originalUrl.includes("?")) {
+  if (!item || item.discarded || !/^[A-Za-z0-9-]+$/.test(req.params.id) || req.originalUrl.includes("?")) {
     res.status(404).send("File expired or not found.");
     return;
   }
+  retainDownloadResponse(item, res);
   const inlineName = encodeURIComponent(path.basename(item.downloadName)).replaceAll("'", "%27");
   res.setHeader("Content-Type", item.mimeType || "application/octet-stream");
   res.setHeader("Content-Disposition", `inline; filename="preview"; filename*=UTF-8''${inlineName}`);
@@ -735,11 +1004,7 @@ app.get("/previews/:id", (req, res) => {
 });
 
 app.use((error, _req, res, _next) => {
-  if (error?.code === "LIMIT_FILE_SIZE") {
-    logger.warn(`Rejected upload: file too large (max ${MAX_UPLOAD_BYTES} bytes)`);
-    res.status(413).json({ error: "文件太大，无法上传。请检查磁盘空间后重试。" });
-    return;
-  }
+  if (sendResourceError(res, error)) return;
   logger.error("Unhandled server error", error);
   res.status(500).json({ error: error.message || "服务器出错。" });
 });
@@ -752,9 +1017,11 @@ function startServer(port = DEFAULT_PORT) {
   trustedServerOrigin = "";
   logger.info(`Server starting (runtime dir: ${RUNTIME_DIR}, engines: ffmpeg=${FFMPEG_PATH}, libreoffice=${LIBREOFFICE_PATH}, poppler=${PDFTOPPM_PATH}, tessdata=${TESSDATA_PATH})`);
   if (!cleanupTimer) {
-    cleanupTimer = setInterval(cleanupOldFiles, 1000 * 60 * 20);
+    cleanupTimer = setInterval(() => cleanupOldFiles(), 1000 * 60 * 20);
     cleanupTimer.unref();
   }
+  // 启动时回收历史实例遗留的 runtime 目录（fire-and-forget，失败不影响启动）。
+  purgeStaleRuntimeDirs().catch(() => {});
 
   return new Promise((resolve, reject) => {
     const server = app.listen(port, "127.0.0.1", () => {
@@ -785,4 +1052,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, startServer, cleanupOldFiles, createPdfjsLoader, getToolDiagnostics, isMissingPdfjsEntry, loadPdfjsModule, platformCapabilities, assertPdfTableOcrQuality };
+module.exports = { app, startServer, createPdfjsLoader, getToolDiagnostics, isMissingPdfjsEntry, loadPdfjsModule, platformCapabilities, assertPdfTableOcrQuality, cleanupOldFiles, purgeRuntimeDirs, purgeRuntimeDirsSync, purgeStaleRuntimeDirs };

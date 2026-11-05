@@ -21,6 +21,7 @@ const {
 const { xmlToJson } = require("./xml-json");
 const { normalizeExt, escapeHtml } = require("./utils");
 const { convertWithLibreOffice } = require("./office-convert");
+const { convertMarkdownDocument } = require("./markdown-document");
 
 function htmlToText(html) {
   return html
@@ -95,7 +96,8 @@ function splitHtmlIntoLines(html) {
     .split("\n");
 }
 
-async function convertTextToDocx(raw, source, outputPath) {
+async function convertTextToDocx(raw, source, outputPath, options = {}) {
+  if (source === "md" || source === "markdown") return convertMarkdownDocument(raw, outputPath, options);
   let lines;
   if (source === "html" || source === "htm") {
     lines = splitHtmlIntoLines(raw);
@@ -175,6 +177,52 @@ function parseJsonText(raw) {
   }
 }
 
+function validatedJsonText(raw) {
+  // Validate grammar without serializing Numbers back into the document: that
+  // would round 64-bit identifiers, decimals and very large/small exponents.
+  parseJsonText(raw);
+  return raw;
+}
+
+function jsonMarkdownBlock(raw) {
+  validatedJsonText(raw);
+  let fenceLength = 3;
+  for (const match of raw.matchAll(/`+/g)) fenceLength = Math.max(fenceLength, match[0].length + 1);
+  const fence = "`".repeat(fenceLength);
+  return `${fence}json\n${raw}${raw.endsWith("\n") ? "" : "\n"}${fence}\n`;
+}
+
+function yamlParseError(error) {
+  // Parser messages, mark.buffer/snippet and even dynamic reason strings can
+  // contain document text. Only known constant reasons and numeric locations
+  // may cross into an error that is persisted by the shared logger.
+  const safeReasons = new Set([
+    "duplicated mapping key",
+    "bad indentation of a mapping entry",
+    "bad indentation of a sequence entry",
+    "tab characters must not be used in indentation",
+    "missed comma between flow collection entries",
+    "unexpected end of the stream within a flow collection",
+    "unexpected end of the stream within a single quoted scalar",
+    "unexpected end of the stream within a double quoted scalar",
+    "unknown escape sequence",
+    "end of the stream or a document separator is expected"
+  ]);
+  const reason = safeReasons.has(error?.reason) ? error.reason : "invalid YAML syntax";
+  const details = { reason };
+  for (const key of ["line", "column"]) {
+    const value = error?.mark?.[key];
+    if (Number.isSafeInteger(value) && value >= 0 && value < Number.MAX_SAFE_INTEGER) details[key] = value + 1;
+  }
+  const zhLocation = details.line ? `（第 ${details.line} 行${details.column ? `，第 ${details.column} 列` : ""}）` : "";
+  const enLocation = details.line ? ` at line ${details.line}${details.column ? `, column ${details.column}` : ""}` : "";
+  const messages = {
+    zhCN: `YAML 解析失败${zhLocation}：${reason}。请检查文件语法。`,
+    enUS: `YAML parsing failed${enLocation}: ${reason}. Check the file syntax.`
+  };
+  return Object.assign(new Error(messages.zhCN), { code: "YAML_JSON_PARSE_FAILED", messages, details });
+}
+
 async function convertText(inputPath, outputPath, inputExt, target, originalName = `converted.${normalizeExt(inputExt) || "txt"}`) {
   let raw = await fsp.readFile(inputPath, "utf8");
   let source = normalizeExt(inputExt);
@@ -190,27 +238,27 @@ async function convertText(inputPath, outputPath, inputExt, target, originalName
   if (target === "pdf") {
     if (source === "md") {
       const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "flyingmouse-textpdf-"));
-      const htmlPath = path.join(tempDir, "converted.html");
-      await fsp.writeFile(htmlPath, markdownToHtml(raw), "utf8");
+      const docxPath = path.join(tempDir, "converted.docx");
       try {
-        await convertWithLibreOffice(htmlPath, outputPath, "converted.html", "pdf");
+        const result = await convertMarkdownDocument(raw, docxPath, { sourceDir: path.dirname(inputPath) });
+        warnings.push(...result.warnings);
+        await convertWithLibreOffice(docxPath, outputPath, "converted.docx", "pdf");
       } finally {
         await fsp.rm(tempDir, { recursive: true, force: true }).catch(() => {});
       }
     } else {
       await convertWithLibreOffice(inputPath, outputPath, originalName, "pdf");
     }
-    return;
+    return { warnings };
   }
 
   if (target === "docx") {
-    await convertTextToDocx(raw, source, outputPath);
-    return;
+    return await convertTextToDocx(raw, source, outputPath, { sourceDir: path.dirname(inputPath) });
   }
 
   if (target === "txt") {
     if (source === "html") converted = htmlToText(raw);
-    else if (source === "json") converted = JSON.stringify(parseJsonText(raw), null, 2);
+    else if (source === "json") converted = validatedJsonText(raw);
   } else if (target === "html") {
     if (source === "md") converted = markdownToHtml(raw);
     else if (source === "html") converted = raw;
@@ -221,10 +269,10 @@ async function convertText(inputPath, outputPath, inputExt, target, originalName
 </html>`;
   } else if (target === "md") {
     if (source === "html") converted = htmlToMarkdown(raw);
-    else if (source === "json") converted = `\`\`\`json\n${JSON.stringify(parseJsonText(raw), null, 2)}\n\`\`\`\n`;
+    else if (source === "json") converted = jsonMarkdownBlock(raw);
     else if (source === "csv") converted = csvToMarkdown(raw);
   } else if (target === "json") {
-    if (source === "json") converted = JSON.stringify(parseJsonText(raw), null, 2);
+    if (source === "json") converted = validatedJsonText(raw);
     else if (source === "csv") converted = JSON.stringify(csvToJsonObjects(raw), null, 2);
     else if (source === "xml") converted = JSON.stringify(xmlToJson(raw), null, 2);
     else if (source === "yaml" || source === "yml") {
@@ -232,10 +280,7 @@ async function convertText(inputPath, outputPath, inputExt, target, originalName
       try {
         parsed = yaml.load(raw);
       } catch (error) {
-        const wrapped = new Error(`YAML 解析失败：${String(error?.message || "未知错误")}`);
-        wrapped.code = "YAML_JSON_PARSE_FAILED";
-        wrapped.cause = error;
-        throw wrapped;
+        throw yamlParseError(error);
       }
       if (parsed === undefined) {
         const wrapped = new Error("YAML 解析失败：内容为空或格式不合法。");
@@ -309,8 +354,9 @@ function parseCsvRecords(csv) {
 
 // TSV -> 逗号分隔 CSV 文本（tab 解析后重新引号转义）。TSV 与 CSV 同源，
 // 统一归一化后走同一套自有实现；避免 LO 的假成功路径。
-async function readTabularText(inputPath, inputExt) {
-  const raw = await fsp.readFile(inputPath, "utf8");
+async function readTabularText(inputPath, inputExt, textOptions) {
+  const raw = textOptions ? await require("./text-encoding").readTextInput(inputPath, textOptions)
+    : await fsp.readFile(inputPath, "utf8");
   if (normalizeExt(inputExt) !== "tsv") return raw;
   const { parse } = require("csv-parse/sync");
   let records;

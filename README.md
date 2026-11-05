@@ -1,6 +1,6 @@
 # Mahiro Format
 
-Current release version: **0.6.5**.
+Current release version: **0.8.4**.
 
 Website source: [website/](website/). A static Chinese landing page with platform selection, GitHub releases, latest builds and GhProxy download links.
 
@@ -63,7 +63,7 @@ Only process files that you obtained lawfully and have permission to use. This p
 | PDF | pdf | docx, xlsx, txt, html, png, jpg, split/encrypted/decrypted PDF |
 | Audio | common audio formats plus experimental NCM/KGG/QMC/KGMA/KWM/VPR containers | mp3, wav, flac, m4a, ogg, aac, opus, wma |
 | Video | mp4, mov, mkv, webm, avi, m4v, wmv, flv | mp4, webm, mkv, mov, gif, and common audio formats |
-| Archives | zip or arbitrary files | image ZIP to PDF; any file to ZIP |
+| Archives | zip or arbitrary files | image ZIP to PDF; archive/PDF workflows |
 
 The available targets are computed from the selected files and installed engines. Use the UI or `targets` CLI command as the authoritative list for a specific file.
 
@@ -86,7 +86,7 @@ Windows installers are currently unsigned and may trigger SmartScreen. macOS pac
 
 Requirements:
 
-- Node.js 18 or newer. Node.js 22 LTS is recommended for building the Windows 7 staging package.
+- Node.js 22.13 or newer. Node.js 22 LTS is recommended for building the Windows 7 staging package.
 - The external engines under `bin/` for the complete conversion feature set. Large FFmpeg, LibreOffice, Poppler, Tesseract, and document-engine resources are not stored in Git.
 
 ```powershell
@@ -187,3 +187,5 @@ These are the same cryptocurrency donation addresses shown in the main interface
 WeChat Pay:
 
 <img src="public/assets/sponsor-qr.jpg" alt="LaoFeng's WeChat Pay donation QR code" width="240">
+
+Current package names: `Mahiro-Format-Setup-0.8.4-x64.exe`, `Mahiro.Format-Setup-0.8.4-win7-x64.exe`, and `Mahiro.Format-Setup-0.8.4-mac-<arch>.dmg`. See [0.8.4 changes](docs/release-notes-084.md).

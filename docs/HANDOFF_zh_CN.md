@@ -51,3 +51,7 @@ node scripts/check-docs.js
 - 更新任何 Microsoft Store 外部状态前，必须在 Partner Center 重新现场回读。
 - 只有在对应系统真机测试后，才记录 Windows 7 与 macOS 真机验收。
 - 凭据、证书、私人源文件、用户文档和未脱敏诊断不得进入 Git。
+
+## 2026-11-05 上游同步
+
+Mahiro 0.8.4 合入原始上游 f7d9eab18e91848f9740261d348717bae3f40c21，见[发行说明](release-notes-084_zh_CN.md)。新包只有本仓库当前发布门禁通过后才公开，上游发行与商店状态不代表 Mahiro 状态。

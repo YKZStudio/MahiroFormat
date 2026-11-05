@@ -11,6 +11,30 @@ from flyingmouse_docstructure.normalize import Limits, ResourceLimitError, norma
 
 
 class NormalizePageTests(unittest.TestCase):
+    def test_sparse_cells_keep_html_positions_and_spatial_ocr_confidence(self):
+        boxes = [[column * 100, row * 100, (column + 1) * 100, (row + 1) * 100]
+                 for row in range(4) for column in range(4)]
+        texts = ["A-001", "2026-08", "0.00", "Confirmed"]
+        html = "<table>" + "".join("<tr>" + "".join(
+            "<td>" + (texts[column] if row == 1 else "") + "</td>"
+            for column in range(4)) + "</tr>" for row in range(4)) + "</table>"
+        raw = {"width": 400, "height": 400, "table_res_list": [{
+            "cell_box_list": boxes, "pred_html": html,
+            "table_ocr_pred": {"rec_texts": texts, "rec_scores": [.99] * 4,
+                "rec_boxes": [[column * 100 + 10, 120, column * 100 + 90, 170]
+                              for column in range(4)]}}]}
+        with tempfile.TemporaryDirectory() as tmp:
+            table = normalize_page(1, raw, Path(tmp))["tableCandidates"][0]
+        self.assertEqual([cell["text"] for cell in table["cells"]], [""] * 4 + texts + [""] * 8)
+        self.assertEqual([cell["confidence"] for cell in table["cells"]], [0.] * 4 + [.99] * 4 + [0.] * 8)
+
+    def test_multiple_ocr_runs_require_matching_text_and_use_lowest_confidence(self):
+        from flyingmouse_docstructure.normalize import _matched_cell_confidence
+        self.assertEqual(_matched_cell_confidence("multi line", [0, 0, 100, 100],
+            ["multi", "line"], [.97, .65], [[10, 10, 40, 30], [10, 40, 40, 60]]), .65)
+        self.assertEqual(_matched_cell_confidence("invented", [0, 0, 100, 100],
+            ["other"], [.99], [[10, 10, 40, 30]]), 0.)
+
     def test_normalizes_official_ppstructure_table_result_shape(self):
         raw = {"width": 400, "height": 600, "parsing_res_list": [
             {"block_label": "table", "block_bbox": [10, 20, 390, 180],
