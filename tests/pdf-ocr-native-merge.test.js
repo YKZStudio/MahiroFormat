@@ -92,6 +92,9 @@ test('exact text matching stays usable when geometry is unavailable and restores
 
 test('OCR geometry is opt-in, uses prepared image dimensions and preserves every word', async t => {
   const { image } = await fixture(t);
+  // The OCR preparation still scales 595 -> 2480 px; a short synthetic page
+  // keeps its prepared pixels inside the minimum device-memory budget.
+  await sharp({ create: { width: 595, height: 100, channels: 3, background: 'white' } }).png().toFile(image);
   const worker = { recognize: async () => ({ data: { text: 'Total 100.00', confidence: 95, rotateRadians: 0,
     blocks: [{ paragraphs: [{ lines: [{ text: 'Total 100.00', bbox: { x0: 20, y0: 20, x1: 230, y1: 50 },
       words: [{ text: 'Total', confidence: 95, bbox: { x0: 20, y0: 20, x1: 90, y1: 50 } },
@@ -99,5 +102,6 @@ test('OCR geometry is opt-in, uses prepared image dimensions and preserves every
   assert.equal((await recognizeImageResultWithWorker(worker, image)).geometry, undefined);
   const result = await recognizeImageResultWithWorker(worker, image, { includeGeometry: true });
   assert.equal(result.geometry.width, 2480);
+  assert.equal(result.geometry.height, 417);
   assert.equal(result.geometry.lines[0].words[1].text, '100.00');
 });

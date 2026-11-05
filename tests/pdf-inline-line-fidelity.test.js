@@ -34,6 +34,9 @@ test('whole-line image preserves real italic overhang pixels and native text ord
   const root=await fs.mkdtemp(path.join(os.tmpdir(),'fmf-inline-line-'));
   t.after(()=>fs.rm(root,{recursive:true,force:true}));
   const pdf=await PDFDocument.create(),page=pdf.addPage([595,842]);
+  // Keep the real 216-DPI raster below the minimum 1 MP admission budget.
+  // Cropping unused page space leaves every tested glyph and pixel unchanged.
+  page.setCropBox(0,600,450,242);
   const font=await pdf.embedFont(StandardFonts.Helvetica),italic=await pdf.embedFont(StandardFonts.TimesRomanItalic);
   // The first two text items have a real visible word gap. Their literal
   // expected output is independent of the writer's projected contract.
