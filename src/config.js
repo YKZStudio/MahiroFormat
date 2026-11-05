@@ -10,7 +10,12 @@ const DEFAULT_PORT = Number(process.env.PORT || 5177);
 const RUNTIME_DIR = process.env.FLYINGMOUSE_RUNTIME_DIR || path.join(os.tmpdir(), "flyingmouse-format-runtime");
 const UPLOAD_DIR = path.join(RUNTIME_DIR, "uploads");
 const OUTPUT_DIR = path.join(RUNTIME_DIR, "converted");
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = require("./resource-policy").LIMITS.maxUploadBytes;
+// 运行时临时目录中「孤儿文件」的宽限期：cleanupOldFiles 只删不在 downloads 登记表、
+// 且超过该时长未修改的文件；启动时超过该时长的历史实例目录也按此清理。
+// 已登记产物在程序运行期间永不过期（2026-09-07 产品决策：用户指出「转换的文件
+// 放在里面不该过期」，改为退出时 purge + 启动时清历史残留），本值不再是保存期限。
+const PRODUCT_EXPIRY_MS = 1000 * 60 * 60 * 24;
 
 function bundledFfmpegPath() {
   const resourcesPath = process.resourcesPath || "";
@@ -25,6 +30,11 @@ function bundledFfmpegPath() {
 }
 
 function bundledLibreOfficePath() {
+  // Store preparation fixes its writable destination before this module loads.
+  // On a cold launch it does not exist yet; falling back by existence would bind
+  // every converter to the read-only installation for the lifetime of the app.
+  const preparedPath = require("./office-readiness").getOfficeState().path;
+  if (preparedPath) return preparedPath;
   const resourcesPath = process.resourcesPath || "";
   const candidates = [
     process.env.FLYINGMOUSE_LIBREOFFICE_PATH,
@@ -92,6 +102,16 @@ function bundledDocenginePath() {
   return candidates.find((candidate) => fs.existsSync(candidate)) || "";
 }
 
+function bundledCr2DecoderPath() {
+  const resourcesPath = process.resourcesPath || "";
+  return [
+    process.env.FLYINGMOUSE_CR2_DECODER_PATH,
+    resourcesPath && path.join(resourcesPath, "libraw", "dcraw_emu.exe"),
+    path.join(ROOT, "bin", "libraw", "dcraw_emu.exe"),
+    path.join(process.cwd(), "bin", "libraw", "dcraw_emu.exe")
+  ].filter(Boolean).find(candidate => fs.existsSync(candidate)) || "";
+}
+
 function bundledQpdfPath() {
   const resourcesPath = process.resourcesPath || "";
   const candidates = [
@@ -132,17 +152,22 @@ const LIBREOFFICE_PATH = bundledLibreOfficePath();
 const PDFTOPPM_PATH = bundledPdftoppmPath();
 const TESSDATA_PATH = bundledTessdataPath();
 const DCRAW_PATH = bundledDcrawPath();
+const CR2_DECODER_PATH = bundledCr2DecoderPath();
 const DOCENGINE_PATH = bundledDocenginePath();
 const QPDF_PATH = bundledQpdfPath();
 const DOCSTRUCTURE_ENGINE_PATH = bundledDocstructureEnginePath();
 const DOCSTRUCTURE_MODEL_DIR = bundledDocstructureModelDir();
 
-const imageInput = new Set(["jpg", "jpeg", "png", "webp", "gif", "avif", "tif", "tiff", "bmp", "heic", "heif", "ico", "tga"]);
+const imageInput = new Set(["jpg", "jpeg", "jfif", "jpe", "png", "webp", "gif", "avif", "tif", "tiff", "bmp", "heic", "heif", "ico", "tga", "svg", "jp2", "j2k", "jxl", "qoi", "ppm"]);
+// 设计稿输入：.ai 本质是 PDF 封装（poppler 可直接栅格化，实测泰文包装稿无缺字），
+// .psd 走 LibreOffice Draw 解码（实测图层合成完整）。统一归入 image 分类。
+const designInput = new Set(["ai", "psd"]);
 // 相机 RAW 原片（dcraw/libraw 可解码的常见扩展名）
 const rawInput = new Set(["cr2", "cr3", "crw", "nef", "arw", "dng", "raf", "rw2", "orf", "pef", "srw", "3fr", "erf", "fff", "iiq", "kdc", "mef", "mrw", "x3f"]);
-const imageFormatTargets = ["png", "jpg", "webp", "gif", "avif", "tiff", "ico", "pdf"];
+// tga/jp2/jxl/qoi/ppm 输出：sharp 的预编译编码器不全，统一走打包内置 ffmpeg。
+const imageFormatTargets = ["png", "jpg", "webp", "gif", "avif", "tiff", "ico", "bmp", "tga", "jp2", "jxl", "qoi", "ppm", "pdf"];
 const imageVideoTargets = ["mp4", "webm"];
-const imageOcrTargets = ["txt"];
+const imageOcrTargets = ["txt", "docx", "md"];
 const imageTargets = [...imageFormatTargets, ...imageVideoTargets, ...imageOcrTargets];
 const textInput = new Set(["txt", "md", "markdown", "html", "htm", "json", "csv", "log", "xml", "yaml", "yml", "epub", "mobi"]);
 const textTargets = ["txt", "md", "html", "json", "csv", "epub"];
@@ -155,8 +180,11 @@ const spreadsheetTargets = ["pdf", "xlsx", "xls", "ods", "csv", "html"];
 const presentationInput = new Set(["ppt", "pptx", "odp", "dps", "dpt"]);
 const presentationTargets = ["pdf", "pptx", "odp", "html", "png", "jpg"];
 const pdfInput = new Set(["pdf"]);
-const pdfTextTargets = ["xlsx", "txt", "html", "docx"];
-const pdfImageTargets = ["png", "jpg"];
+const pdfTextTargets = ["xlsx", "txt", "html", "docx", "md"];
+const subtitleInput = new Set(["srt", "vtt", "ass", "ssa"]);
+const subtitleTargets = ["srt", "vtt", "ass", "ssa", "txt"];
+// webp 输出经 png 二跳（poppler 只出 png/jpg；sharp 有 webp 编码器）
+const pdfImageTargets = ["png", "jpg", "webp"];
 const pdfTargets = [...pdfTextTargets, ...pdfImageTargets, "pdf"];
 const qmcV1Inputs = [
   "tkm", "bkcmp3", "bkcm4a", "bkcflac", "bkcwav", "bkcape", "bkcogg", "bkcwma",
@@ -175,12 +203,12 @@ const audioInput = new Set([
 const unlockAudioInputs = new Set([
   "ncm", "kgg", "kgma", "kwm", "vpr", ...qmcV1Inputs, ...qmcV2Inputs
 ]);
-const videoInput = new Set(["mp4", "mov", "mkv", "webm", "avi", "m4v", "wmv", "flv"]);
+const videoInput = new Set(["mp4", "mov", "mkv", "webm", "avi", "m4v", "m4s", "wmv", "flv", "mts", "m2ts", "ts", "mst"]);
 const mediaAudioTargets = ["mp3", "wav", "flac", "m4a", "ogg", "aac", "opus", "wma"];
 const mediaVideoTargets = ["mp4", "webm", "mkv", "mov", "gif"];
 const mediaTargets = [...mediaVideoTargets, ...mediaAudioTargets];
 const experimentalInputsByCategory = Object.freeze({
-  image: ["heic", "heif", "ico", "tga"],
+  image: ["heic", "heif", "tga", "ai", "psd", "jp2", "j2k", "jxl", "qoi", "ppm"],
   raw: [...rawInput],
   document: ["wpd", "wps", "wpt"],
   spreadsheet: ["et", "ett"],
@@ -195,8 +223,8 @@ const allTargets = new Set([
   ...spreadsheetTargets,
   ...presentationTargets,
   ...pdfTargets,
-  ...mediaTargets,
-  "zip"
+  ...subtitleTargets,
+  ...mediaTargets
 ]);
 
 // 运行时下载登记表（downloadUrlFor 写入 / 路由读取，跨模块共享同一实例）。
@@ -209,16 +237,19 @@ module.exports = {
   UPLOAD_DIR,
   OUTPUT_DIR,
   MAX_UPLOAD_BYTES,
+  PRODUCT_EXPIRY_MS,
   FFMPEG_PATH,
   LIBREOFFICE_PATH,
   PDFTOPPM_PATH,
   TESSDATA_PATH,
   DCRAW_PATH,
+  CR2_DECODER_PATH,
   DOCENGINE_PATH,
   QPDF_PATH,
   DOCSTRUCTURE_ENGINE_PATH,
   DOCSTRUCTURE_MODEL_DIR,
   imageInput,
+  designInput,
   rawInput,
   imageFormatTargets,
   imageVideoTargets,
@@ -237,6 +268,8 @@ module.exports = {
   pdfTextTargets,
   pdfImageTargets,
   pdfTargets,
+  subtitleInput,
+  subtitleTargets,
   audioInput,
   unlockAudioInputs,
   videoInput,

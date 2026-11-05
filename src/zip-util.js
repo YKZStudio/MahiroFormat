@@ -7,6 +7,23 @@ const path = require("path");
 const yazl = require("yazl");
 const yauzl = require("yauzl");
 const sanitize = require("sanitize-filename");
+const { pipeline } = require("stream/promises");
+
+async function writeZipArchive(files, outputPath, level) {
+  const archive = new yazl.ZipFile();
+  // yazl emits source-file failures on ZipFile itself, not outputStream.
+  archive.on("error", (error) => archive.outputStream.destroy(error));
+  const completion = pipeline(archive.outputStream, fs.createWriteStream(outputPath));
+  try {
+    for (const file of files) archive.addFile(file.inputPath, file.archiveName, { compressionLevel: level });
+    archive.end();
+    await completion;
+  } catch (error) {
+    archive.outputStream.destroy(error);
+    await completion.catch(() => {});
+    throw error;
+  }
+}
 
 async function zipFile(inputPath, outputPath, originalName, compressionLevel = 6) {
   await zipFiles([{ inputPath, archiveName: sanitize(originalName || "file") || "file" }], outputPath, compressionLevel);
@@ -15,18 +32,9 @@ async function zipFile(inputPath, outputPath, originalName, compressionLevel = 6
 async function zipFiles(files, outputPath, compressionLevel = 6) {
   const levelNum = Number(compressionLevel);
   const level = Number.isFinite(levelNum) ? Math.min(9, Math.max(0, levelNum)) : 6;
-  await new Promise((resolve, reject) => {
-    const archive = new yazl.ZipFile();
-    const output = fs.createWriteStream(outputPath);
-    output.on("close", resolve);
-    output.on("error", reject);
-    archive.outputStream.on("error", reject);
-    archive.outputStream.pipe(output);
-    for (const file of files) {
-      archive.addFile(file.inputPath, sanitize(file.archiveName || "file") || "file", { compressionLevel: level });
-    }
-    archive.end();
-  });
+  await writeZipArchive(files.map((file) => ({
+    inputPath: file.inputPath, archiveName: sanitize(file.archiveName || "file") || "file"
+  })), outputPath, level);
 }
 
 // 递归收集目录下所有文件，返回 [{ inputPath, archiveName }]。
@@ -56,18 +64,7 @@ async function zipDirectory(dirPath, outputPath, compressionLevel = 6) {
   }
   const levelNum = Number(compressionLevel);
   const level = Number.isFinite(levelNum) ? Math.min(9, Math.max(0, levelNum)) : 6;
-  await new Promise((resolve, reject) => {
-    const archive = new yazl.ZipFile();
-    const output = fs.createWriteStream(outputPath);
-    output.on("close", resolve);
-    output.on("error", reject);
-    archive.outputStream.on("error", reject);
-    archive.outputStream.pipe(output);
-    for (const file of files) {
-      archive.addFile(file.inputPath, file.archiveName, { compressionLevel: level });
-    }
-    archive.end();
-  });
+  await writeZipArchive(files, outputPath, level);
   return files.length;
 }
 
@@ -107,9 +104,7 @@ function readZipEntryToFile(zipfile, entry, outputPath) {
         return;
       }
       const output = fs.createWriteStream(outputPath);
-      stream.pipe(output);
-      output.on("close", resolve);
-      output.on("error", reject);
+      pipeline(stream, output).then(resolve, reject);
     });
   });
 }

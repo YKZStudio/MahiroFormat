@@ -302,7 +302,9 @@ try {
   if ($manifest.schemaVersion -ne 1 -or @($manifest.pages).Count -ne 1) { throw "Private blank-PDF probe returned an invalid manifest." }
 
   if ($WriteLock) {
-    & node $lockScript --root $builtRoot --lock $engineLock --engine-version "3.7.0"
+    $verifiedEngineVersion = [string]$manifest.engine.version
+    if ($verifiedEngineVersion -notmatch '^\d+\.\d+\.\d+$') { throw "Native engine returned an invalid version." }
+    & node $lockScript --root $builtRoot --lock $engineLock --engine-version $verifiedEngineVersion
     if ($LASTEXITCODE -ne 0) { throw "Unable to write document engine lock." }
   }
   if (-not (Test-Path -LiteralPath $engineLock -PathType Leaf)) { throw "Document engine lock is missing." }

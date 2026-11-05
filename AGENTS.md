@@ -43,7 +43,7 @@ Mahiro Format 是基于原项目升级的 Windows Electron 离线文件转换器
 
 - PDF → XLSX 是“智能表格提取”：优先 PDF.js 电子文字坐标，无有效文字时使用 Poppler + Tesseract blocks；支持有框/无框、多表、跨页续接、旋转、合并区域、低置信批注与 Raw 回退，但扫描件和复杂排版仍可能不完整。
 - PDF → DOCX 优先用内置 docengine 引擎（spawn `bin/docengine/docengine.exe`，pdf2docx 打包）做版式还原（段落/表格/图片/字体）；引擎缺失或转换失败时回退到 PDF.js 文字提取。Windows 7 版不含该引擎（Python 3.12 不支持 Win7），始终回退文字提取；macOS 版同样不含（darwin 引擎仅 runtime/libreoffice/tessdata）。
-- HTML / Office → Markdown 必须共用 ATX 标题、fenced 代码块的 Turndown helper；CSV 使用锁定的 `csv-parse 5.6.0`，禁止退回按换行拆分的简易解析器。
+- HTML / Office → Markdown 必须共用 ATX 标题、fenced 代码块的 Turndown helper；CSV 使用锁定的 `csv-parse 7.0.2`，禁止退回按换行拆分的简易解析器。
 - 资源上限固定为：单图 50MP、单边 16384px、图片合并 PDF 总解码量 100MP、批量选择 2GB、PDF 不限页数（1:1 还原）、OCR 不限页数；Sharp 不得使用无约束 `limitInputPixels: false`。
 - PDF → PNG/JPG 使用 Poppler，并因多页输出 ZIP。
 - 图片或扫描 PDF → TXT 使用 Tesseract OCR。
@@ -125,3 +125,7 @@ npm audit --omit=dev --prefix output\win7-stage
 - 许可证为非商用：禁止销售、转卖、收费服务、电商平台倒卖、套壳换皮重新发布。LICENSE 已从 MIT 更换为非商用许可。
 - 任何界面文案/文档新增署名时：原作者=牢蜂（LaoFeng），Mahiro Format 升级与维护=YKZStudio；禁止商用表述为「仅供个人免费使用，禁止商业售卖/转卖/套壳」。
 - 包内版本号、README 版本号、release notes、package-lock/win7-package-lock 版本号必须与 package.json 同步，发版前逐一核对。
+
+## 2026-11-05 上游同步
+
+已合入原始上游 `f7d9eab18e91848f9740261d348717bae3f40c21`（0.8.4）。继续使用 src/、scripts/lib/ 和 Mahiro 品牌；根构建要求 Node.js >=22.13.0，Win7 构建仍使用 Node.js 22。图片采用可用内存预算且上限不高于 50MP/16384px，合并总量 100MP、批量 2GB；PDF/OCR 不截断页数。上游版本记录中的商店和公开包状态仅适用于原始上游，不代表 Mahiro 已发布。

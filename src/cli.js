@@ -5,15 +5,17 @@ const fs = require("node:fs");
 const fsp = require("node:fs/promises");
 const http = require("node:http");
 const path = require("node:path");
+const os = require("node:os");
 const { randomUUID } = require("node:crypto");
+const { saveConvertedResult } = require("./save-converted-result");
 
 const VALUE_OPTIONS = new Map([
   ["--to", "to"],
   ["--output", "output"],
   ["--output-dir", "outputDir"],
-  ["--compression-level", "compressionLevel"],
   ["--video-codec", "videoCodec"],
   ["--pdf-action", "pdfAction"],
+  ["--text-encoding", "textEncoding"],
   ["--password", "password"]
 ]);
 
@@ -29,10 +31,10 @@ Usage:
 Options:
   --output <file>             Single-result output path
   --output-dir <directory>    Output directory for one or more results
-  --compression-level <0-9>   ZIP compression level
   --video-codec <h264|h265|av1>
   --pdf-action <encrypt|decrypt>
   --password <password>       PDF password (never printed in JSON output)
+  --text-encoding <encoding>  EPUB source: auto, utf-8, gb18030, utf-16le, utf-16be
   --json                      Stable machine-readable output
   -h, --help                  Show this help
 
@@ -45,7 +47,8 @@ License: Non-Commercial — personal use only. Commercial resale or rebranding i
 
 function parseCliArgs(argv) {
   const args = [...argv];
-  const command = args.shift() || "help";
+  const first = args.shift();
+  const command = !first || first === "--help" || first === "-h" ? "help" : first;
   const files = [];
   const options = { json: false, help: false };
 
@@ -222,25 +225,6 @@ async function postMultipart(url, fields, files, fieldName, sessionToken) {
   });
 }
 
-async function downloadFile(url, destination) {
-  await fsp.mkdir(path.dirname(destination), { recursive: true });
-  return new Promise((resolve, reject) => {
-    const parsed = new URL(url);
-    const request = http.get(parsed, (response) => {
-      if (response.statusCode !== 200) {
-        response.resume();
-        reject(new Error(`Download failed with HTTP ${response.statusCode}.`));
-        return;
-      }
-      const output = fs.createWriteStream(destination, { flags: "wx" });
-      response.pipe(output);
-      output.on("finish", () => output.close(resolve));
-      output.on("error", reject);
-    });
-    request.on("error", reject);
-  });
-}
-
 function extensionFromInput(value) {
   const base = path.basename(String(value || ""));
   const ext = path.extname(base).replace(/^\./, "");
@@ -253,17 +237,67 @@ function printResult(payload, json) {
     return;
   }
   if (Array.isArray(payload.outputs)) {
-    for (const output of payload.outputs) process.stdout.write(`${output.path}\n`);
+    for (const output of payload.outputs) {
+      process.stdout.write(`${output.path}\n`);
+      // Keep stdout usable as a path list while exposing quality limitations to
+      // human CLI users. JSON already carries the unchanged warning objects.
+      for (const warning of Array.isArray(output.warnings) ? output.warnings : []) {
+        const message = warning?.messages?.zhCN || warning?.messages?.enUS || warning?.code;
+        if (!message) continue;
+        const code = warning?.code ? ` [${warning.code}]` : "";
+        process.stderr.write(`Warning: ${output.fileName || path.basename(output.path)}${code}: ${message}\n`);
+      }
+    }
   } else {
     process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
   }
 }
 
+let cliActive = false;
+
+async function createCliWorkspace() {
+  // An explicit runtime override is a caller-owned parent, never a cleanup target.
+  const parent = path.resolve(process.env.FLYINGMOUSE_RUNTIME_DIR || os.tmpdir());
+  await fsp.mkdir(parent, { recursive: true });
+  const realParent = await fsp.realpath(parent);
+  const root = await fsp.mkdtemp(path.join(realParent, `flyingmouse-cli-${process.pid}-`));
+  const identity = await fsp.lstat(root);
+  return {
+    runtimeDir: path.join(root, "runtime"),
+    async dispose() {
+      const current = await fsp.lstat(root).catch(error => {
+        if (error.code === "ENOENT") return null;
+        throw error;
+      });
+      if (!current) return;
+      // Verify the exact owned directory before recursive deletion. A changed
+      // symlink or directory identity is not ours to remove.
+      if (!current.isDirectory() || current.isSymbolicLink()
+        || current.dev !== identity.dev || current.ino !== identity.ino
+        || path.dirname(root) !== realParent || await fsp.realpath(root) !== root) {
+        throw new Error("CLI temporary workspace changed; cleanup was refused.");
+      }
+      await fsp.rm(root, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+    }
+  };
+}
+
 async function executeCli(parsed, runtime) {
   if (parsed.command === "help" || parsed.options.help) return { help: true };
-  const { startServer } = runtime || require("./server");
-  const started = await startServer(0);
+  // config and conversion modules capture their runtime directory at load time.
+  // Never reuse a GUI/shared server's already initialized runtime for CLI cleanup.
+  if (cliActive || (!runtime && require.cache[require.resolve("./config")])) {
+    throw new Error("Run each CLI invocation in its own process before loading the conversion server.");
+  }
+  cliActive = true;
+  const previousRuntime = process.env.FLYINGMOUSE_RUNTIME_DIR;
+  let workspace;
+  let started;
   try {
+    workspace = await createCliWorkspace();
+    process.env.FLYINGMOUSE_RUNTIME_DIR = workspace.runtimeDir;
+    const { startServer } = runtime || require("./server");
+    started = await startServer(0);
     const baseUrl = started.url;
     if (parsed.command === "capabilities") {
       return await requestJson(`${baseUrl}/api/capabilities`);
@@ -287,8 +321,8 @@ async function executeCli(parsed, runtime) {
       for (const file of parsed.files) {
         results.push(await postMultipart(`${baseUrl}/api/convert`, {
           targetFormat: parsed.options.to,
-          compressionLevel: parsed.options.compressionLevel,
           videoCodec: parsed.options.videoCodec,
+          textEncoding: parsed.options.textEncoding,
           pdfAction: parsed.options.pdfAction,
           password: parsed.options.password
         }, [file], "file", started.sessionToken));
@@ -304,7 +338,15 @@ async function executeCli(parsed, runtime) {
     const destinations = resolveOutputDestinations(results, parsed.options);
     const outputs = [];
     for (let index = 0; index < results.length; index += 1) {
-      await downloadFile(new URL(results[index].downloadUrl, baseUrl), destinations[index]);
+      await fsp.mkdir(path.dirname(destinations[index]), { recursive: true });
+      const resolveUrl = (value) => {
+        const url = new URL(value, baseUrl);
+        if (url.origin !== new URL(baseUrl).origin || url.username || url.password || !url.pathname.startsWith("/downloads/")) {
+          throw new Error("Rejected conversion download URL.");
+        }
+        return url.href;
+      };
+      await saveConvertedResult(results[index], destinations[index], { resolveUrl, overwrite: false, resolveRedirect: resolveUrl });
       outputs.push({
         input: parsed.command === "convert" ? path.resolve(parsed.files[index]) : parsed.files.map((item) => path.resolve(item)),
         path: destinations[index],
@@ -315,7 +357,17 @@ async function executeCli(parsed, runtime) {
     }
     return { ok: true, command: parsed.command, outputs };
   } finally {
-    await new Promise((resolve) => started.server.close(resolve));
+    try {
+      if (started) await new Promise((resolve) => started.server.close(resolve));
+    } finally {
+      try {
+        await workspace?.dispose();
+      } finally {
+        if (previousRuntime === undefined) delete process.env.FLYINGMOUSE_RUNTIME_DIR;
+        else process.env.FLYINGMOUSE_RUNTIME_DIR = previousRuntime;
+        cliActive = false;
+      }
+    }
   }
 }
 

@@ -52,6 +52,7 @@ class CliTests(unittest.TestCase):
         out, err = io.StringIO(), io.StringIO()
         replacement = FakePipeline() if effect is None else effect
         with mock.patch("flyingmouse_docstructure.__main__.build_pipeline", return_value=replacement), \
+             mock.patch("flyingmouse_docstructure.__main__.preflight_pdf"), \
              redirect_stdout(out), redirect_stderr(err):
             code = main(argv)
         return code, out.getvalue(), err.getvalue()

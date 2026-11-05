@@ -1,7 +1,7 @@
 {
   "version": "docstructure-engine-v1",
   "platform": "win32-x64",
-  "engineVersion": "3.7.0",
+  "engineVersion": "1.0.1",
   "files": [
     {
       "path": "_internal/_asyncio.pyd",
@@ -105,13 +105,8 @@
     },
     {
       "path": "_internal/aiohappyeyeballs-2.7.1.dist-info/RECORD",
-      "size": 1315,
-      "sha256": "8b34e469f37919d5ef132b90d192b279981ef7e719c934b7de633d23f69ed211"
-    },
-    {
-      "path": "_internal/aiohappyeyeballs-2.7.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1218,
+      "sha256": "45f18d48ff8e52ffbe79f01cacbb0a53773e364dab9658a2ad91325045fe7937"
     },
     {
       "path": "_internal/aiohappyeyeballs-2.7.1.dist-info/WHEEL",
@@ -140,13 +135,8 @@
     },
     {
       "path": "_internal/aiohttp-3.14.3.dist-info/RECORD",
-      "size": 9135,
-      "sha256": "e9b75606edadbe773a725915f8629fda992a6dd99ccda3099dd02327ac896d23"
-    },
-    {
-      "path": "_internal/aiohttp-3.14.3.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 9046,
+      "sha256": "24d176e7d244cd6f79e7408f9692b33155924d8aef844caf6dbc02938c452078"
     },
     {
       "path": "_internal/aiohttp-3.14.3.dist-info/top_level.txt",
@@ -195,13 +185,8 @@
     },
     {
       "path": "_internal/aiosignal-1.4.0.dist-info/RECORD",
-      "size": 793,
-      "sha256": "391a9dfe16ea1ace2f28cfbd270c3ed508a3a7a2c3cf3e51c5a94583ed00553b"
-    },
-    {
-      "path": "_internal/aiosignal-1.4.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 703,
+      "sha256": "d3e57df9e057ca8644294c218c0578bb19b43e5b2c6e254c57eba9389128b911"
     },
     {
       "path": "_internal/aiosignal-1.4.0.dist-info/top_level.txt",
@@ -235,13 +220,8 @@
     },
     {
       "path": "_internal/aistudio_sdk-0.3.9.dist-info/RECORD",
-      "size": 4352,
-      "sha256": "c3e3fb524e54229fcacd6a295976d9de5665ff47e62e28179cc9490b7a767b3f"
-    },
-    {
-      "path": "_internal/aistudio_sdk-0.3.9.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 4259,
+      "sha256": "5f1f14ebf4fbe6e33dbfb04c6824484b2fe140358792a873459c82d71af89d85"
     },
     {
       "path": "_internal/aistudio_sdk-0.3.9.dist-info/top_level.txt",
@@ -252,46 +232,6 @@
       "path": "_internal/aistudio_sdk-0.3.9.dist-info/WHEEL",
       "size": 91,
       "sha256": "2b6eb4118ce7cd7b09601406aa623c553c4476265836f0d9c16f5c061f7efcc0"
-    },
-    {
-      "path": "_internal/altgraph-0.17.5.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/altgraph-0.17.5.dist-info/LICENSE",
-      "size": 1002,
-      "sha256": "6c194d6db0c64d45535d10c95142b9b0cda7b7dcc7f1ddee302b3d536f3dbe46"
-    },
-    {
-      "path": "_internal/altgraph-0.17.5.dist-info/METADATA",
-      "size": 7519,
-      "sha256": "dc60641dba229a3aef09f764f562c38d908b930c92615af2e626af31d6ff19b5"
-    },
-    {
-      "path": "_internal/altgraph-0.17.5.dist-info/RECORD",
-      "size": 1556,
-      "sha256": "47f1755c7b00384abb79de30d4fa5fb9d8231032e5f934b0b361054cc0b2142f"
-    },
-    {
-      "path": "_internal/altgraph-0.17.5.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/altgraph-0.17.5.dist-info/top_level.txt",
-      "size": 9,
-      "sha256": "1c405e4567f922d54f73b63d856ee11a5acb5d98cfa0be1bcba08084157f0700"
-    },
-    {
-      "path": "_internal/altgraph-0.17.5.dist-info/WHEEL",
-      "size": 110,
-      "sha256": "89896fe5f5f7e7b3d0c914f6a3ab70d5b37e61c2851472aa07f2f01cee703fe8"
-    },
-    {
-      "path": "_internal/altgraph-0.17.5.dist-info/zip-safe",
-      "size": 1,
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
     },
     {
       "path": "_internal/annotated_types-0.8.0.dist-info/INSTALLER",
@@ -310,13 +250,8 @@
     },
     {
       "path": "_internal/annotated_types-0.8.0.dist-info/RECORD",
-      "size": 898,
-      "sha256": "88c1cf50fa30c3296cb0c78a329fdecbb9c1ef7464825f60fd02bf9d24787ca0"
-    },
-    {
-      "path": "_internal/annotated_types-0.8.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 802,
+      "sha256": "7019741c16d7c811aa59c4305c47e85bfb62c1a9925e83f16fb69f4a66b63fff"
     },
     {
       "path": "_internal/annotated_types-0.8.0.dist-info/WHEEL",
@@ -345,13 +280,8 @@
     },
     {
       "path": "_internal/anyio-4.14.2.dist-info/RECORD",
-      "size": 6665,
-      "sha256": "dbb210e476baf2d105ac7afb23d31f2b8ccfbb3c4d2925f7c37f2f0252a12575"
-    },
-    {
-      "path": "_internal/anyio-4.14.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 6578,
+      "sha256": "2a6afa22bfa89212d58335b5dc5696cf9fe3a89a83528e01a924ae734e506a7c"
     },
     {
       "path": "_internal/anyio-4.14.2.dist-info/scm_file_list.json",
@@ -375,218 +305,218 @@
     },
     {
       "path": "_internal/api-ms-win-core-console-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "869ec6bc79d1da594b0db2cfa510472ca781ffd826acbe7716198415ea3a3605"
+      "size": 22872,
+      "sha256": "015bd08815c7b934a8952c3a7578e9ce59f21136e8a880d42bbd414bec2c6058"
     },
     {
       "path": "_internal/api-ms-win-core-datetime-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "60675dfc2cb2af87456032d28d454baa4821d6b1921cb03f12a2891def445fd6"
+      "size": 22896,
+      "sha256": "5534812cdbdae94ba45cb216e5eb9af686b853948df54365103555abbbaf9d9a"
     },
     {
       "path": "_internal/api-ms-win-core-debug-l1-1-0.dll",
-      "size": 21960,
-      "sha256": "3182765b6cae55cf4c67b9cb5b6f0b037f323585950ff9b6301b59e5e5acf780"
+      "size": 22872,
+      "sha256": "837d2b1b2cd03e03fc6ccb050698b6b5763af17c201304872342a5eae9e0a2d2"
     },
     {
       "path": "_internal/api-ms-win-core-errorhandling-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "3746169e2226c52c7b930bbffc8f3e263283d559d3237c4e193cbb07abaced1c"
+      "size": 22872,
+      "sha256": "de43b165f568c276c00e95acd454e3092f352a18e95874595f4f4658c06d2ec7"
     },
     {
       "path": "_internal/api-ms-win-core-fibers-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "7ad9720c4999b88c8b8db1dcb1ee765f374900b489b2f09bb40e4951b68b0aab"
+      "size": 22872,
+      "sha256": "3cebc45bf479ad74cfabf2c6bfd4994d7ad639ed1221025981d19cedf9ce0416"
     },
     {
       "path": "_internal/api-ms-win-core-fibers-l1-1-1.dll",
-      "size": 21960,
-      "sha256": "6599741ffe12d3e90ef2b456b64cee90425ff995bc0d1c3cd9c754ddba6697ae"
+      "size": 22872,
+      "sha256": "5ef70308bcca628ce6b0e2856b15b1c7ae340c3f9bbbc4c1071d8c191a34a5c3"
     },
     {
       "path": "_internal/api-ms-win-core-file-l1-1-0.dll",
-      "size": 26056,
-      "sha256": "3a7bdd492a945a962eb18f486ae7bcddc2bbd5b43a12eb461057a6cdc5657f5f"
+      "size": 27008,
+      "sha256": "250ac829f2617bcac1c6e5b8c4f630462e20765863ba573526a3e11bbfb94a9a"
     },
     {
       "path": "_internal/api-ms-win-core-file-l1-2-0.dll",
-      "size": 22072,
-      "sha256": "1b384401b534ca9a61dce7f51c8d54b9eabb625f86569bf09e449be5724c6ca0"
+      "size": 22888,
+      "sha256": "ae14079a114733f60ce87b92cba42acd8083c2cd67594e53bc37dc0b97a4b465"
     },
     {
       "path": "_internal/api-ms-win-core-file-l2-1-0.dll",
-      "size": 22056,
-      "sha256": "1d2f1efefd0a802190f0257aac7e1589d08ffbaea550c561c69c1827e57b55e7"
+      "size": 22912,
+      "sha256": "914bf26a298713119477ea0a8e7bd43171b91344ebe24fb47ad77c49686e3d87"
     },
     {
       "path": "_internal/api-ms-win-core-handle-l1-1-0.dll",
-      "size": 22072,
-      "sha256": "819976a22a6648536ba0c184d80d093d867d513849baa8f7011fade104a7f8c0"
+      "size": 22896,
+      "sha256": "ab5489955e371b15f77906c08ec3c7affe2c7a46a08c514ca628768b4478974b"
     },
     {
       "path": "_internal/api-ms-win-core-heap-l1-1-0.dll",
-      "size": 22072,
-      "sha256": "83ca55315263d7a42d16cf032e67b79359052321c43c5df97d687c2f4d84a79c"
+      "size": 22872,
+      "sha256": "c70f9644d8377fa39c5b71f2e9734c1400d7598904fdeb772e8502099982dcb7"
     },
     {
       "path": "_internal/api-ms-win-core-interlocked-l1-1-0.dll",
-      "size": 22072,
-      "sha256": "7e32a4463c99e54dd1366658b4284020e1a3384c4c366761116309dae49ee831"
+      "size": 22888,
+      "sha256": "f8129710188e407bb0e6f46d30aeba277d67b947ece5fe09e883fde2323f3ae6"
     },
     {
       "path": "_internal/api-ms-win-core-kernel32-legacy-l1-1-1.dll",
-      "size": 21960,
-      "sha256": "82bb3c053e3c8f4ed9127d3a4d0d5bea73d13b98a023073ea0f039ca96405c09"
+      "size": 22888,
+      "sha256": "5200b16cb2ddc61cfc07373a9a84aa85a3ab50806ca96c879c883275832944c1"
     },
     {
       "path": "_internal/api-ms-win-core-libraryloader-l1-1-0.dll",
-      "size": 21960,
-      "sha256": "c29c1592af0578c58f2f37e77a044573e8c9fda4daba184c3ac5032b061693a5"
+      "size": 22872,
+      "sha256": "48786fb88b001dcd1f63acea903d3ca9cc0b3060d5a325e3f2f3cbc3bfd53166"
     },
     {
       "path": "_internal/api-ms-win-core-localization-l1-2-0.dll",
-      "size": 22056,
-      "sha256": "2fb638be18863ef6077fef2b7f4ebda92527b8e19d2e5b39eba27b3bf96a7fed"
+      "size": 22872,
+      "sha256": "9ec3898f7eba91faa28b51616c211a2689e3a13aeef8de6e13cb674e49d689eb"
     },
     {
       "path": "_internal/api-ms-win-core-memory-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "7aacd77d48b5a7595c59ef95c09d65bd9ee6644206b0878a8108398563b09515"
+      "size": 22896,
+      "sha256": "3a6cbc524c99e1cd80d5368f5601402a37ad602528b1ab628093573ef638eb3b"
     },
     {
       "path": "_internal/api-ms-win-core-namedpipe-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "c184419f20f5ea131239e627dcad237da804a5fd21b446846f5c0d60b06a7b49"
+      "size": 22888,
+      "sha256": "97145ef89c44949fcf0f04ac834a8bc7d687ef49ee73ae9fc32f3c11136b7201"
     },
     {
       "path": "_internal/api-ms-win-core-processenvironment-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "9ab3de163dd167a9423946c308a6f225e22172e8547ccf154e0269d258588df7"
+      "size": 22872,
+      "sha256": "8bc7c10b1851aea644e9c9f381cdb935e091fee6b0be3d3aedc6fffaac96adb7"
     },
     {
       "path": "_internal/api-ms-win-core-processthreads-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "f5b2cd5c8fbe89ac55a09b6939cfacdd0861ff47e1fc3df300412603fa96e00b"
+      "size": 22912,
+      "sha256": "d8030b777617c71f0f94564607699dbf7561487d779db9756aed378c5675213f"
     },
     {
       "path": "_internal/api-ms-win-core-processthreads-l1-1-1.dll",
-      "size": 22072,
-      "sha256": "5a3d41a750d1d6714232448193e57ab7d8fd718ba9cec24c7afc71f69886dae3"
+      "size": 22872,
+      "sha256": "f5e676713340f73a03a3d41a6ec9883b431da7d16c7f07bd0a920fb80e6c0753"
     },
     {
       "path": "_internal/api-ms-win-core-profile-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "23a1324112574ad2f7d903a881592354e8fe915ba3086e830b9dc49cfbf7154c"
+      "size": 22872,
+      "sha256": "f023d47e44d3eea6b0743580f57e8c6ba81e79d5ebfa7da26250076c647b980e"
     },
     {
       "path": "_internal/api-ms-win-core-rtlsupport-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "17423b1dfc0d5c9246a1b4c50bce5af931b186ad66268761b2611e611d9adbb3"
+      "size": 22888,
+      "sha256": "9746d8930704153578a628c010638a5f818ffe5a927e25591b108e256dc6afca"
     },
     {
       "path": "_internal/api-ms-win-core-string-l1-1-0.dll",
-      "size": 22072,
-      "sha256": "ac5a66b65ead96dfbc63afd947601bd276c1c5ede2a7acc0d580b02ef104892a"
+      "size": 22896,
+      "sha256": "7c53ae24c982d16ffd1bf7f918d115b11b7f30e57bc7feaa18cb9781e4abb926"
     },
     {
       "path": "_internal/api-ms-win-core-synch-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "2d577cdae281cd49141a87340d21ee3b372a297ef9ce35e82cf449dd352f380d"
+      "size": 22896,
+      "sha256": "56d9d62ca5dba79a6581b8d574a7d8b2a64a5ecb71e47dcf06ed0285708b1859"
     },
     {
       "path": "_internal/api-ms-win-core-synch-l1-2-0.dll",
-      "size": 22072,
-      "sha256": "220a7cee500b92a005b58d45006b1b98545fcd2040dda5d3d750fe2e6de5c62b"
+      "size": 22888,
+      "sha256": "f6482bbec5612c39ecb4822787a333f2b7570f7a5f922a4059be41ba957bb372"
     },
     {
       "path": "_internal/api-ms-win-core-sysinfo-l1-1-0.dll",
-      "size": 21960,
-      "sha256": "371442d516a47a8949945f85c6bb0fe3c3b88731de07a4ff457c2b041c928cfd"
+      "size": 22896,
+      "sha256": "272d02765fdd3582618236c2d309abba069642f9bc1062ede069d0c144e17007"
     },
     {
       "path": "_internal/api-ms-win-core-sysinfo-l1-2-0.dll",
-      "size": 21960,
-      "sha256": "da65cf54767305c74eaf35e39ac8b7ff472c2df5e22a84e4fc465e2448d2fea3"
+      "size": 22912,
+      "sha256": "8a0900788859d0eb51c2f48f50cc6ed376a120b518100fa20e11d7702ccde260"
     },
     {
       "path": "_internal/api-ms-win-core-timezone-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "9dae313de05c31ab6583545323e422dd1bdaec4aa26e81cbea0d5b69b632fd0c"
+      "size": 22896,
+      "sha256": "ff35de6c03812b332e140f17dade25c5dd4775156da9eeb1eaae3fddd27236ec"
     },
     {
       "path": "_internal/api-ms-win-core-util-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "d627df017ddcf7472c761f9796cb55fc7a2347f05cc897bf6c7c29aee8e4dd0c"
+      "size": 22896,
+      "sha256": "191ef3e98641a57296f19d572d8eb62489470ff1ef6030d136af170c2f835173"
     },
     {
       "path": "_internal/api-ms-win-crt-conio-l1-1-0.dll",
-      "size": 22072,
-      "sha256": "4324863a74391b29229e5376020de3e1a04f436abbd4604e305307fde4601fa7"
+      "size": 22872,
+      "sha256": "54ee5ec719a051496ff60aa00dbeaa94b9a7d2cdac27fe9b7317f1a666b6a2aa"
     },
     {
       "path": "_internal/api-ms-win-crt-convert-l1-1-0.dll",
-      "size": 26040,
-      "sha256": "6f997e4a9837f42295fa25f45cb564f5efa93c99768e2a2e2643008ecffe97b0"
+      "size": 26992,
+      "sha256": "8b94662429171019fcd63c70bbf2095a075170599704a5e7dcdbe3da13f3a429"
     },
     {
       "path": "_internal/api-ms-win-crt-environment-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "3c0893659c504d16984d6b87c61c98fa050d60473ff77e294f69fdb7fae155bb"
+      "size": 22912,
+      "sha256": "39e5929593709e8af3bc9e0a75ec1155778d6f4a247f4cdfc58928ad6db88434"
     },
     {
       "path": "_internal/api-ms-win-crt-filesystem-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "924099811552d0e9623d220fd9f9348a14d44ef08694a15d442010193574b1fe"
+      "size": 22872,
+      "sha256": "5a8ecebac32edf4e1f3c5c6c1c8ea1a1add6cda4f9c9cb26f752fb295bea6865"
     },
     {
       "path": "_internal/api-ms-win-crt-heap-l1-1-0.dll",
-      "size": 22056,
-      "sha256": "2cfc2c7c376630b595e3582ccd2dda019f82ae5dc1665d34d3621e2c62e1a868"
+      "size": 22872,
+      "sha256": "c71080cbcb43bf1f8f3e391deb12a582eb0abefc80946f340675a2c616e4feb4"
     },
     {
       "path": "_internal/api-ms-win-crt-locale-l1-1-0.dll",
-      "size": 22072,
-      "sha256": "3c2bc1ebdcb4c6fedefc5b82419a1a4b5ba035c3f5453e9d083dccdbfe2d9e95"
+      "size": 22896,
+      "sha256": "6c68648e524187e03c4ad9aaa4a99113c6ee9f29fb39cc0ed93f951975138e63"
     },
     {
       "path": "_internal/api-ms-win-crt-math-l1-1-0.dll",
-      "size": 30248,
-      "sha256": "930fbbcfd3fbd97bfc2c0174f059ff48f33fa54274e409ed6d629a7230e45aa0"
+      "size": 31064,
+      "sha256": "d4fbcccbe29371cbce431e43b2eb4f7ba9a6f04a3d740a071f02457a505e9dc8"
     },
     {
       "path": "_internal/api-ms-win-crt-private-l1-1-0.dll",
-      "size": 75320,
-      "sha256": "0b6c38eae2ba2929b5a25393766cf66028b0d5d2cd51c218528a8df9f62cafee"
+      "size": 76120,
+      "sha256": "29bf3d90617d3781d19b332d6ceb9f20ba5ce082ec74bf6c34d5d4aee56e48a1"
     },
     {
       "path": "_internal/api-ms-win-crt-process-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "4efdca4ac7819401a586e2abebc3b858ba8ba0b13ad296c6afacd583500f2575"
+      "size": 22896,
+      "sha256": "47c1935942e3ac0812e4dcf18c0e265e565f0194a3349111c299712f5565f7ac"
     },
     {
       "path": "_internal/api-ms-win-crt-runtime-l1-1-0.dll",
-      "size": 26168,
-      "sha256": "5e9837abf4517eb8f74edcf7ea08a3d32916e253d9c24663869dda40cf7b0280"
+      "size": 26968,
+      "sha256": "72adc1b3677e0814d9c4ebf0964000e84bb2acf67336c8963061665e44f78029"
     },
     {
       "path": "_internal/api-ms-win-crt-stdio-l1-1-0.dll",
-      "size": 26168,
-      "sha256": "f2a7e41ededd62b2c192fe6381c8cc33f9bd223164ffc8b38623c9220c009ccb"
+      "size": 26968,
+      "sha256": "900afc3989673c9bb1a687ed38c192f46db9e6ba6d11a668898a539e7fc23798"
     },
     {
       "path": "_internal/api-ms-win-crt-string-l1-1-0.dll",
-      "size": 26168,
-      "sha256": "0b337649b564a760abb57e21fb2a755cff080a604034b71c3e8a3cc48c7da71d"
+      "size": 26968,
+      "sha256": "fcf12466cc12fd3b73611fc0763a5a1f9d44e90349513c34a0c83b0f36421793"
     },
     {
       "path": "_internal/api-ms-win-crt-time-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "63a56aa00ca3bec9225e516ccd336003fc4145c1c1439c7d4d9925d8be24c0e7"
+      "size": 22912,
+      "sha256": "886e57c4a6adb299b38f02945369f590a67da4e79a798359fc60aaa067212d7c"
     },
     {
       "path": "_internal/api-ms-win-crt-utility-l1-1-0.dll",
-      "size": 21944,
-      "sha256": "dc75e73ff3f294ada7e9646b51b2ed137f5c26364cbbd71f36a8f5029a3111db"
+      "size": 22912,
+      "sha256": "5f8f26b216ade615b67a41f6fbbb910972fc6153315a65bb8f09912be50215b1"
     },
     {
       "path": "_internal/attrs-26.1.0.dist-info/INSTALLER",
@@ -605,13 +535,8 @@
     },
     {
       "path": "_internal/attrs-26.1.0.dist-info/RECORD",
-      "size": 3643,
-      "sha256": "32885e42990fc3173e73c4cefa53066d6bcc15ce0939be51021093227278d63d"
-    },
-    {
-      "path": "_internal/attrs-26.1.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 3556,
+      "sha256": "8f04447f4570c82492a9e989da7bae92bb7242e3996cea3a21602ed09c73295b"
     },
     {
       "path": "_internal/attrs-26.1.0.dist-info/WHEEL",
@@ -621,7 +546,7 @@
     {
       "path": "_internal/base_library.zip",
       "size": 1443565,
-      "sha256": "9be388d6675eb6dc53e420fc6e06a6116799d366543613a2db7e7417cfb4b696"
+      "sha256": "325cf08dac4d841fec1ef02aae27f267133c40d4aeee7314ff987c1a28b29699"
     },
     {
       "path": "_internal/bce_python_sdk-0.9.76.dist-info/INSTALLER",
@@ -635,13 +560,8 @@
     },
     {
       "path": "_internal/bce_python_sdk-0.9.76.dist-info/RECORD",
-      "size": 33621,
-      "sha256": "ab9678fd6d55f1378aee8c29428fffd46b1c3f72f8a541dfaf475a5721b44c80"
-    },
-    {
-      "path": "_internal/bce_python_sdk-0.9.76.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 33525,
+      "sha256": "c72d120aaca221cff598bf21c43cfe0b39f74ace947d1ebed2211b29c5621016"
     },
     {
       "path": "_internal/bce_python_sdk-0.9.76.dist-info/top_level.txt",
@@ -675,13 +595,8 @@
     },
     {
       "path": "_internal/beautifulsoup4-4.15.0.dist-info/RECORD",
-      "size": 2529,
-      "sha256": "c597fc1c954f5a8487a524ea9d2e9b196d31b1549e56bf627a264daae434a7d3"
-    },
-    {
-      "path": "_internal/beautifulsoup4-4.15.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 2433,
+      "sha256": "9fb263147671f243c0c8c05dcc8f3cc08fd0e41a5fa4028dda3dbe6437c5860b"
     },
     {
       "path": "_internal/beautifulsoup4-4.15.0.dist-info/WHEEL",
@@ -692,41 +607,6 @@
       "path": "_internal/bidi/bidi.cp311-win_amd64.pyd",
       "size": 262144,
       "sha256": "925d771421e3484ba6e112ca21f5ad5ec3856e4e6da5185abdee648a05125e88"
-    },
-    {
-      "path": "_internal/build-1.5.0.dist-info/entry_points.txt",
-      "size": 105,
-      "sha256": "3186db33a24662e6e02234e070ba4d219a5cd0f59b8bd991016ed586d733952f"
-    },
-    {
-      "path": "_internal/build-1.5.0.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/build-1.5.0.dist-info/licenses/LICENSE",
-      "size": 1113,
-      "sha256": "aaf9a29ca5907971ccf07de025375db34539a8d5eeebce20b46099805722106f"
-    },
-    {
-      "path": "_internal/build-1.5.0.dist-info/METADATA",
-      "size": 5703,
-      "sha256": "e02a29e6013647e2f74b3bd14213efafe24874667bd5eff709be2d34c2dc0b48"
-    },
-    {
-      "path": "_internal/build-1.5.0.dist-info/RECORD",
-      "size": 2329,
-      "sha256": "3b4a098456551f9ca8fea3619b93e62f9ed9cae50225b8f2c6166a35325ca0cf"
-    },
-    {
-      "path": "_internal/build-1.5.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/build-1.5.0.dist-info/WHEEL",
-      "size": 82,
-      "sha256": "1b68144734c4b66791f27add5d425f3620775585718a03d0f9b110ba3a4d88db"
     },
     {
       "path": "_internal/cachetools-7.1.7.dist-info/INSTALLER",
@@ -745,13 +625,8 @@
     },
     {
       "path": "_internal/cachetools-7.1.7.dist-info/RECORD",
-      "size": 1554,
-      "sha256": "ab5b837c30af8a82a7fbb5275775ffef3be5a47587fea48608a6ead43e515c2e"
-    },
-    {
-      "path": "_internal/cachetools-7.1.7.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1463,
+      "sha256": "8b39fed9e76c025c7f540e5261ac04ee2f3105348eab68d3dec21287750893c1"
     },
     {
       "path": "_internal/cachetools-7.1.7.dist-info/top_level.txt",
@@ -780,13 +655,8 @@
     },
     {
       "path": "_internal/certifi-2026.7.22.dist-info/RECORD",
-      "size": 1393,
-      "sha256": "4ec404ad8116e7db4c689a9ea54140cab0c8b17f0687211f504bc8e9fe016d26"
-    },
-    {
-      "path": "_internal/certifi-2026.7.22.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1301,
+      "sha256": "f2d513bb7e6ba764c2a8ffdbbb04ce7c81c3b1829b94243fbc97151268c0dc68"
     },
     {
       "path": "_internal/certifi-2026.7.22.dist-info/top_level.txt",
@@ -830,8 +700,8 @@
     },
     {
       "path": "_internal/chardet-7.5.1.dist-info/RECORD",
-      "size": 7682,
-      "sha256": "61502febe050d1c72928d99614d415d4e17e1130ca6cf3e8aa919b959c92016a"
+      "size": 7678,
+      "sha256": "88a23c2deebd12f62124f45f0f396d6948540fa63ad750896971b0109d25b421"
     },
     {
       "path": "_internal/chardet-7.5.1.dist-info/REQUESTED",
@@ -1015,8 +885,8 @@
     },
     {
       "path": "_internal/charset_normalizer-3.5.0.dist-info/RECORD",
-      "size": 2868,
-      "sha256": "06b95f73ea9b0484c686f2aef1ca7e988fb6406d53fff28fab365da0f36ffba7"
+      "size": 2864,
+      "sha256": "284415806bd006b7e66d1f7f2cb8c2775d5ec56622450a6a0a26a344a5e06222"
     },
     {
       "path": "_internal/charset_normalizer-3.5.0.dist-info/REQUESTED",
@@ -1120,13 +990,8 @@
     },
     {
       "path": "_internal/colorlog-6.12.0.dist-info/RECORD",
-      "size": 1180,
-      "sha256": "47fd4de0bd606d3cb7ba4f9b90097d1709b1d61bf6f24cd22f7d15afce5122e2"
-    },
-    {
-      "path": "_internal/colorlog-6.12.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1090,
+      "sha256": "2c6be652171d8a01db85caf3e4d42c6f94e8ef2f14c9f76173ff8c7f64f36af6"
     },
     {
       "path": "_internal/colorlog-6.12.0.dist-info/top_level.txt",
@@ -1175,13 +1040,8 @@
     },
     {
       "path": "_internal/crc32c-2.8.dist-info/RECORD",
-      "size": 2583,
-      "sha256": "57ba209281ae5e0a320aba1f7ea5dc9d3d4a412171e398af5f95d1c2aace881a"
-    },
-    {
-      "path": "_internal/crc32c-2.8.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 2498,
+      "sha256": "9b0a8c30cb5f6be767c2b717edf874f45706c5dd2164d93f0b6c20428a78e2a3"
     },
     {
       "path": "_internal/crc32c-2.8.dist-info/top_level.txt",
@@ -1430,13 +1290,8 @@
     },
     {
       "path": "_internal/cssselect-1.5.0.dist-info/RECORD",
-      "size": 1045,
-      "sha256": "dbf29bf6426829fe6f124db3e795ecb496b1acf8a9b018c5bde73ac2b3c63b7a"
-    },
-    {
-      "path": "_internal/cssselect-1.5.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 955,
+      "sha256": "c29fe8e51a14adb97bced77d63757696d70d8e64127f105f761da773f04516db"
     },
     {
       "path": "_internal/cssselect-1.5.0.dist-info/WHEEL",
@@ -1465,13 +1320,8 @@
     },
     {
       "path": "_internal/cssutils-2.15.0.dist-info/RECORD",
-      "size": 7910,
-      "sha256": "20e0a39f1dd8181b9952714da19c0a0b0c85c9137eddd4f92e36aea5126937e4"
-    },
-    {
-      "path": "_internal/cssutils-2.15.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 7820,
+      "sha256": "69ab13022fbf97907e27d3c5de07de786c9ed861032d1158150d89073ca54389"
     },
     {
       "path": "_internal/cssutils-2.15.0.dist-info/top_level.txt",
@@ -1580,13 +1430,8 @@
     },
     {
       "path": "_internal/distro-1.9.0.dist-info/RECORD",
-      "size": 1172,
-      "sha256": "305d4a9469c16af33d7a6d48fbaf4bd61cc76946c69ba832e8f32cfb0ce4e05d"
-    },
-    {
-      "path": "_internal/distro-1.9.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1085,
+      "sha256": "fe94e1a9f0c83b0832c2132bad1bf09f4c1ebdf1847ab45c56420990d0efedbb"
     },
     {
       "path": "_internal/distro-1.9.0.dist-info/top_level.txt",
@@ -1615,13 +1460,8 @@
     },
     {
       "path": "_internal/einops-0.8.2.dist-info/RECORD",
-      "size": 4051,
-      "sha256": "ee0b02b1c79b3008e818a312a0f698bf5383405e05cb6470b5ddcae681669db8"
-    },
-    {
-      "path": "_internal/einops-0.8.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 3964,
+      "sha256": "d3d870dd2908b5f28c07810d2f9e63a165ed3c1af4b653f1b5fbe2be1e9a3a80"
     },
     {
       "path": "_internal/einops-0.8.2.dist-info/WHEEL",
@@ -1645,13 +1485,8 @@
     },
     {
       "path": "_internal/encutils-1.0.0.dist-info/RECORD",
-      "size": 618,
-      "sha256": "9fa0bc7cb29791de732d5e9949e03af7cd8a239307be1cfaeb96532f13c47640"
-    },
-    {
-      "path": "_internal/encutils-1.0.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 529,
+      "sha256": "1f73342962d986e50c4c3a0741ae8b15b014ea235500f316c7f416d8391e8fa2"
     },
     {
       "path": "_internal/encutils-1.0.0.dist-info/WHEEL",
@@ -1685,13 +1520,8 @@
     },
     {
       "path": "_internal/et_xmlfile-2.0.0.dist-info/RECORD",
-      "size": 1193,
-      "sha256": "d81bde08a23a27b96b57e94a6a775b6e8b0b515845669f0c83ece0ff44b0c511"
-    },
-    {
-      "path": "_internal/et_xmlfile-2.0.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1102,
+      "sha256": "b594ad08f9d9b9edb4cc01e8bd90f15a4864be081df90bfe43d6a2225d354fd5"
     },
     {
       "path": "_internal/et_xmlfile-2.0.0.dist-info/top_level.txt",
@@ -1720,13 +1550,8 @@
     },
     {
       "path": "_internal/filelock-3.32.3.dist-info/RECORD",
-      "size": 3283,
-      "sha256": "62b30b33d461abb374f6813b5fa30e4458bd9c76b66a8a77bddb58bb2169fc00"
-    },
-    {
-      "path": "_internal/filelock-3.32.3.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 3193,
+      "sha256": "b2f6f940c92fc0011f46d31ba99584627f218a081755b49ccdec096e78c645ea"
     },
     {
       "path": "_internal/filelock-3.32.3.dist-info/WHEEL",
@@ -1750,13 +1575,8 @@
     },
     {
       "path": "_internal/frozenlist-1.8.0.dist-info/RECORD",
-      "size": 1071,
-      "sha256": "61c9bac1a009381f45e93f04ac44bdd8a9d2ec0cafa4c06f729849d2c2b68b97"
-    },
-    {
-      "path": "_internal/frozenlist-1.8.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 980,
+      "sha256": "c511cce27a5b5f0f7efb57f3faec2dd7c048d7eb124bc6d2bedaefb3e1269195"
     },
     {
       "path": "_internal/frozenlist-1.8.0.dist-info/top_level.txt",
@@ -1790,13 +1610,8 @@
     },
     {
       "path": "_internal/fsspec-2026.7.0.dist-info/RECORD",
-      "size": 8419,
-      "sha256": "1193cfdd4ce73f8cbda7dc9cf95fd8970711e6f666ef23cc8ef151d5ac1efba1"
-    },
-    {
-      "path": "_internal/fsspec-2026.7.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 8329,
+      "sha256": "5019ef533104eaf552e1135284eaefe5a0578b00a0e59ae3ee7e8943b27dc779"
     },
     {
       "path": "_internal/fsspec-2026.7.0.dist-info/WHEEL",
@@ -1825,13 +1640,8 @@
     },
     {
       "path": "_internal/ftfy-6.3.1.dist-info/RECORD",
-      "size": 1844,
-      "sha256": "0f855a5a3ffb548e0339cdd2cfe3f487d571b219c632f1531415eddf3bca05a2"
-    },
-    {
-      "path": "_internal/ftfy-6.3.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1759,
+      "sha256": "1650ade8dbfcf5512332c7ad0b77d10f8c31452ac7ed7e9047a195404ca256b0"
     },
     {
       "path": "_internal/ftfy-6.3.1.dist-info/WHEEL",
@@ -1860,13 +1670,8 @@
     },
     {
       "path": "_internal/future-1.0.0.dist-info/RECORD",
-      "size": 31654,
-      "sha256": "db9bc314744a4c83446d0f0550be5d47de181e5df503b29a2c5362479a969702"
-    },
-    {
-      "path": "_internal/future-1.0.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 31567,
+      "sha256": "17b960b63eb80b07879f7d5595ab13956134433ed791f35e22aa5a32d01b04c0"
     },
     {
       "path": "_internal/future-1.0.0.dist-info/top_level.txt",
@@ -1900,13 +1705,8 @@
     },
     {
       "path": "_internal/h11-0.16.0.dist-info/RECORD",
-      "size": 1915,
-      "sha256": "40761cd85b40e478ba98da0944ec0ae8f6e56497b64318d1a60f8cb853021895"
-    },
-    {
-      "path": "_internal/h11-0.16.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1830,
+      "sha256": "8e391456f4e0da0be0a48c231c89bcdf4f4ac33237f03a9b247b3fc2458f1983"
     },
     {
       "path": "_internal/h11-0.16.0.dist-info/top_level.txt",
@@ -1935,13 +1735,8 @@
     },
     {
       "path": "_internal/hf_xet-1.6.0.dist-info/RECORD",
-      "size": 788,
-      "sha256": "7b52eb9fabab952438c9a041a92342ff8fc10e0aedd04392f89a6b6325ba5615"
-    },
-    {
-      "path": "_internal/hf_xet-1.6.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 701,
+      "sha256": "4042e435d4efe8cabc803349afee4978e6b08297a9ace02eae89092334b7e08a"
     },
     {
       "path": "_internal/hf_xet-1.6.0.dist-info/sboms/hf_xet.cyclonedx.json",
@@ -1975,13 +1770,8 @@
     },
     {
       "path": "_internal/httpcore-1.0.9.dist-info/RECORD",
-      "size": 4851,
-      "sha256": "0d13e700a21a115ee0e3bb24260f033ca44ca030c3200d69769ff7ec5dabed45"
-    },
-    {
-      "path": "_internal/httpcore-1.0.9.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 4762,
+      "sha256": "36bec67b7063830936845ab96e5ea8340673e25414860e865929e465f7d00175"
     },
     {
       "path": "_internal/httpcore-1.0.9.dist-info/WHEEL",
@@ -2005,13 +1795,8 @@
     },
     {
       "path": "_internal/httpcore2-2.10.0.dist-info/RECORD",
-      "size": 4926,
-      "sha256": "5e0f9152c0193011159ad2b1a07110be4391399fc401ba812ced26654fb63b22"
-    },
-    {
-      "path": "_internal/httpcore2-2.10.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 4835,
+      "sha256": "b61dfdfff4ecab23d2134e11f5dec7b7b9c72a5a551fdc51562a0c52ae994eca"
     },
     {
       "path": "_internal/httpcore2-2.10.0.dist-info/WHEEL",
@@ -2040,13 +1825,8 @@
     },
     {
       "path": "_internal/httpx-0.28.1.dist-info/RECORD",
-      "size": 3617,
-      "sha256": "b78d50f544af3e60a18a3d777d86a61ded40101dfe9397f8bca4aef40a7495ac"
-    },
-    {
-      "path": "_internal/httpx-0.28.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 3530,
+      "sha256": "fe21f9251672312f022973b1c8dd5f0b5be29e8e77506c11bad9c6547d92ea0b"
     },
     {
       "path": "_internal/httpx-0.28.1.dist-info/WHEEL",
@@ -2075,13 +1855,8 @@
     },
     {
       "path": "_internal/httpx2-2.10.0.dist-info/RECORD",
-      "size": 4630,
-      "sha256": "cc7c4911744442ae2ad14744e44acc8e7ba4a9001f7eacb6378f5efa1fb47b77"
-    },
-    {
-      "path": "_internal/httpx2-2.10.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 4542,
+      "sha256": "32a9048abf1b7a8b76773d0afb122605a3733083f51690f2b3259ae27e31a24e"
     },
     {
       "path": "_internal/httpx2-2.10.0.dist-info/WHEEL",
@@ -2110,13 +1885,8 @@
     },
     {
       "path": "_internal/huggingface_hub-1.27.0.dist-info/RECORD",
-      "size": 32312,
-      "sha256": "b34d8085cb858857371f89b8cf4c4f82e42cd751797809beb0a41db5004d2460"
-    },
-    {
-      "path": "_internal/huggingface_hub-1.27.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 32215,
+      "sha256": "358fa719544315f81168128965a80a175e758937d2a7300a462fefac230c775e"
     },
     {
       "path": "_internal/huggingface_hub-1.27.0.dist-info/top_level.txt",
@@ -2150,13 +1920,8 @@
     },
     {
       "path": "_internal/idna-3.18.dist-info/RECORD",
-      "size": 1877,
-      "sha256": "22cc7114d7c65be2b80773f0203b938f4775b1e161c6dfa715e5b244f80423a2"
-    },
-    {
-      "path": "_internal/idna-3.18.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1793,
+      "sha256": "7765da6f24d705edd0ecdc3c938882c5edb7739ffc734d970906c26510d08bd4"
     },
     {
       "path": "_internal/idna-3.18.dist-info/WHEEL",
@@ -2180,13 +1945,8 @@
     },
     {
       "path": "_internal/imagesize-2.0.0.dist-info/RECORD",
-      "size": 855,
-      "sha256": "5d6d2200595cca0692bd82871141ab8a92657786ca85e512803ec6310fba320c"
-    },
-    {
-      "path": "_internal/imagesize-2.0.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 765,
+      "sha256": "c56d5c325feef97351243ee9000e3313e788b39356d93e0d7b6d764338af6322"
     },
     {
       "path": "_internal/imagesize-2.0.0.dist-info/top_level.txt",
@@ -2295,13 +2055,8 @@
     },
     {
       "path": "_internal/jinja2-3.1.6.dist-info/RECORD",
-      "size": 3706,
-      "sha256": "19d404d2d5f4dff73a54d3ea7d68cdc384e92fb5e1a1db927cf1595ea8aa0199"
-    },
-    {
-      "path": "_internal/jinja2-3.1.6.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 3619,
+      "sha256": "1cdb905163b71bcd3528f9d0f46aafd59670242cdbd0ed1a34de3e96dab0cf3b"
     },
     {
       "path": "_internal/jinja2-3.1.6.dist-info/WHEEL",
@@ -2325,13 +2080,8 @@
     },
     {
       "path": "_internal/jiter-0.16.0.dist-info/RECORD",
-      "size": 948,
-      "sha256": "bac1ef249537dd31d3e254ba29e44fc73152a0ffa437aae3c810a07ee8ce233a"
-    },
-    {
-      "path": "_internal/jiter-0.16.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 861,
+      "sha256": "43f411c5565e00e7d61a7aa8b8a24a409cd84f4755eba2986d0fd288192e81e8"
     },
     {
       "path": "_internal/jiter-0.16.0.dist-info/sboms/jiter-python.cyclonedx.json",
@@ -2365,13 +2115,8 @@
     },
     {
       "path": "_internal/joblib-1.5.3.dist-info/RECORD",
-      "size": 18933,
-      "sha256": "02f93351130d6943c80807c60f1e3b713e86009151a06c4de97018b0c8e31143"
-    },
-    {
-      "path": "_internal/joblib-1.5.3.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 18846,
+      "sha256": "89f725b2913e87563be4c1c30958d241cdca36d4917cbdee7cc9223ff6efaf47"
     },
     {
       "path": "_internal/joblib-1.5.3.dist-info/top_level.txt",
@@ -2400,13 +2145,8 @@
     },
     {
       "path": "_internal/latex2mathml-3.81.0.dist-info/RECORD",
-      "size": 1818,
-      "sha256": "1e82f57a9903c44f9e9ec0e5b63b76ebc074e27542075318c6749f32b7e60eef"
-    },
-    {
-      "path": "_internal/latex2mathml-3.81.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1724,
+      "sha256": "42beca8438e72acad219cc3db740bf2b4318a8dfb54224a78b88d029e38570fe"
     },
     {
       "path": "_internal/latex2mathml-3.81.0.dist-info/WHEEL",
@@ -2450,13 +2190,8 @@
     },
     {
       "path": "_internal/lxml-6.1.1.dist-info/RECORD",
-      "size": 17087,
-      "sha256": "ef6df05e2789a4f47eeed60576b7f5557f60b234404a84d1cd5003a957266847"
-    },
-    {
-      "path": "_internal/lxml-6.1.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 17002,
+      "sha256": "3b52af6d3b81c8a6aac6ea1ef4e28cb8e8339d5789ece0efc84afd3f1409101a"
     },
     {
       "path": "_internal/lxml-6.1.1.dist-info/top_level.txt",
@@ -2565,13 +2300,8 @@
     },
     {
       "path": "_internal/markupsafe-3.0.3.dist-info/RECORD",
-      "size": 1195,
-      "sha256": "d0ad78282d26dfc59c54ddaa59547c7c6d12d7c28fc9a7898bd699197309f48c"
-    },
-    {
-      "path": "_internal/markupsafe-3.0.3.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1104,
+      "sha256": "eb598202c7791f6f9f1778b16223ebf50d15472be64260d47c93e9cbb5590740"
     },
     {
       "path": "_internal/markupsafe-3.0.3.dist-info/top_level.txt",
@@ -2610,13 +2340,8 @@
     },
     {
       "path": "_internal/modelscope_hub-0.2.0.dist-info/RECORD",
-      "size": 6912,
-      "sha256": "4e807819bf6b2d33650fb764360472aa4542e0698f0c5a0631330f5ec25d288e"
-    },
-    {
-      "path": "_internal/modelscope_hub-0.2.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 6817,
+      "sha256": "b924c416130397c2bc12c57ebda6fe4e7cbbb3bc7fe176824102f4c6f3716857"
     },
     {
       "path": "_internal/modelscope_hub-0.2.0.dist-info/top_level.txt",
@@ -2650,13 +2375,8 @@
     },
     {
       "path": "_internal/modelscope-1.39.1.dist-info/RECORD",
-      "size": 581375,
-      "sha256": "60faad0ec37b1dd8a1fbca5e34ede1a4fdc5c8b4a05b2fd15d5e795bc5191b3c"
-    },
-    {
-      "path": "_internal/modelscope-1.39.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 583902,
+      "sha256": "fb8f2bae452ae4477c739991f50bc1ef1a44896621dd9b6170892ae21788d5e6"
     },
     {
       "path": "_internal/modelscope-1.39.1.dist-info/top_level.txt",
@@ -2685,13 +2405,8 @@
     },
     {
       "path": "_internal/more_itertools-11.1.0.dist-info/RECORD",
-      "size": 1268,
-      "sha256": "f6b0c967b5e10f08a1c5d364c21e28a7d17419443e8f8e2d40430b74fd16baaa"
-    },
-    {
-      "path": "_internal/more_itertools-11.1.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1172,
+      "sha256": "ff6a3152132523b2dd6733918c2dc43d55c89956db2cc707a5e40ee5a6739957"
     },
     {
       "path": "_internal/more_itertools-11.1.0.dist-info/WHEEL",
@@ -2700,8 +2415,8 @@
     },
     {
       "path": "_internal/msvcp140.dll",
-      "size": 575056,
-      "sha256": "a4c2229bdc2a2a630acdc095b4d86008e5c3e3bc7773174354f3da4f5beb9cde"
+      "size": 643512,
+      "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca"
     },
     {
       "path": "_internal/multidict-6.7.1.dist-info/INSTALLER",
@@ -2720,13 +2435,8 @@
     },
     {
       "path": "_internal/multidict-6.7.1.dist-info/RECORD",
-      "size": 1279,
-      "sha256": "97a11c0472b08f52862e4d2c8420af33981e1e1978d05d705e003f7d4e77fdfb"
-    },
-    {
-      "path": "_internal/multidict-6.7.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1189,
+      "sha256": "47b0ee6bbc7ad1011992e201867ae80e0cdcc1528065f4becc2072892fd5c69e"
     },
     {
       "path": "_internal/multidict-6.7.1.dist-info/top_level.txt",
@@ -2760,13 +2470,8 @@
     },
     {
       "path": "_internal/narwhals-2.24.0.dist-info/RECORD",
-      "size": 23372,
-      "sha256": "f89ecc1b1345525248861b294972c8f4bb31e73ad4cdc9761fbca54739e332a0"
-    },
-    {
-      "path": "_internal/narwhals-2.24.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 23282,
+      "sha256": "e713c755b09c5f005e132b0d2d6378c70fb916229f2d402ac86f68600d8e7f6a"
     },
     {
       "path": "_internal/narwhals-2.24.0.dist-info/WHEEL",
@@ -2795,13 +2500,8 @@
     },
     {
       "path": "_internal/networkx-3.6.1.dist-info/RECORD",
-      "size": 102547,
-      "sha256": "b6875bd669c4b8fbd2e6696bd9533ce94e994df1f5b66d0bbd3e63fb4553ef39"
-    },
-    {
-      "path": "_internal/networkx-3.6.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 102458,
+      "sha256": "062a288dc1a4210734ee0c8b5f8d79794cfc46389311f2aa045bf53466d77f05"
     },
     {
       "path": "_internal/networkx-3.6.1.dist-info/top_level.txt",
@@ -2840,8 +2540,8 @@
     },
     {
       "path": "_internal/numpy-2.3.5.dist-info/RECORD",
-      "size": 127670,
-      "sha256": "ed86c5ab5198ebd4554b9919681ec2101a29fd047d3dfdcd699e808f34c1f9b9"
+      "size": 127662,
+      "sha256": "162069e6939fb48d29eaa19d72dc6369fa4a0451ef73713863d704ae1f641808"
     },
     {
       "path": "_internal/numpy-2.3.5.dist-info/REQUESTED",
@@ -2980,13 +2680,8 @@
     },
     {
       "path": "_internal/opencv_contrib_python-4.10.0.84.dist-info/RECORD",
-      "size": 11777,
-      "sha256": "08e5f9fdc4e1273eea24b081536d6bedf0a9c952f8fb7d4a30cf6a17eee64dcd"
-    },
-    {
-      "path": "_internal/opencv_contrib_python-4.10.0.84.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 11671,
+      "sha256": "4c1b9167f457afc9b236441f403c8103cec4326ff6808a29d2828854f9e2339b"
     },
     {
       "path": "_internal/opencv_contrib_python-4.10.0.84.dist-info/top_level.txt",
@@ -3015,13 +2710,8 @@
     },
     {
       "path": "_internal/openpyxl-3.1.5.dist-info/RECORD",
-      "size": 27747,
-      "sha256": "6140d75a8b5fe3e31553b5cfe275092919a5b8f98796462f9dcf6aaacdefb2bf"
-    },
-    {
-      "path": "_internal/openpyxl-3.1.5.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 27658,
+      "sha256": "2865feba3d19e9f5de4f4a4f791d886c2a88fcc6fbf048feef5b3b9716a9f749"
     },
     {
       "path": "_internal/openpyxl-3.1.5.dist-info/top_level.txt",
@@ -3050,13 +2740,8 @@
     },
     {
       "path": "_internal/opt_einsum-3.3.0.dist-info/RECORD",
-      "size": 4215,
-      "sha256": "c45ecc92559cb19740714d780fd8d81cfaf17bac5bbb36fcae24071a2c644502"
-    },
-    {
-      "path": "_internal/opt_einsum-3.3.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 4124,
+      "sha256": "58d62bc6fc2ce8cb6c3c79a03699e04557ec20be301bcbb168f711d722cb92ea"
     },
     {
       "path": "_internal/opt_einsum-3.3.0.dist-info/top_level.txt",
@@ -3201,7 +2886,7 @@
     {
       "path": "_internal/paddleocr-3.7.0.dist-info/RECORD",
       "size": 11829,
-      "sha256": "1ba1b8d43255058a45ce18b41ae4fe1f36c582be007a43720d843863e2bcb16a"
+      "sha256": "18e3150fd36b93077a7dc0ea53d156556032329887e09f55424cc27835df273e"
     },
     {
       "path": "_internal/paddleocr-3.7.0.dist-info/REQUESTED",
@@ -3241,7 +2926,7 @@
     {
       "path": "_internal/paddlepaddle-3.2.2.dist-info/RECORD",
       "size": 452071,
-      "sha256": "da43c41f8a22aaf4f3bbfd5affe2610de57a00221afb2c825e69746e8e02bba5"
+      "sha256": "442d772f56fb3283f5bfa63d99343a9c64165e793a48d9459b6ad97fc9b56b8e"
     },
     {
       "path": "_internal/paddlepaddle-3.2.2.dist-info/REQUESTED",
@@ -3280,13 +2965,8 @@
     },
     {
       "path": "_internal/paddlex-3.7.2.dist-info/RECORD",
-      "size": 239110,
-      "sha256": "b91ce63703d423a2ad40753f5e50c8746286f4905b32fa7dc663105c8916d5ef"
-    },
-    {
-      "path": "_internal/paddlex-3.7.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 239022,
+      "sha256": "2316023a9106c6df66c8b263459981a3872f2ad5d62e13f6b8a6c5dc9339a301"
     },
     {
       "path": "_internal/paddlex-3.7.2.dist-info/scm_file_list.json",
@@ -5085,13 +4765,8 @@
     },
     {
       "path": "_internal/pandas-3.0.5.dist-info/RECORD",
-      "size": 249415,
-      "sha256": "0a1d5e187292c45e7a4e8c81496531061c5eccc4b641fbfc594d8abd11f5c644"
-    },
-    {
-      "path": "_internal/pandas-3.0.5.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 249328,
+      "sha256": "ee7e3bdadae51570a1b0b7339739edbdff9afa28a1375e325e42a09eb0e6d87c"
     },
     {
       "path": "_internal/pandas-3.0.5.dist-info/WHEEL",
@@ -5364,41 +5039,6 @@
       "sha256": "92fb843c53b1bccd72da2e5877d3ffe4e43c9a06bd9ce6c0b429856aa663bb41"
     },
     {
-      "path": "_internal/pefile-2023.2.7.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/pefile-2023.2.7.dist-info/LICENSE",
-      "size": 1083,
-      "sha256": "bfd4b5e4f8a99c961fd6f94d708e38396cc146bfe8fbc5d2a86e63aa29fb4208"
-    },
-    {
-      "path": "_internal/pefile-2023.2.7.dist-info/METADATA",
-      "size": 1352,
-      "sha256": "363f5c2c30558bf0245a1676e86a86af94186e4821e1fe9ace3eff1d7ef91204"
-    },
-    {
-      "path": "_internal/pefile-2023.2.7.dist-info/RECORD",
-      "size": 1179,
-      "sha256": "85a3412b6a75c6260577f86d2ffe054d7e3d02ffa1f7ae39c3d513e226c67915"
-    },
-    {
-      "path": "_internal/pefile-2023.2.7.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/pefile-2023.2.7.dist-info/top_level.txt",
-      "size": 25,
-      "sha256": "7bf125792b9950e40a7171c92ecdac49e1a4c46e0e6608542dc09cfefea441ba"
-    },
-    {
-      "path": "_internal/pefile-2023.2.7.dist-info/WHEEL",
-      "size": 92,
-      "sha256": "1b5e87e00dc87a84269cead8578b9e6462928e18a95f1f3373c9eef451a5bcc0"
-    },
-    {
       "path": "_internal/PIL/_avif.cp311-win_amd64.pyd",
       "size": 7832064,
       "sha256": "6e4f728eded394ce9a40f45b8be5bbae4c1064d7d54ee332934bd93d49f4e17a"
@@ -5472,46 +5112,6 @@
       "path": "_internal/pillow-11.3.0.dist-info/zip-safe",
       "size": 2,
       "sha256": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6"
-    },
-    {
-      "path": "_internal/pip_tools-7.5.0.dist-info/entry_points.txt",
-      "size": 98,
-      "sha256": "33ef8e3065980cdc05904257a78f19af5f7f3f36c463a1687154e7c9d89ee628"
-    },
-    {
-      "path": "_internal/pip_tools-7.5.0.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/pip_tools-7.5.0.dist-info/licenses/LICENSE",
-      "size": 1522,
-      "sha256": "075f22737ed9245d386a23968c7ec906f66dfb7af35c3ff920aabd165a8ae920"
-    },
-    {
-      "path": "_internal/pip_tools-7.5.0.dist-info/METADATA",
-      "size": 26114,
-      "sha256": "688dbc0bca9917b085c98f1c28d6151d54097fb93c5d0da59a4e0ed7c2569fe3"
-    },
-    {
-      "path": "_internal/pip_tools-7.5.0.dist-info/RECORD",
-      "size": 3886,
-      "sha256": "7480d0467f05df11116ec868e3a5771cfc24e6ff1c992654c4a30912835ec785"
-    },
-    {
-      "path": "_internal/pip_tools-7.5.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/pip_tools-7.5.0.dist-info/top_level.txt",
-      "size": 9,
-      "sha256": "ff5ea7bdfa30f8410d375250fd68d8edb16ba09bdbe48607e712c81dcde477b5"
-    },
-    {
-      "path": "_internal/pip_tools-7.5.0.dist-info/WHEEL",
-      "size": 91,
-      "sha256": "ff309ddcdd65ebd02bc724dbf2bcc4a0ff53a5b61792a44548d383e4ebb19d3b"
     },
     {
       "path": "_internal/pip-26.2.1.dist-info/entry_points.txt",
@@ -5640,8 +5240,8 @@
     },
     {
       "path": "_internal/pip-26.2.1.dist-info/RECORD",
-      "size": 68999,
-      "sha256": "c7881b962b4759bec2c2e34fdbc426af3bdefd3f54eb55870e77b7972d60b424"
+      "size": 68987,
+      "sha256": "7a2fec9c6f43aba13f979325d0a3aa2ba28ca39ea68e711a301ef82d2ec31cac"
     },
     {
       "path": "_internal/pip-26.2.1.dist-info/REQUESTED",
@@ -5670,13 +5270,8 @@
     },
     {
       "path": "_internal/premailer-3.10.0.dist-info/RECORD",
-      "size": 1236,
-      "sha256": "5d48837c8764632855e42638194bf77c7c72b755ed2882550a29ddf4500f564c"
-    },
-    {
-      "path": "_internal/premailer-3.10.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1145,
+      "sha256": "736a624572ede95d892ab9ba20758d803f520257b757a60f4ecf61ca4c665721"
     },
     {
       "path": "_internal/premailer-3.10.0.dist-info/top_level.txt",
@@ -5705,13 +5300,8 @@
     },
     {
       "path": "_internal/prettytable-3.18.0.dist-info/RECORD",
-      "size": 1265,
-      "sha256": "6250ea4bd8a5e79791ee418a549bea174bb17d03482eb867cd25a8fd9e1088c3"
-    },
-    {
-      "path": "_internal/prettytable-3.18.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1172,
+      "sha256": "8d39528877c02918ed4b6e7eeb033a2e30fd5a87d3ac48ec2236818d107d65e5"
     },
     {
       "path": "_internal/prettytable-3.18.0.dist-info/WHEEL",
@@ -5740,13 +5330,8 @@
     },
     {
       "path": "_internal/propcache-0.5.2.dist-info/RECORD",
-      "size": 1456,
-      "sha256": "af31f2dd00c963f2e757157aa01bf012322b8aec741df021d03011131c44c881"
-    },
-    {
-      "path": "_internal/propcache-0.5.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1366,
+      "sha256": "5d59feb44c81bb9c2a34299b89a26a5f06ddb5fcc1a6c7695c70607d2b445ba2"
     },
     {
       "path": "_internal/propcache-0.5.2.dist-info/top_level.txt",
@@ -5780,13 +5365,8 @@
     },
     {
       "path": "_internal/protobuf-7.35.1.dist-info/RECORD",
-      "size": 8942,
-      "sha256": "a9ce7948762c3cf502d508d4ac35a04f20e020b2aefc74a1ce4f276d927b0e56"
-    },
-    {
-      "path": "_internal/protobuf-7.35.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 8852,
+      "sha256": "193fa76fa43af3f1ca924997b42c5b4706543bed4259ca5dda7a2327e25ef40a"
     },
     {
       "path": "_internal/protobuf-7.35.1.dist-info/WHEEL",
@@ -5810,13 +5390,8 @@
     },
     {
       "path": "_internal/psutil-7.2.2.dist-info/RECORD",
-      "size": 1875,
-      "sha256": "36eb8aae7aa5420387cca53cef95777e92fc4d10282fbd6e86318a6322cb572c"
-    },
-    {
-      "path": "_internal/psutil-7.2.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1788,
+      "sha256": "157f91cfd3ba766714e3a07613284f700419432560c48df31412fa50266eb6a5"
     },
     {
       "path": "_internal/psutil-7.2.2.dist-info/top_level.txt",
@@ -5855,13 +5430,8 @@
     },
     {
       "path": "_internal/py_cpuinfo-9.0.0.dist-info/RECORD",
-      "size": 1140,
-      "sha256": "ad06501c4d0d37b15992f65dfeca6c026838f3a7a14db8ebcf192df2a9a9cb00"
-    },
-    {
-      "path": "_internal/py_cpuinfo-9.0.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1049,
+      "sha256": "1e1ef84fc6482e2fc7a4ae486c1c40b230b7931506f4523f7598195e7ba4926f"
     },
     {
       "path": "_internal/py_cpuinfo-9.0.0.dist-info/top_level.txt",
@@ -5890,13 +5460,8 @@
     },
     {
       "path": "_internal/pyclipper-1.4.0.dist-info/RECORD",
-      "size": 947,
-      "sha256": "9487f960e4981cf172634f16a958c906547914568485b059c2296c60550ebaf1"
-    },
-    {
-      "path": "_internal/pyclipper-1.4.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 857,
+      "sha256": "a681bc1e101851bae10b61595e5e291414794933567c8247892bb6d8d8115c02"
     },
     {
       "path": "_internal/pyclipper-1.4.0.dist-info/top_level.txt",
@@ -5935,13 +5500,8 @@
     },
     {
       "path": "_internal/pycryptodome-3.23.0.dist-info/RECORD",
-      "size": 42607,
-      "sha256": "e9055a48d8680255f74e9a5eb3a8e3641a0774b252e396cf54fc3404aa7f2c0b"
-    },
-    {
-      "path": "_internal/pycryptodome-3.23.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 42513,
+      "sha256": "13a3cb2b1a02bdd822cacb72aead27f45a831dae53dc7ab37d5d8056ff1d52c6"
     },
     {
       "path": "_internal/pycryptodome-3.23.0.dist-info/top_level.txt",
@@ -5970,13 +5530,8 @@
     },
     {
       "path": "_internal/pydantic_core-2.46.4.dist-info/RECORD",
-      "size": 1209,
-      "sha256": "bec1776f1f477c7b5c63109f5f597fb8da46522e0dfa4f28076bea601f82b4e9"
-    },
-    {
-      "path": "_internal/pydantic_core-2.46.4.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1114,
+      "sha256": "f867a5f77eafb178011c762d80cb6e97755338370a045d4480f1ece26a65b5e9"
     },
     {
       "path": "_internal/pydantic_core-2.46.4.dist-info/sboms/pydantic-core.cyclonedx.json",
@@ -6010,13 +5565,8 @@
     },
     {
       "path": "_internal/pydantic-2.13.4.dist-info/RECORD",
-      "size": 15546,
-      "sha256": "17ede917c5a22e23aa8d976f9b71175ca7da3ec17b379e4a484eac2c7e99b26c"
-    },
-    {
-      "path": "_internal/pydantic-2.13.4.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 15456,
+      "sha256": "e0acd515187e747b327f54e4813abdbfaa2307170b523213a12afee72106d5af"
     },
     {
       "path": "_internal/pydantic-2.13.4.dist-info/WHEEL",
@@ -6027,86 +5577,6 @@
       "path": "_internal/pyexpat.pyd",
       "size": 199448,
       "sha256": "c7c7564f7f874fb660a46384980a2cf28bc3e245ca83628a197ccf861eab5560"
-    },
-    {
-      "path": "_internal/pyinstaller_hooks_contrib-2026.6.dist-info/entry_points.txt",
-      "size": 69,
-      "sha256": "16c33d42d9a41c23e8f5bdb7b16af1556ec5bf86b0a2e8755a7043149a7124fb"
-    },
-    {
-      "path": "_internal/pyinstaller_hooks_contrib-2026.6.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/pyinstaller_hooks_contrib-2026.6.dist-info/licenses/LICENSE",
-      "size": 27666,
-      "sha256": "91d0baaff00773038e72c0a1fc9d5d2d38706b7a2b9c04f34296608f931b9cd0"
-    },
-    {
-      "path": "_internal/pyinstaller_hooks_contrib-2026.6.dist-info/METADATA",
-      "size": 16043,
-      "sha256": "ed6d46645fc409648ac6ed04d68b62cce72a6c9852c2ec6655d169f58a372954"
-    },
-    {
-      "path": "_internal/pyinstaller_hooks_contrib-2026.6.dist-info/RECORD",
-      "size": 143275,
-      "sha256": "c92e123fbf8c70078b0ffd23518c5b5a4134be88f2a3f027fc9d0ad4b187c3fa"
-    },
-    {
-      "path": "_internal/pyinstaller_hooks_contrib-2026.6.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/pyinstaller_hooks_contrib-2026.6.dist-info/top_level.txt",
-      "size": 27,
-      "sha256": "88b7ca82c81ae5b2d93129285a91f15adead0e370f542bc6b0982fc1f3187270"
-    },
-    {
-      "path": "_internal/pyinstaller_hooks_contrib-2026.6.dist-info/WHEEL",
-      "size": 91,
-      "sha256": "69e6228a0d35958183cc1812f07c565ce837b95eb51bd8a33acba9fa4f68d6c9"
-    },
-    {
-      "path": "_internal/pyinstaller-6.15.0.dist-info/COPYING.txt",
-      "size": 32138,
-      "sha256": "dcf75fdb959db1e3b41c0f8505069d2ece781b5ec6b3d0a4d30975cfc6580245"
-    },
-    {
-      "path": "_internal/pyinstaller-6.15.0.dist-info/entry_points.txt",
-      "size": 376,
-      "sha256": "95a68a8d8162302dd8baab9d1cd371e36f9375507ecb86032cd0cead11609382"
-    },
-    {
-      "path": "_internal/pyinstaller-6.15.0.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/pyinstaller-6.15.0.dist-info/METADATA",
-      "size": 8395,
-      "sha256": "7e4e489ecf2585c0564def1e05fb2c65145ece5b658ac06c86cfbbb58ef6d369"
-    },
-    {
-      "path": "_internal/pyinstaller-6.15.0.dist-info/RECORD",
-      "size": 97991,
-      "sha256": "eb5eb0e94d5a357b17b641e885607e754b4348de14c97297603996a9c4b699a3"
-    },
-    {
-      "path": "_internal/pyinstaller-6.15.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/pyinstaller-6.15.0.dist-info/top_level.txt",
-      "size": 12,
-      "sha256": "1ae466bd65c64d124d6262b989618e82536fe0bddbcbb60a68488ac9c359e174"
-    },
-    {
-      "path": "_internal/pyinstaller-6.15.0.dist-info/WHEEL",
-      "size": 97,
-      "sha256": "db0afef8fdf72ff5edefd32b6f9efece7e82ad394d6845471306ce76e3312518"
     },
     {
       "path": "_internal/pymupdf-1.26.3.dist-info/COPYING",
@@ -6136,7 +5606,7 @@
     {
       "path": "_internal/pymupdf-1.26.3.dist-info/RECORD",
       "size": 17024,
-      "sha256": "578e251455d19585cb2e36bafd8422ca2262c516f236f236c86ffd319c25eff5"
+      "sha256": "4d4078b1b77f8a12af5836d8d4493683ef9d32c9e695ef93a605b15fce153457"
     },
     {
       "path": "_internal/pymupdf-1.26.3.dist-info/REQUESTED",
@@ -6285,13 +5755,8 @@
     },
     {
       "path": "_internal/pypdfium2-5.13.0.dist-info/RECORD",
-      "size": 9753,
-      "sha256": "0643da944328bf67b2b4478c56ecc7975c8cb3ca89f1ad68703b811451292bca"
-    },
-    {
-      "path": "_internal/pypdfium2-5.13.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 9662,
+      "sha256": "44f54a0d03db83df271689c9a6b5c8471f3dadad8877630149ade827a1f496db"
     },
     {
       "path": "_internal/pypdfium2-5.13.0.dist-info/top_level.txt",
@@ -6307,36 +5772,6 @@
       "path": "_internal/pypdfium2/version.json",
       "size": 171,
       "sha256": "f78cf951e040056caf785ef3e5fe4bb4e7b9291178e270ce2d1eb1391d2d8cb5"
-    },
-    {
-      "path": "_internal/pyproject_hooks-1.2.0.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/pyproject_hooks-1.2.0.dist-info/LICENSE",
-      "size": 1081,
-      "sha256": "1b22b049b5267d6dfc23a67bf4a84d8ec04b9fdfb1a51d360e42b4342c8b4154"
-    },
-    {
-      "path": "_internal/pyproject_hooks-1.2.0.dist-info/METADATA",
-      "size": 1288,
-      "sha256": "3bfd818e5a898e2c01d849e2342920136d822b59454b599ad55c0d293428654c"
-    },
-    {
-      "path": "_internal/pyproject_hooks-1.2.0.dist-info/RECORD",
-      "size": 1213,
-      "sha256": "bb466d1149d0083cb7d9abc2c0567dd00791b2e135a8c16b9d7884a31bc5c57e"
-    },
-    {
-      "path": "_internal/pyproject_hooks-1.2.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/pyproject_hooks-1.2.0.dist-info/WHEEL",
-      "size": 81,
-      "sha256": "1196c6921ec87b83e865f450f08d19b8ff5592537f4ef719e83484e546abe33e"
     },
     {
       "path": "_internal/python_bidi-0.6.11.dist-info/entry_points.txt",
@@ -6375,13 +5810,8 @@
     },
     {
       "path": "_internal/python_bidi-0.6.11.dist-info/RECORD",
-      "size": 1717,
-      "sha256": "60349eea9dcd93c2f8bc21218547cef8935e1137203115686535cdc5bc9395b8"
-    },
-    {
-      "path": "_internal/python_bidi-0.6.11.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1624,
+      "sha256": "d4eef959f5b44307d01d8409673475871e3a587de4efe721cee72df434ce1ce8"
     },
     {
       "path": "_internal/python_bidi-0.6.11.dist-info/sboms/python-bidi.cyclonedx.json",
@@ -6410,13 +5840,8 @@
     },
     {
       "path": "_internal/python_dateutil-2.9.0.post0.dist-info/RECORD",
-      "size": 3227,
-      "sha256": "f22054479391148e83a48ef217d27243d2d23e738d8c8f10c3c89ba3ee63afca"
-    },
-    {
-      "path": "_internal/python_dateutil-2.9.0.post0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 3125,
+      "sha256": "2d07914d24c0e9ff27be7ab8be3924c0b036ccf24d7df1a50db22e10a8263e22"
     },
     {
       "path": "_internal/python_dateutil-2.9.0.post0.dist-info/top_level.txt",
@@ -6442,41 +5867,6 @@
       "path": "_internal/python311.dll",
       "size": 5800216,
       "sha256": "0817a2a657a24c0d5fbb60df56960f42fc66b3039d522ec952dab83e2d869364"
-    },
-    {
-      "path": "_internal/pywin32_ctypes-0.2.3.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/pywin32_ctypes-0.2.3.dist-info/LICENSE.txt",
-      "size": 1644,
-      "sha256": "dfa83b3e2709adfcdb838d9ad55823ca674abb780e60563d9dd9544ccbf785e9"
-    },
-    {
-      "path": "_internal/pywin32_ctypes-0.2.3.dist-info/METADATA",
-      "size": 3909,
-      "sha256": "1e3767d3faff4d5b9c347160883831098d1f25acf4306b02c9acdcc6bfb5883b"
-    },
-    {
-      "path": "_internal/pywin32_ctypes-0.2.3.dist-info/RECORD",
-      "size": 5746,
-      "sha256": "baeb21c5294dc914d1520159c204f1adaaa5282bece38ba6083278acfbb80dc4"
-    },
-    {
-      "path": "_internal/pywin32_ctypes-0.2.3.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/pywin32_ctypes-0.2.3.dist-info/top_level.txt",
-      "size": 12,
-      "sha256": "43aedaaf40bc821b075abf7aac9f2203498b0b16d840bc5e4b97c798c383c349"
-    },
-    {
-      "path": "_internal/pywin32_ctypes-0.2.3.dist-info/WHEEL",
-      "size": 92,
-      "sha256": "3aa464174798e461ecb0ca2b16395b4c8ab4ef6be91e917ad1f21003a952f710"
     },
     {
       "path": "_internal/PyYAML-6.0.2.dist-info/INSTALLER",
@@ -6530,13 +5920,8 @@
     },
     {
       "path": "_internal/regex-2026.7.19.dist-info/RECORD",
-      "size": 1191,
-      "sha256": "fb2d42485d32ce27c589239468f65b39fa812241ce585fb02aa9b5b02b117b39"
-    },
-    {
-      "path": "_internal/regex-2026.7.19.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1101,
+      "sha256": "3a958debe682683df47cd08c614b7796c00368851e853c3665fa1bc82a509eba"
     },
     {
       "path": "_internal/regex-2026.7.19.dist-info/top_level.txt",
@@ -6575,13 +5960,8 @@
     },
     {
       "path": "_internal/requests-2.34.2.dist-info/RECORD",
-      "size": 3153,
-      "sha256": "80a07dc1ca3b1a0c981e49e8dfde15af08a07050a74107fa8d699181d46c2d5c"
-    },
-    {
-      "path": "_internal/requests-2.34.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 3063,
+      "sha256": "95f5b02ec24d1187982de368c0f5cafc8006fb2c409d624fc7140a184c6040a8"
     },
     {
       "path": "_internal/requests-2.34.2.dist-info/top_level.txt",
@@ -6610,13 +5990,8 @@
     },
     {
       "path": "_internal/ruamel_yaml-0.19.1.dist-info/RECORD",
-      "size": 5070,
-      "sha256": "9aebd877220d900de3316b9101588c79bdb029e19a58c53ed254ee6c5819b070"
-    },
-    {
-      "path": "_internal/ruamel_yaml-0.19.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 4977,
+      "sha256": "ae55317e47da17fb83cdfc30cca0dbba20186bea2f6c16af9b044935dc515a19"
     },
     {
       "path": "_internal/ruamel_yaml-0.19.1.dist-info/top_level.txt",
@@ -6645,13 +6020,8 @@
     },
     {
       "path": "_internal/safetensors-0.8.0.dist-info/RECORD",
-      "size": 1785,
-      "sha256": "bb96465b8ab6ffc0e682add24f7de6f5984fbd5c56c2b216add8393601d510d5"
-    },
-    {
-      "path": "_internal/safetensors-0.8.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1693,
+      "sha256": "a64678bc43da21db19ef063ef2444f50d54efd592d86fb8d058b3db122498986"
     },
     {
       "path": "_internal/safetensors-0.8.0.dist-info/sboms/safetensors-python.cyclonedx.json",
@@ -6685,13 +6055,8 @@
     },
     {
       "path": "_internal/scikit_learn-1.9.0.dist-info/RECORD",
-      "size": 151140,
-      "sha256": "4fc3df4b541efb3fc2bbefb8457f010ec3537daf0b40ef435dbb641168bf2e8d"
-    },
-    {
-      "path": "_internal/scikit_learn-1.9.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 151047,
+      "sha256": "e684dcccfc74ebb73bedf267087f7846052389b55bff8d7957b295d994ddf9a0"
     },
     {
       "path": "_internal/scikit_learn-1.9.0.dist-info/WHEEL",
@@ -6720,13 +6085,8 @@
     },
     {
       "path": "_internal/scipy-1.17.1.dist-info/RECORD",
-      "size": 208403,
-      "sha256": "bf9fc66f101fb0848761a33ba3cda359204b3db1a1e700b4b194da7a01382438"
-    },
-    {
-      "path": "_internal/scipy-1.17.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 208316,
+      "sha256": "043bd537f257737ca477503ec5e250542b3ea499884789429ba696b178deca14"
     },
     {
       "path": "_internal/scipy-1.17.1.dist-info/WHEEL",
@@ -7245,13 +6605,8 @@
     },
     {
       "path": "_internal/sentencepiece-0.2.2.dist-info/RECORD",
-      "size": 1875,
-      "sha256": "81feea5890a3420f89fcf13f83dc00f9b0fe8319cf5cf25f98228f2f658490c0"
-    },
-    {
-      "path": "_internal/sentencepiece-0.2.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1781,
+      "sha256": "8c1c58108ccdb12ff440cd4606b668ab3124fac2b2e1d3248f813fd1da8e32e3"
     },
     {
       "path": "_internal/sentencepiece-0.2.2.dist-info/top_level.txt",
@@ -7380,13 +6735,8 @@
     },
     {
       "path": "_internal/shapely-2.1.2.dist-info/RECORD",
-      "size": 20586,
-      "sha256": "3c3cb131138528060beaa67ecc8b88d49325d0a6e32d40805d3fd96490ef68b9"
-    },
-    {
-      "path": "_internal/shapely-2.1.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 20498,
+      "sha256": "61c4872074f8043cbfccf4a29fa54ec25fb3c321b4446a6c0aa749824dbc234c"
     },
     {
       "path": "_internal/shapely-2.1.2.dist-info/top_level.txt",
@@ -7445,13 +6795,8 @@
     },
     {
       "path": "_internal/six-1.17.0.dist-info/RECORD",
-      "size": 646,
-      "sha256": "e353fead4ebb07ec46b426eeb04bf4c04482caeb5032eac872f0c091c742c049"
-    },
-    {
-      "path": "_internal/six-1.17.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 561,
+      "sha256": "6eca8f3767a4e15a8317acec57d36e1248342e307b4a20bebbbfa713befaa539"
     },
     {
       "path": "_internal/six-1.17.0.dist-info/top_level.txt",
@@ -9445,13 +8790,8 @@
     },
     {
       "path": "_internal/sniffio-1.3.1.dist-info/RECORD",
-      "size": 1476,
-      "sha256": "fd77e6838adf5a17212f1ec1a00a9b56206768d6f3ec85ece9ac7c0d9ad29c06"
-    },
-    {
-      "path": "_internal/sniffio-1.3.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1388,
+      "sha256": "df89f26d55f3f3fab7c81362bb496a82fcdc15c0385338e455053779611a76c7"
     },
     {
       "path": "_internal/sniffio-1.3.1.dist-info/top_level.txt",
@@ -9480,13 +8820,8 @@
     },
     {
       "path": "_internal/soupsieve-2.9.2.dist-info/RECORD",
-      "size": 1473,
-      "sha256": "62f60f2ec78db2bebe81423003deff166105e9c3b7ed014bb77b44868ea863c2"
-    },
-    {
-      "path": "_internal/soupsieve-2.9.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1383,
+      "sha256": "8fae1e00c9994b8f03417889f37ce973761f28887a964b7c346a0fe664de65f3"
     },
     {
       "path": "_internal/soupsieve-2.9.2.dist-info/WHEEL",
@@ -9515,13 +8850,8 @@
     },
     {
       "path": "_internal/threadpoolctl-3.6.0.dist-info/RECORD",
-      "size": 640,
-      "sha256": "45ec1ffcec4eabed9558f14385fc6f6122ac97461acce1bdbc962631b7f0efc4"
-    },
-    {
-      "path": "_internal/threadpoolctl-3.6.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 546,
+      "sha256": "831c558199ec0552671891bfd2248e62825c281e719c05e28f44658214a369d7"
     },
     {
       "path": "_internal/threadpoolctl-3.6.0.dist-info/WHEEL",
@@ -9580,13 +8910,8 @@
     },
     {
       "path": "_internal/tokenizers-0.23.1.dist-info/RECORD",
-      "size": 4103,
-      "sha256": "aafd9695c2da6cca62b2e6acc35c2919dd0715e17b45172ca6437e654534dea6"
-    },
-    {
-      "path": "_internal/tokenizers-0.23.1.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 4011,
+      "sha256": "a648bb0ee8d10e17b96ce0ffc61530495fb90cb9e26b16d4fa04ab7d61b01eb1"
     },
     {
       "path": "_internal/tokenizers-0.23.1.dist-info/sboms/tokenizers-python.cyclonedx.json",
@@ -9625,13 +8950,8 @@
     },
     {
       "path": "_internal/tqdm-4.70.0.dist-info/RECORD",
-      "size": 4637,
-      "sha256": "37dd77ef695f39b7425eebe87d0631aaab5b2b646d3712317442a528561c6819"
-    },
-    {
-      "path": "_internal/tqdm-4.70.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 4551,
+      "sha256": "81925ccab5c146eb76bd97b354387507ff8f8132fbf299270b39be0625953d8a"
     },
     {
       "path": "_internal/tqdm-4.70.0.dist-info/top_level.txt",
@@ -9660,13 +8980,8 @@
     },
     {
       "path": "_internal/truststore-0.10.4.dist-info/RECORD",
-      "size": 1370,
-      "sha256": "80172f426a9e608be7533a52f56155aaee3af65287854bc20abee986d5dc04b1"
-    },
-    {
-      "path": "_internal/truststore-0.10.4.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1278,
+      "sha256": "fa290f96d2eea4dd31d224d40176b07189da4fd6b1b7ad8aef67f7f32115616e"
     },
     {
       "path": "_internal/truststore-0.10.4.dist-info/WHEEL",
@@ -9690,13 +9005,8 @@
     },
     {
       "path": "_internal/typing_extensions-4.16.0.dist-info/RECORD",
-      "size": 679,
-      "sha256": "55d983572e1b472869bf6c3dad8fc049388999903f38d6ece1eff0f5af526072"
-    },
-    {
-      "path": "_internal/typing_extensions-4.16.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 580,
+      "sha256": "61d86db5843e537a7a8d095771289016a5bbfe26fdeace2b655dd0c7503f042a"
     },
     {
       "path": "_internal/typing_extensions-4.16.0.dist-info/WHEEL",
@@ -9720,13 +9030,8 @@
     },
     {
       "path": "_internal/typing_inspection-0.4.4.dist-info/RECORD",
-      "size": 1174,
-      "sha256": "d4707c5e38e8acd2de16e1d948059246c7fefc120c4d73a1ecc0bb55e34cf9d6"
-    },
-    {
-      "path": "_internal/typing_inspection-0.4.4.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1076,
+      "sha256": "8f9b37d93c3d625c0fdd46a3e93f9ce54ffbb29006a0a43678e509f419f63ce0"
     },
     {
       "path": "_internal/typing_inspection-0.4.4.dist-info/WHEEL",
@@ -9755,13 +9060,8 @@
     },
     {
       "path": "_internal/tzdata-2026.3.dist-info/RECORD",
-      "size": 56919,
-      "sha256": "651d2644ddaa0f5e2eac8cfb718f92badb368d1847912f33a3eea691c083f6d6"
-    },
-    {
-      "path": "_internal/tzdata-2026.3.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 56831,
+      "sha256": "bf7145abc571ef499d924629727b54f13bce83b49254b9613f2d1037bfbafd08"
     },
     {
       "path": "_internal/tzdata-2026.3.dist-info/top_level.txt",
@@ -12800,8 +12100,8 @@
     },
     {
       "path": "_internal/ucrtbase.dll",
-      "size": 1357256,
-      "sha256": "d404dc9aa843d53d7e276dd078b2cac8d7aa905e2838a1fe8385278e19ba3810"
+      "size": 1362264,
+      "sha256": "3239227d27667ba20d10a880751924e5719de0078f9fce232d149d383f7681f6"
     },
     {
       "path": "_internal/ujson-5.13.0.dist-info/INSTALLER",
@@ -12820,13 +12120,8 @@
     },
     {
       "path": "_internal/ujson-5.13.0.dist-info/RECORD",
-      "size": 741,
-      "sha256": "4920a9b5421fc74fd4b90d61b585bfb75d0d4e1fb9b3ac6e090ec663908a6dfe"
-    },
-    {
-      "path": "_internal/ujson-5.13.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 654,
+      "sha256": "e119f273b1ff690f2dd17872d8333a06f27c3b5eba0702874a12700f8b8c392f"
     },
     {
       "path": "_internal/ujson-5.13.0.dist-info/top_level.txt",
@@ -12865,13 +12160,8 @@
     },
     {
       "path": "_internal/urllib3-2.7.0.dist-info/RECORD",
-      "size": 5615,
-      "sha256": "f254d3adc53473ba7dcd88bda8602dc3bf2193858f95eebf952f077612726290"
-    },
-    {
-      "path": "_internal/urllib3-2.7.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 5527,
+      "sha256": "d92c5987f028a48aeca052e467c437707187f4289d98c9b891805e945aa6216e"
     },
     {
       "path": "_internal/urllib3-2.7.0.dist-info/WHEEL",
@@ -12880,18 +12170,18 @@
     },
     {
       "path": "_internal/VCOMP140.DLL",
-      "size": 193152,
-      "sha256": "55aba23cdcd6484fbb06f4155b8ca75adfce7a881f10afd0c49457165e677164"
+      "size": 212920,
+      "sha256": "95d4ce4a6802d1e18b5e0e1722cc30ea72ca7e033f83828f05c0b7b993fe7cbf"
     },
     {
       "path": "_internal/vcruntime140_1.dll",
-      "size": 49640,
-      "sha256": "7dd9aa02e271c68ca6d5f18d651d23a15d7259715af43326578f7dde27f37637"
+      "size": 50112,
+      "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e"
     },
     {
       "path": "_internal/vcruntime140.dll",
-      "size": 119888,
-      "sha256": "02c6aa0e6e624411a9f19b0360a7865ab15908e26024510e5c38a9c08362c35a"
+      "size": 178616,
+      "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7"
     },
     {
       "path": "_internal/wcwidth-0.8.2.dist-info/INSTALLER",
@@ -12910,13 +12200,8 @@
     },
     {
       "path": "_internal/wcwidth-0.8.2.dist-info/RECORD",
-      "size": 7895,
-      "sha256": "081de5f21a2f4253b2b93ff8c3538a44e0dab22153164694be08948ad10b9856"
-    },
-    {
-      "path": "_internal/wcwidth-0.8.2.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 7807,
+      "sha256": "f6cf88aedf84155544dcc1d4cdd9c02bb6c91771430ee3b8ebc43bcdb4bda20e"
     },
     {
       "path": "_internal/wcwidth-0.8.2.dist-info/WHEEL",
@@ -12927,41 +12212,6 @@
       "path": "_internal/wcwidth/py.typed",
       "size": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/wheel-0.48.0.dist-info/entry_points.txt",
-      "size": 110,
-      "sha256": "24976d480193bcc2db2244d565400cbc628edfd16d59f09517c9a9fcd1fa7b88"
-    },
-    {
-      "path": "_internal/wheel-0.48.0.dist-info/INSTALLER",
-      "size": 4,
-      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
-    },
-    {
-      "path": "_internal/wheel-0.48.0.dist-info/licenses/LICENSE.txt",
-      "size": 1107,
-      "sha256": "30c23618679108f3e8ea1d2a658c7ca417bdfc891c98ef1a89fa4ff0c9828654"
-    },
-    {
-      "path": "_internal/wheel-0.48.0.dist-info/METADATA",
-      "size": 2301,
-      "sha256": "e702fede719fefbb8accad64c01c78efe8d7efea27a7dcef3423f83ffaadfc48"
-    },
-    {
-      "path": "_internal/wheel-0.48.0.dist-info/RECORD",
-      "size": 2615,
-      "sha256": "d6b21147c1f441c320737c3fc72bd68a44c1566db292feb038420bb6b6525eb9"
-    },
-    {
-      "path": "_internal/wheel-0.48.0.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "_internal/wheel-0.48.0.dist-info/WHEEL",
-      "size": 81,
-      "sha256": "ff23073da055face9f40cc14a28f3735275308cddcf315d6157461a9a7cdfbb6"
     },
     {
       "path": "_internal/xlsxwriter-3.2.9.dist-info/INSTALLER",
@@ -12980,13 +12230,8 @@
     },
     {
       "path": "_internal/xlsxwriter-3.2.9.dist-info/RECORD",
-      "size": 6341,
-      "sha256": "ca287b0044679e70cc40e90b79131cf3c3c54d25207db901b001920cb361fc13"
-    },
-    {
-      "path": "_internal/xlsxwriter-3.2.9.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 6250,
+      "sha256": "c39f24b8be3761953afe809a905e51f3add4ac891a772f9d089af6133b52b3a1"
     },
     {
       "path": "_internal/xlsxwriter-3.2.9.dist-info/top_level.txt",
@@ -13025,13 +12270,8 @@
     },
     {
       "path": "_internal/yarl-1.24.5.dist-info/RECORD",
-      "size": 1835,
-      "sha256": "7ef5c494b9f8fd7329f622045db2228d60b2268542cdaa801026d0f247afd1f2"
-    },
-    {
-      "path": "_internal/yarl-1.24.5.dist-info/REQUESTED",
-      "size": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "size": 1749,
+      "sha256": "57c58f6923f2d3bdb48e1ea9c4b9c70831ac1ea440dc2e03fe8a93e12b7e1bf7"
     },
     {
       "path": "_internal/yarl-1.24.5.dist-info/top_level.txt",
@@ -13050,8 +12290,8 @@
     },
     {
       "path": "docstructure-engine.exe",
-      "size": 54570832,
-      "sha256": "e3278174bd173d8778611fe8c0f8816b2dbde0024efa8fa833fd13470dd68168"
+      "size": 54574444,
+      "sha256": "21d45f3777cdea447045452f4d90ebeb13b1c7b22589b229ee017e163069ec74"
     },
     {
       "path": "models/doc_orientation_classification/.msc",

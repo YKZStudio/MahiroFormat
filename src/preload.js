@@ -1,6 +1,9 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("flyingMouseFormat", {
+  rendererReady() {
+    return ipcRenderer.invoke("renderer-ready");
+  },
   getSettings() {
     return ipcRenderer.invoke("get-settings");
   },
@@ -24,9 +27,6 @@ contextBridge.exposeInMainWorld("flyingMouseFormat", {
   },
   saveConvertedFiles(payload) {
     return ipcRenderer.invoke("save-converted-files", payload);
-  },
-  compressFolder(payload) {
-    return ipcRenderer.invoke("compress-folder", payload);
   },
   log(level, message) {
     return ipcRenderer.invoke("log-event", { level, message });

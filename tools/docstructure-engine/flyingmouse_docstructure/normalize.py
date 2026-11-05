@@ -170,6 +170,11 @@ def _cells_from_ppstructure(table: dict, limits: Limits) -> list[dict]:
     ocr = table.get("table_ocr_pred", {})
     scores = ocr.get("rec_scores", []) if isinstance(ocr, dict) else []
     texts = ocr.get("rec_texts", []) if isinstance(ocr, dict) else []
+    token_boxes = ocr.get("rec_boxes", []) if isinstance(ocr, dict) else []
+    if not all(isinstance(value, list) for value in (scores, texts, token_boxes)):
+        raise InvalidNormalizationError("table ocr")
+    if max(len(scores), len(texts), len(token_boxes)) > limits.max_cells_per_table:
+        raise ResourceLimitError()
     occupied = set()
     cells = []
     box_index = 0
@@ -184,8 +189,10 @@ def _cells_from_ppstructure(table: dict, limits: Limits) -> list[dict]:
                     if (row_slot, column_slot) in occupied: raise InvalidNormalizationError("overlap")
                     occupied.add((row_slot, column_slot))
             text = descriptor["text"].strip()
-            if box_index < len(texts) and isinstance(texts[box_index], str): text = texts[box_index]
-            score = scores[box_index] if box_index < len(scores) else 0
+            # pred_html already assigns OCR runs to cells. OCR tokens are NOT a
+            # cell array: blanks and multi-line cells break index correspondence.
+            # Preserve that text and only derive confidence from matching tokens.
+            score = _matched_cell_confidence(text, boxes[box_index], texts, scores, token_boxes)
             cells.append({"row": row_index, "column": column, "rowSpan": row_span,
                           "columnSpan": column_span, "bbox": boxes[box_index],
                           "text": text, "confidence": score})
@@ -196,6 +203,29 @@ def _cells_from_ppstructure(table: dict, limits: Limits) -> list[dict]:
     if "confidence" not in table and scores:
         table["confidence"] = sum(_confidence(score) for score in scores) / len(scores)
     return cells
+
+
+def _matched_cell_confidence(text: str, box: list, texts: list,
+                             scores: list, token_boxes: list) -> float:
+    def comparable(value): return "".join(str(value).split())
+    if not text: return 0.0
+    selected = []
+    if token_boxes:
+        for index, token in enumerate(token_boxes):
+            if not isinstance(token, (list, tuple)) or len(token) != 4:
+                raise InvalidNormalizationError("ocr bbox")
+            center_x, center_y = (token[0] + token[2]) / 2, (token[1] + token[3]) / 2
+            if box[0] <= center_x < box[2] and box[1] <= center_y < box[3]:
+                selected.append(index)
+        matched = "".join(comparable(texts[index]) for index in selected if index < len(texts))
+        if matched != comparable(text): return 0.0
+    else:
+        # Older exports may omit geometry. Only an exact text match provides
+        # evidence; use the lowest confidence when repeated text is ambiguous.
+        selected = [index for index, value in enumerate(texts)
+                    if isinstance(value, str) and comparable(value) == comparable(text)]
+    values = [_confidence(scores[index]) if index < len(scores) else 0.0 for index in selected]
+    return min(values) if values else 0.0
 
 
 def normalize_page(page_number: int, raw: dict, output_dir: Path,

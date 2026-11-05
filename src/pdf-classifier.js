@@ -1,5 +1,5 @@
 const fsp = require("node:fs/promises");
-const { loadPdfjs } = require("./pdfjs");
+const { loadPdfjs, getPdfjsDocumentOptions } = require("./pdfjs");
 
 const MIN_NATIVE_CHARACTERS = 24;
 const MIN_PRINTABLE_RATIO = 0.8;
@@ -12,6 +12,7 @@ function boundedNumber(value, minimum = 0, maximum = Number.MAX_SAFE_INTEGER) {
 }
 
 function classifyPageMetrics(metrics = {}) {
+  if (metrics.blank === true) return "native";
   const characterCount = boundedNumber(metrics.characterCount);
   const printableRatio = boundedNumber(metrics.printableRatio, 0, 1);
   const imageCoverage = boundedNumber(metrics.imageCoverage, 0, 1);
@@ -33,7 +34,8 @@ function classifyDocument(pages = []) {
         : index + 1,
       characterCount: boundedNumber(page.characterCount),
       printableRatio: boundedNumber(page.printableRatio, 0, 1),
-      imageCoverage: boundedNumber(page.imageCoverage, 0, 1)
+      imageCoverage: boundedNumber(page.imageCoverage, 0, 1),
+      ...(page.blank === true ? { blank: true } : {})
     };
     return { ...metrics, kind: classifyPageMetrics(metrics) };
   });
@@ -324,15 +326,48 @@ function textMetrics(textContent) {
   };
 }
 
+async function ocrImageCoverageFromOperators(operatorList, OPS, viewport, objects) {
+  const coverage = imageCoverageFromOperators(operatorList, OPS, viewport);
+  if (!(coverage > 0 && coverage < 0.001)) return coverage;
+  const imageOperations = new Set(Object.entries(OPS).filter(([name]) => /image/i.test(name)).map(([, code]) => code));
+  let count = 0;
+  for (let i = 0; i < (operatorList?.fnArray || []).length; i++) {
+    const operation = operatorList.fnArray[i];
+    if (!imageOperations.has(operation)) continue;
+    // Only positively identified tiny constant-color image tiles can be
+    // treated as decoration. Masks, unresolved images, nonuniform pixels and
+    // larger coverage retain the existing conservative OCR requirement.
+    if (operation !== OPS.paintImageXObject) return coverage;
+    const [id, width, height] = operatorList.argsArray[i] || [];
+    if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width > 16 || height > 16) return coverage;
+    let image, timer;
+    try {
+      image = await new Promise((resolve, reject) => {
+        timer = setTimeout(() => resolve(null), 1000);
+        try { objects?.get(id, resolve); } catch (error) { reject(error); }
+      });
+    } catch { return coverage; }
+    finally { clearTimeout(timer); }
+    const data = image?.data;
+    const channels = data?.length / (width * height);
+    if (![3, 4].includes(channels)) return coverage;
+    for (let index = channels; index < data.length; index++) {
+      if (data[index] !== data[index % channels]) return coverage;
+    }
+    count++;
+  }
+  return count ? 0 : coverage;
+}
+
 async function classifyPdf(inputPath) {
   const pdfjs = await loadPdfjs();
   const data = new Uint8Array(await fsp.readFile(inputPath));
-  const loadingTask = pdfjs.getDocument({
+  const loadingTask = pdfjs.getDocument(getPdfjsDocumentOptions({
     data,
     disableFontFace: true,
     useSystemFonts: true,
     isEvalSupported: false
-  });
+  }));
 
   try {
     const pdf = await loadingTask.promise;
@@ -348,6 +383,7 @@ async function classifyPdf(inputPath) {
       pages.push({
         pageNumber,
         ...metrics,
+        ...(!metrics.characterCount && operatorList.fnArray.length === 0 ? { blank: true } : {}),
         imageCoverage: imageCoverageFromOperators(operatorList, pdfjs.OPS, viewport)
       });
     }
@@ -363,6 +399,7 @@ module.exports = {
   FULL_PAGE_IMAGE_COVERAGE,
   rectangleUnionArea,
   imageCoverageFromOperators,
+  ocrImageCoverageFromOperators,
   classifyPageMetrics,
   classifyDocument,
   classifyPdf

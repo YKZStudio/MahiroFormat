@@ -51,3 +51,7 @@ For runtime or release changes, also follow [the release guide](RELEASE.md), run
 - Reconfirm Microsoft Store status in Partner Center before updating any external-state claim.
 - Record physical Windows 7 and macOS acceptance only after testing on those systems.
 - Keep credentials, certificates, private source files, user documents, and unredacted diagnostics out of Git.
+
+## Upstream synchronization — 2026-11-05
+
+Mahiro 0.8.4 integrates original upstream f7d9eab18e91848f9740261d348717bae3f40c21. See [release notes](release-notes-084.md). New package publication requires the current release workflow gates; upstream releases and Store states are separate evidence.

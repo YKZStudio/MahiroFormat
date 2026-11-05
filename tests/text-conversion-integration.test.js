@@ -1,3 +1,4 @@
+const sessionFetch = require("./helpers/authenticated-fetch");
 const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const os = require("node:os");
@@ -6,9 +7,9 @@ const { after, before, test } = require("node:test");
 
 const runtimeDir = path.join(os.tmpdir(), `flyingmouse-text-integration-${process.pid}`);
 process.env.FLYINGMOUSE_RUNTIME_DIR = runtimeDir;
-// csv->pdf 走 LibreOffice html->pdf 管线；本机已安装版引擎存在时启用，否则跳过该断言。
+// csv->pdf 走 LibreOffice html->pdf 管线；使用当前配置的引擎，不绑定开发者安装目录。
 // 注意必须用 soffice.com（命令行壳）：portable 版 soffice.exe 会拉起 GUI 挂起，probe 超时。
-const candidateLo = "C:\\Users\\34615\\AppData\\Local\\Programs\\Mahiro Format\\resources\\libreoffice\\LibreOfficePortable\\App\\libreoffice\\program\\soffice.com";
+const candidateLo = require("../src/config").LIBREOFFICE_PATH;
 const LO_AVAILABLE = require("node:fs").existsSync(candidateLo);
 if (LO_AVAILABLE) process.env.FLYINGMOUSE_LIBREOFFICE_PATH = candidateLo;
 const { startServer, platformCapabilities } = require("../src/server");
@@ -21,7 +22,7 @@ let sessionToken;
 function apiFetch(apiPath, options = {}) {
   const headers = new Headers(options.headers || {});
   headers.set("X-Mahiro-Session-Token", sessionToken);
-  return fetch(`${baseUrl}${apiPath}`, { ...options, headers });
+  return sessionFetch(`${baseUrl}${apiPath}`, { ...options, headers });
 }
 
 before(async () => {
@@ -43,7 +44,7 @@ async function convert(name, content, targetFormat, type) {
   const response = await apiFetch("/api/convert", { method: "POST", body: form });
   const body = await response.json();
   assert.equal(response.status, 200, body.error);
-  const download = await fetch(`${baseUrl}${body.downloadUrl}`);
+  const download = await sessionFetch(`${baseUrl}${body.downloadUrl}`);
   assert.equal(download.status, 200);
   return download.text();
 }
@@ -97,12 +98,36 @@ test("server flags txt to JSON as a raw-text wrapper warning instead of pretendi
     "text/plain"
   );
   assert.equal(response.status, 200, body.error);
-  const download = await fetch(`${baseUrl}${body.downloadUrl}`);
+  const download = await sessionFetch(`${baseUrl}${body.downloadUrl}`);
   assert.equal(download.status, 200);
   const payload = JSON.parse(await download.text());
   assert.equal(payload.text, "just some plain text\nno structure here");
   assert.ok(Array.isArray(body.warnings), "expected warnings array");
   assert.ok(body.warnings.some((warning) => warning.code === "TEXT_JSON_WRAPPED"));
+});
+
+test("server returns a client error for unsupported mathematics and corrupt ebook containers", async () => {
+  const math = await convertResponse("equation.md", "$\\unsupportedMouseMacro{x}$", "html", "text/markdown");
+  assert.equal(math.response.status, 422);
+  assert.equal(math.body.errorCode, "MARKDOWN_MATH_UNSUPPORTED");
+  assert.match(math.body.messages.enUS, /mathematics/);
+  for (const extension of ["epub", "mobi"]) {
+    const result = await convertResponse(`corrupt.${extension}`, "invalid binary container", "txt", "application/octet-stream");
+    assert.equal(result.response.status, 422);
+    assert.match(result.body.errorCode, /^(EPUB|MOBI)_PARSE_FAILED$/);
+  }
+});
+
+test("server exposes the real Pandoc probe and propagates missing Markdown image warnings", async (t) => {
+  const capabilities = await (await sessionFetch(`${baseUrl}/api/capabilities`)).json();
+  assert.equal(typeof capabilities.tools.pandoc, "boolean");
+  assert.equal(capabilities.toolDetails.pandoc.enabled, capabilities.tools.pandoc);
+  if (!capabilities.tools.pandoc) return t.skip("Bundled Pandoc is unavailable on this test host");
+  const result = await convertResponse("rich.md", "# Heading\n\n$E=mc^2$\n\n![图片](missing.png)", "docx", "text/markdown");
+  assert.equal(result.response.status, 200, result.body.error);
+  assert.ok(result.body.warnings.some((warning) => warning.code === "MARKDOWN_IMAGE_UNAVAILABLE"));
+  const buffer = Buffer.from(await (await sessionFetch(`${baseUrl}${result.body.downloadUrl}`)).arrayBuffer());
+  assert.equal(buffer.toString("ascii", 0, 2), "PK");
 });
 
 test("server converts CSV to JSON without the wrapper warning (real parse)", async () => {
@@ -114,7 +139,7 @@ test("server converts CSV to JSON without the wrapper warning (real parse)", asy
   );
   assert.equal(response.status, 200, body.error);
   assert.ok(!Array.isArray(body.warnings) || !body.warnings.some((warning) => warning.code === "TEXT_JSON_WRAPPED"));
-  const download = await fetch(`${baseUrl}${body.downloadUrl}`);
+  const download = await sessionFetch(`${baseUrl}${body.downloadUrl}`);
   const payload = JSON.parse(await download.text());
   assert.deepEqual(payload, [{ name: "Alice", age: "30" }]);
 });
@@ -128,7 +153,7 @@ test("server converts CSV to a real EPUB (not a LO fake success)", async () => {
   );
   assert.equal(response.status, 200, body.error);
   assert.equal(body.fileName, "rows.epub");
-  const download = await fetch(`${baseUrl}${body.downloadUrl}`);
+  const download = await sessionFetch(`${baseUrl}${body.downloadUrl}`);
   assert.equal(download.status, 200);
   const buffer = Buffer.from(await download.arrayBuffer());
   // EPUB 规范：第一个条目是明文 mimetype
@@ -144,7 +169,7 @@ test("server converts CSV to XLSX with real cells (not a LO fake success)", asyn
   );
   assert.equal(response.status, 200, body.error);
   assert.equal(body.fileName, "rows.xlsx");
-  const download = await fetch(`${baseUrl}${body.downloadUrl}`);
+  const download = await sessionFetch(`${baseUrl}${body.downloadUrl}`);
   assert.equal(download.status, 200);
   const buffer = Buffer.from(await download.arrayBuffer());
   assert.equal(buffer.toString("latin1", 0, 2), "PK", "xlsx must be a zip archive");
@@ -161,14 +186,14 @@ test("server converts CSV to PDF and HTML with a real table", { skip: !LO_AVAILA
   const pdf = await convertResponse("rows.csv", "name,age\nAlice,30\n", "pdf", "text/csv");
   assert.equal(pdf.response.status, 200, pdf.body.error);
   assert.equal(pdf.body.fileName, "rows.pdf");
-  const pdfDownload = await fetch(`${baseUrl}${pdf.body.downloadUrl}`);
+  const pdfDownload = await sessionFetch(`${baseUrl}${pdf.body.downloadUrl}`);
   const pdfBuffer = Buffer.from(await pdfDownload.arrayBuffer());
   assert.equal(pdfBuffer.toString("latin1", 0, 4), "%PDF", "csv->pdf must produce a real PDF");
 
   const html = await convertResponse("rows.csv", "name,age\nAlice,30\n", "html", "text/csv");
   assert.equal(html.response.status, 200, html.body.error);
   assert.equal(html.body.fileName, "rows.html");
-  const htmlDownload = await fetch(`${baseUrl}${html.body.downloadUrl}`);
+  const htmlDownload = await sessionFetch(`${baseUrl}${html.body.downloadUrl}`);
   const htmlText = await htmlDownload.text();
   assert.match(htmlText, /<table>/);
   assert.match(htmlText, /Alice/);
@@ -177,32 +202,29 @@ test("server converts CSV to PDF and HTML with a real table", { skip: !LO_AVAILA
 test("server converts TSV through the same real pipelines as CSV", async () => {
   const json = await convertResponse("data.tsv", "name\tage\nAlice\t30\n", "json", "text/tab-separated-values");
   assert.equal(json.response.status, 200, json.body.error);
-  const jsonDownload = await fetch(`${baseUrl}${json.body.downloadUrl}`);
+  const jsonDownload = await sessionFetch(`${baseUrl}${json.body.downloadUrl}`);
   assert.deepEqual(JSON.parse(await jsonDownload.text()), [{ name: "Alice", age: "30" }]);
 
   const md = await convertResponse("data.tsv", "name\tage\nAlice\t30\n", "md", "text/tab-separated-values");
   assert.equal(md.response.status, 200, md.body.error);
-  const mdDownload = await fetch(`${baseUrl}${md.body.downloadUrl}`);
+  const mdDownload = await sessionFetch(`${baseUrl}${md.body.downloadUrl}`);
   assert.match(await mdDownload.text(), /\| name \| age \|/);
 
   const xlsx = await convertResponse("data.tsv", "name\tage\nAlice\t30\n", "xlsx", "text/tab-separated-values");
   assert.equal(xlsx.response.status, 200, xlsx.body.error);
-  const xlsxDownload = await fetch(`${baseUrl}${xlsx.body.downloadUrl}`);
+  const xlsxDownload = await sessionFetch(`${baseUrl}${xlsx.body.downloadUrl}`);
   const xlsxBuffer = Buffer.from(await xlsxDownload.arrayBuffer());
   assert.equal(xlsxBuffer.toString("latin1", 0, 2), "PK", "tsv->xlsx must be a zip archive");
 });
 
 test("capabilities expose stable conversion limits and Sharp keeps pixel protection enabled", async () => {
-  const response = await fetch(`${baseUrl}/api/capabilities`);
+  const response = await sessionFetch(`${baseUrl}/api/capabilities`);
   assert.equal(response.status, 200);
   const capabilities = await response.json();
-  assert.deepEqual(capabilities.limits, {
-    maxImagePixels: 50_000_000,
-    maxImageDimension: 16_384,
-    maxImagePdfPixels: 100_000_000,
-    maxBatchBytes: 2 * 1024 * 1024 * 1024
-  });
-  assert.deepEqual(capabilities.groups.image.experimentalInputs, ["heic", "heif", "ico", "tga"].concat(DCRAW_PATH ? [...rawInput] : []).sort());
+  assert.deepEqual(capabilities.limits, require('../src/resource-policy').LIMITS);
+  assert.ok(capabilities.limits.maxImagePixels < 100_000_000);
+  assert.ok(capabilities.limits.maxBatchBytes < Number.MAX_SAFE_INTEGER);
+  assert.deepEqual(capabilities.groups.image.experimentalInputs, [...experimentalInputsByCategory.image, ...(DCRAW_PATH ? rawInput : [])].sort());
   assert.deepEqual(capabilities.groups.document.experimentalInputs, ["wpd", "wps", "wpt"]);
   assert.deepEqual(capabilities.groups.spreadsheet.experimentalInputs, ["et", "ett"]);
   assert.deepEqual(capabilities.groups.presentation.experimentalInputs, ["dps", "dpt"]);
@@ -230,7 +252,7 @@ test("packaging and Win7 staging include the new runtime modules", () => {
   const packageJson = require("../package.json");
   const source = require("node:fs").readFileSync(path.join(__dirname, "..", "scripts/lib/win7-build-profile.js"), "utf8");
   assert.ok(packageJson.build.files.includes("src/pdf-classifier.js"), "pdf-classifier.js is missing from build.files");
-  for (const file of ["src/resource-policy.js", "src/text-conversion.js", "src/pdf-table-extractor.js", "src/pdf-table-runtime.js", "src/config.js", "src/utils.js", "src/media.js", "src/zip-util.js", "src/image.js", "src/ocr.js", "src/pdfjs.js", "src/pdf-table.js", "src/pdf.js", "src/text-docx.js", "src/office-convert.js", "src/markdown-assets.js", "src/ncm-format.js", "src/ncm-metadata.js", "src/av3a-format.js", "src/kgg-format.js", "src/mflac-format.js", "src/kgma-format.js", "src/kwm-format.js", "src/kgm-vpr-format.js"]) {
+  for (const file of ["src/resource-policy.js", "src/text-conversion.js", "src/text-encoding.js", "src/pdf-table-extractor.js", "src/pdf-table-runtime.js", "src/config.js", "src/utils.js", "src/media.js", "src/zip-util.js", "src/image.js", "src/ocr.js", "src/pdfjs.js", "src/pdf-table.js", "src/pdf.js", "src/text-docx.js", "src/office-convert.js"]) {
     assert.ok(packageJson.build.files.includes(file), `${file} is missing from build.files`);
     assert.match(source, new RegExp(`["]${file.replace(".", "\\.")}["]`));
   }

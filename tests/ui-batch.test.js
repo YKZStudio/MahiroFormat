@@ -33,12 +33,14 @@ function renderer(fetch) {
     removeAttribute(name) { delete this[name]; }
     addEventListener() {}
     querySelectorAll() { return []; }
+    querySelector() { return null; }
     focus() {}
   }
   const elements = new Map();
   const document = {
     querySelector(selector) {
       if (!elements.has(selector)) elements.set(selector, new Element(selector === "#targetSelect" ? "select" : "div"));
+      if (selector === "#imagePdfMode" && !elements.get(selector).value) elements.get(selector).value = "merge";
       return elements.get(selector);
     },
     querySelectorAll: () => [],
@@ -49,10 +51,13 @@ function renderer(fetch) {
     document, fetch, Headers, console,
     localStorage: { getItem() { return null; }, setItem() {} },
     navigator: { language: "en-US" },
+    setTimeout, clearTimeout, setInterval, clearInterval, performance, crypto: require("node:crypto").webcrypto, AbortController,
     window: {
       addEventListener() {},
       FlyingMouseConversionPreferences: require("../public/conversion-preferences"),
-      FlyingMouseI18n: require("../public/i18n")
+      FlyingMouseI18n: require("../public/i18n"),
+      FlyingMouseSettings: require("../public/settings-sync"),
+      FlyingMouseTheme: { restore() {}, select() {} }
     }
   });
   const source = fs.readFileSync(path.join(__dirname, "..", "public", "app.js"), "utf8");

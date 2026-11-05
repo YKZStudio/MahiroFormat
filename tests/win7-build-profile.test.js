@@ -61,6 +61,52 @@ test("Win7 artifact name follows a non-current input version", () => {
   assert.doesNotMatch(profile.build.artifactName, /0\.3\.2/);
 });
 
+test("Win7 retains its separate locked toolchain when the modern dependency graph is upgraded", () => {
+  const { createWin7Package } = require("../scripts/lib/win7-build-profile");
+  const input = structuredClone(rootPackage);
+  input.engines = { node: ">=22.13.0" };
+  input.devDependencies["electron-builder"] = "26.18.1";
+  input.overrides = { ...input.overrides, minimatch: "11.0.4", "fast-uri": "3.1.9" };
+  input.overrides.archiver = "7.0.1";
+  input.overrides.temp = { rimraf: "6.1.3" };
+  input.scripts.postinstall = "node scripts/patch-dependency-compat.js";
+  input.scripts["verify:dependency-compat"] = "node scripts/patch-dependency-compat.js --check";
+  input.scripts.test += " tests/dependency-patch.test.js tests/dependency-compatibility.test.js";
+  input.scripts["test:ci"] += " tests/dependency-patch.test.js tests/dependency-compatibility.test.js";
+  const before = JSON.stringify(input);
+  const profile = createWin7Package(input, path.resolve(__dirname, ".."));
+  assert.equal(profile.engines.node, ">=18");
+  assert.equal(profile.devDependencies["electron-builder"], "^26.15.3");
+  assert.equal(profile.overrides.minimatch, undefined);
+  assert.equal(profile.overrides["fast-uri"], undefined);
+  assert.equal(profile.overrides.archiver, undefined);
+  assert.equal(profile.overrides.temp, undefined);
+  assert.equal(profile.scripts.postinstall, undefined);
+  assert.equal(profile.scripts["verify:dependency-compat"], undefined);
+  assert.doesNotMatch(profile.scripts.test, /dependency-patch|dependency-compatibility/);
+  assert.doesNotMatch(profile.scripts["test:ci"], /dependency-patch|dependency-compatibility/);
+  assert.equal(profile.overrides.qs, input.overrides.qs);
+  assert.equal(JSON.stringify(input), before);
+});
+
+test("Win7 staging excludes build-only distribution tests and retains the qpdf resource filter", () => {
+  const { createWin7BuildProfile } = require("../scripts/lib/win7-build-profile");
+  const { packageJson: profile, stagingEntries } = createWin7BuildProfile(
+    rootPackage, path.resolve(__dirname, "..")
+  );
+  // The distribution test loads a build script and the modern build.win layout;
+  // neither exists in this independently derived legacy runtime staging area.
+  assert.ok(!stagingEntries.includes("scripts"));
+  assert.ok(stagingEntries.filter(entry => entry.startsWith("scripts/")).every(entry => entry === "scripts/lib/win7-build-profile.js"));
+  for (const command of [profile.scripts.test, profile.scripts["test:ci"]]) {
+    assert.doesNotMatch(command, /tests\/distribution-footprint\.test\.js/);
+  }
+  assert.deepEqual(
+    profile.build.extraResources.find(item => item.to === "qpdf").filter,
+    rootPackage.build.win.extraResources.find(item => item.to === "qpdf").filter
+  );
+});
+
 test("Win7 profile includes every current runtime module and absolute binary resources", () => {
   const { createWin7Package } = require("../scripts/lib/win7-build-profile");
   const projectRoot = path.resolve(__dirname, "..");
@@ -139,6 +185,23 @@ test("stage source entries contain runtime source and assets but exclude node_mo
   }
   assert.ok(!entries.includes("node_modules"));
   assert.ok(!entries.some((entry) => entry.startsWith("node_modules/")));
+});
+
+test("Win7 staging retains distribution exclusions without copying exclusion globs", () => {
+  const { createWin7BuildProfile } = require("../scripts/lib/win7-build-profile");
+  const input = structuredClone(rootPackage);
+  const exclusions = input.build.files.filter((entry) => entry.startsWith("!"));
+  assert.ok(exclusions.some((entry) => entry.includes(".map")), "source-map exclusion missing");
+  assert.ok(exclusions.some((entry) => entry.includes("traineddata.gz")), "OCR-data exclusion missing");
+  // Exclusion semantics belong to electron-builder, including future filters
+  // outside node_modules. They are never concrete source paths to stage.
+  input.build.files.push("!public/**/*.map");
+  const original = JSON.stringify(input);
+  const { packageJson, stagingEntries } = createWin7BuildProfile(input, path.resolve(__dirname, ".."));
+  assert.deepEqual(packageJson.build.files.filter((entry) => entry.startsWith("!")), [...exclusions, "!public/**/*.map"]);
+  assert.ok(!stagingEntries.some((entry) => entry.startsWith("!")), "an exclusion became a staging input");
+  assert.ok(stagingEntries.includes("public"));
+  assert.equal(JSON.stringify(input), original);
 });
 
 test("derived package and staging entries restore a missing required runtime module", () => {

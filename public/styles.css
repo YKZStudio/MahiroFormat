@@ -1067,9 +1067,6 @@ input:disabled {
   margin-top: 2px;
 }
 
-.compress-folder-button {
-  width: 100%;
-}
 
 button:focus-visible,
 a:focus-visible,
@@ -1121,16 +1118,7 @@ input:focus-visible {
 .progress-panel.success .progress-fill { background: var(--success); }
 .progress-panel.error .progress-fill { background: var(--error); }
 
-.progress-panel.indeterminate .progress-fill {
-  width: 38%;
-  animation: progress-indeterminate 1.5s ease-in-out infinite;
-}
 
-@keyframes progress-indeterminate {
-  0% { margin-left: -38%; }
-  55% { margin-left: 62%; }
-  100% { margin-left: 100%; }
-}
 
 .status-box {
   min-height: 48px;
@@ -2216,3 +2204,17 @@ input:focus-visible {
     background: Highlight;
   }
 }
+
+/* Upstream phase progress and responsive controls, with Mahiro surfaces. */
+.progress-panel.error .progress-fill { background: var(--error); }
+.progress-details, .progress-summary { font-size: 12px; color: var(--ink-soft); overflow-wrap: anywhere; }
+.progress-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 14px; }
+#progressPercent, #progressElapsed { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.status-box { white-space: pre-line; overflow-wrap: anywhere; }
+.batch-actions { flex-wrap: wrap; min-width: 0; }
+.field-help { color: var(--ink-soft); font-size: 12px; overflow-wrap: anywhere; }
+:root[data-theme="dark"] { color-scheme: dark; --ink: #f2f3f7; --ink-soft: #bbc3d2; --ink-faint: #a9b3c6; --surface: #20242e; --surface-strong: #272d39; --surface-solid: #20242e; --glass-border: #647086; --glass-line: #647086; --accent: #ee94a5; --accent-strong: #ffbdc8; --success: #9be6bb; --error: #ffb0ad; }
+:root[data-theme="dark"] body { background: #151820; }
+:root[data-theme="dark"] :is(.workspace, .workspace-body, .topbar, .upload-panel, .controls, .formats-panel, .preview-dialog, .preview-header, .preview-body, .sponsor-panel, .file-strip, .batch-list, .batch-item, .status-box, .drop-zone, select, input) { background: var(--surface); color: var(--ink); }
+:root[data-theme="dark"] :is(.file-name, .format-hint, .preview-text, .sponsor-title) { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .progress-fill { transition: none; } }
