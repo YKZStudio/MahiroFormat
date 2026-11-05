@@ -50,7 +50,7 @@ function harness({ targets, convert } = {}) {
     }
   });
   context.loadTargetsForFiles = files => Promise.all(files.map(context.loadTargets));
-  context.apiFetch = context.fetch;
+  context.apiFetch = (...args) => context.fetch(...args);
   for (const name of ["fileInput", "folderInput", "dropZone", "chooseFolderButton", "clearButton", "fileName", "fileMeta", "fileStrip",
     "batchList", "targetSelect", "convertButton", "downloadButton", "batchSaveButton", "previewButton", "videoCodec", "alphaBackground",
     "pdfPassword", "pdfAction", "pdfSplitMode", "pdfGroupSize", "imagePdfMode", "textEncoding", "textEncodingField"]) context[name] = element();

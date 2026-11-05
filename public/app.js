@@ -856,6 +856,11 @@ function createBatchItem(file, index, reorder) {
     createTextElement("p", "batch-detail", result.detail || batchStatusLabel(result.status))
   );
 
+  if (Number.isFinite(result.elapsedMs)) {
+    const seconds = (Math.max(0, result.elapsedMs) / 1000).toFixed(1);
+    main.append(createTextElement("p", "batch-detail", i18n.language === "en-US" ? `Duration: ${seconds} s` : `耗时：${seconds} 秒`));
+  }
+
   const actions = document.createElement("div");
   actions.className = "batch-actions";
   if (reorder) {
