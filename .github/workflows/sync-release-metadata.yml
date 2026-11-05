@@ -2,20 +2,23 @@ name: Sync published release metadata
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: [".github/workflows/sync-release-metadata.yml"]
+  workflow_run:
+    workflows: ["Release validation"]
+    types: [completed]
 
 permissions:
   contents: read
 
 jobs:
   sync:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -51,3 +54,4 @@ jobs:
           RELEASE_TAG="v$(node -p 'require("./package.json").version')"
           gh release upload "$RELEASE_TAG" output/release-metadata/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --notes-file output/release-metadata/notes.md
+
