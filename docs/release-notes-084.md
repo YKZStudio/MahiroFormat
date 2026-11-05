@@ -1,6 +1,6 @@
 # Mahiro Format v0.8.4
 
-[English](release-notes-084.md) | [简体中文](release-notes-084_zh_CN.md)
+[English](https://github.com/YKZStudio/MahiroFormat/blob/v0.8.4/docs/release-notes-084.md) | [简体中文](https://github.com/YKZStudio/MahiroFormat/blob/v0.8.4/docs/release-notes-084_zh_CN.md)
 
 Synchronizes the original upstream `LaoFeng-mouse/flyingmouse-format` through commit `f7d9eab18e91848f9740261d348717bae3f40c21` (0.8.4), while retaining Mahiro Format's identity, fan artwork, bilingual interface and source layout.
 
