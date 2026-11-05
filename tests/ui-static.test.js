@@ -62,7 +62,7 @@ test("renderer uses the Mahiro brand and favicon", () => {
 
 test("Mahiro pastel visual theme classes and motion states are present", () => {
   const css = readPublic("styles.css");
-  assert.match(css, /background:\s*var\(--accent\)/);
+  assert.match(css, /--accent:\s*#ff82ad/);
   assert.match(css, /:root\[data-theme="dark"\]/);
   assert.match(css, /\.workflow-steps/);
   assert.match(css, /\.mahiro-stage/);
@@ -236,7 +236,7 @@ test("renderer labels unstable experimental inputs bilingually", () => {
   assert.match(app, /NCM \/ KGG \/ QQ 音乐 QMC \/ KGMA \/ KWM \/ VPR/);
 });
 
-test("public runtime keeps encrypted music unsupported even with former local environment flags", () => {
+test("Mahiro experimental audio remains separate from Store operation and environment flags", () => {
   const { execFileSync } = require("node:child_process");
   const inputs = ["ncm", "kgg", "kgma", "vpr", "kwm", "mflac", "mgg", "qmcflac", "av3a"];
   const result = JSON.parse(execFileSync(process.execPath, ["-e", `
@@ -246,12 +246,14 @@ test("public runtime keeps encrypted music unsupported even with former local en
     process.stdout.write(JSON.stringify({
       inputs: inputs.map(ext => config.audioInput.has(ext)),
       targets: inputs.map(ext => targetsForExt(ext, {ffmpeg: true})),
-      ordinaryTargets: targetsForExt('flac', {ffmpeg: true})
+      ordinaryTargets: targetsForExt('flac', {ffmpeg: true}),
+      storeTargets: (() => { process.windowsStore = true; return inputs.map(ext => targetsForExt(ext, {ffmpeg: true})); })()
     }));
   `], { cwd: path.join(__dirname, ".."), windowsHide: true, encoding: "utf8",
     env: { ...process.env, FLYINGMOUSE_LOCAL_QQ_MUSIC: "1", FLYINGMOUSE_LOCAL_MUSIC: "1" } }));
-  assert.deepEqual(result.inputs, inputs.map(() => false));
-  assert.deepEqual(result.targets, inputs.map(() => []));
+  assert.deepEqual(result.inputs, inputs.map(ext => ext !== "av3a"));
+  assert.ok(result.targets.slice(0,-1).every(targets => targets.includes("mp3")));
+  assert.deepEqual(result.storeTargets, inputs.map(() => []));
   assert.ok(result.ordinaryTargets.includes("mp3"));
 });
 
@@ -340,7 +342,9 @@ test("non-commercial notice is present in UI and styles with author attribution"
   const css = readPublic("styles.css");
   assert.match(html, /class="author-line"/);
   assert.match(html, /LaoFeng/);
-  assert.match(html, /仅支持普通音乐格式转换，不支持其他音乐平台的加密特殊格式/);
+  assert.match(html, /特殊音乐容器兼容.*实验性/);
+  assert.match(html, /YKZStudio/);
+  assert.match(html, /非官方绪山真寻同人主题/);
   assert.match(html, /禁止商业售卖/);
   assert.match(css, /\.author-line/);
   assert.match(css, /\.compatibility-warning/);

@@ -1067,9 +1067,6 @@ input:disabled {
   margin-top: 2px;
 }
 
-.compress-folder-button {
-  width: 100%;
-}
 
 button:focus-visible,
 a:focus-visible,

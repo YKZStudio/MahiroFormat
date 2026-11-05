@@ -55,6 +55,7 @@ if (process.env.FLYINGMOUSE_LOG_FILE) {
 const {
   ensureDirs,
   commandExists,
+  run,
   extFromName,
   decodeUploadFileName,
   normalizeExt,

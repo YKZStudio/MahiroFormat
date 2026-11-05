@@ -36,7 +36,7 @@ async function entryFixture({ cli = false, fail = false } = {}) {
   };
   vm.runInNewContext(fs.readFileSync(path.join(root,'src/electron-main.js'),'utf8'),{
     __dirname:root,console:{log(){},error(){}},setImmediate,
-    process:{argv:cli?['--cli','targets','png']:[],env:{},platform:'win32',pid:123,resourcesPath:'C:/audit-resources',on(){}},
+    process:{argv:cli?['--cli','targets','png']:[],env:{},platform:'win32',arch:'x64',pid:123,resourcesPath:'C:/audit-resources',on(){}},
     require:name=>Object.hasOwn(overrides,name)?overrides[name]:name.startsWith('./')?require(path.join(root,"src",name)):require(name)
   });
   await settle();

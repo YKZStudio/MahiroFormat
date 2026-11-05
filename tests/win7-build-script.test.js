@@ -112,7 +112,7 @@ test("prepare-only creates a clean, current Win7 staging tree without changing t
   assert.ok(distributionExclusions.some((entry) => entry.includes("traineddata.gz")));
   assert.deepEqual(stagedPackage.build.files.filter((entry) => entry.startsWith("!")), distributionExclusions);
   assert.ok(!fs.readdirSync(stagePath).some((entry) => entry.startsWith("!")), "exclusion glob was copied as a source directory");
-  assert.equal(rootPackage.name, "flyingmouse-format");
+  assert.equal(rootPackage.name, "mahiro-format");
   assert.notEqual(stagedPackage.name, rootPackage.name);
   assert.equal(stagedPackage.dependencies.sharp, "0.32.6");
   assert.equal(stagedPackage.dependencies["pdfjs-dist"], "2.16.105");
@@ -518,8 +518,8 @@ test("build commands reject a junctioned local builder CLI before executing it",
     "builder shim"
   );
   fs.mkdirSync(path.join(externalBuilder, "out", "cli"), { recursive: true });
-  fs.writeFileSync(path.join(externalBuilder, "src/cli.js"), "external builder CLI");
-  fs.writeFileSync(path.join(externalBuilder, "out", "cli", "src/cli.js"), "external old CLI");
+  fs.writeFileSync(path.join(externalBuilder, "cli.js"), "external builder CLI");
+  fs.writeFileSync(path.join(externalBuilder, "out", "cli", "cli.js"), "external old CLI");
   const sentinel = path.join(externalBuilder, "do-not-touch.txt");
   fs.writeFileSync(sentinel, "external content");
   const builderJunction = path.join(temporaryStage, "node_modules", "electron-builder");

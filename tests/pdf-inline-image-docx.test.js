@@ -142,14 +142,14 @@ for(const phase of ['loading','parsing'])test(`cancellation during ${phase} stop
   const args=await fixture(t),root=path.resolve(__dirname,'..');
   const code=`
     const assert=require('node:assert/strict');const root=process.argv[1],inputPath=process.argv[2],outputPath=process.argv[3],phase=process.argv[4];
-    const loader=require(root+'/pdfjs');const controller=new AbortController();
+    const loader=require(root+'/src/pdfjs');const controller=new AbortController();
     let enter,release;const entered=new Promise(r=>enter=r),gate=new Promise(r=>release=r);let called=false,destroyed=false;
     const page={getViewport:()=>({transform:[1,0,0,-1,0,842],width:595,height:842}),getTextContent:async()=>({items:[]}),cleanup(){},
       getOperatorList:async()=>{enter();await gate;return {fnArray:[],argsArray:[]};}};
     const task={promise:Promise.resolve({numPages:1,getPage:async()=>page}),destroy:async()=>{destroyed=true;release();}};
     loader.loadPdfjs=async()=>{if(phase==='loading'){enter();await gate;}return {version:'6.2.108',OPS:{},getDocument:opts=>{
       called=true;assert.ok(opts.maxImageSize>0);assert.equal(opts.stopAtErrors,true);return task;}};};
-    const {convertInlineImagePdfToDocx}=require(root+'/pdf-inline-image-docx');
+    const {convertInlineImagePdfToDocx}=require(root+'/src/pdf-inline-image-docx');
     const pending=convertInlineImagePdfToDocx({inputPath,outputPath,pages:[{lines:[{}],imageCoverage:.1}],options:{signal:controller.signal}});
     const checked=assert.rejects(pending,{code:'CONVERSION_CANCELED'});
     (async()=>{await entered;controller.abort();if(phase==='loading')release();
@@ -180,9 +180,9 @@ test('an oversized declared image is rejected before the PDF.js image decoder ru
   const image=pdf.context.lookup(objects.entries()[0][1]);image.dict.set(PDFName.of('Width'),PDFNumber.of(1000000000));
   await fs.writeFile(args.inputPath,await pdf.save());
   const root=path.resolve(__dirname,'..'),code=`
-    const assert=require('node:assert/strict'),root=process.argv[1],loader=require(root+'/pdfjs');
+    const assert=require('node:assert/strict'),root=process.argv[1],loader=require(root+'/src/pdfjs');
     let entered=false;loader.loadPdfjs=async()=>({version:'6.2.108',getDocument(){entered=true;throw new Error('decoder must not run');}});
-    require(root+'/pdf-inline-image-docx').convertInlineImagePdfToDocx({inputPath:process.argv[2],outputPath:process.argv[3],pages:[{lines:[{}],imageCoverage:.1}]})
+    require(root+'/src/pdf-inline-image-docx').convertInlineImagePdfToDocx({inputPath:process.argv[2],outputPath:process.argv[3],pages:[{lines:[{}],imageCoverage:.1}]})
       .then(()=>{throw new Error('expected resource rejection');},error=>{assert.equal(error.errorCode,'IMAGE_DIMENSION_EXCEEDED');assert.equal(entered,false);})
       .catch(e=>{console.error(e);process.exitCode=1;});
   `;

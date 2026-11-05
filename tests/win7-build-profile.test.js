@@ -96,7 +96,8 @@ test("Win7 staging excludes build-only distribution tests and retains the qpdf r
   );
   // The distribution test loads a build script and the modern build.win layout;
   // neither exists in this independently derived legacy runtime staging area.
-  assert.ok(!stagingEntries.some(entry => entry === "scripts" || entry.startsWith("scripts/")));
+  assert.ok(!stagingEntries.includes("scripts"));
+  assert.ok(stagingEntries.filter(entry => entry.startsWith("scripts/")).every(entry => entry === "scripts/lib/win7-build-profile.js"));
   for (const command of [profile.scripts.test, profile.scripts["test:ci"]]) {
     assert.doesNotMatch(command, /tests\/distribution-footprint\.test\.js/);
   }

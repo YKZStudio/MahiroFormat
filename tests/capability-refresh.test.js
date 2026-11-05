@@ -46,6 +46,7 @@ function harness({ converting = false, loadTargets } = {}) {
     loadTargets: async file => { targetQueries++; return loadTargets ? loadTargets(file) : { category: "text", targets: ["md", "docx", "pdf"] }; },
     commonTargetsFrom: infos => infos[0].targets.filter(target => infos.every(info => info.targets.includes(target)))
   });
+  context.loadTargetsForFiles = files => Promise.all(files.map(context.loadTargets));
   assert.ok(refreshSource.includes("async function fetchCapabilities"));
   vm.runInContext(targetLabelSource + "\n" + refreshSource, context);
   return {
